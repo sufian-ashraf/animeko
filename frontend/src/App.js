@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './styles.css';
-import { Anime, NewAnime } from './types';
 
 function App() {
-  const [animeList, setAnimeList] = useState<Anime[]>([]);
-  const [newAnime, setNewAnime] = useState<NewAnime>({
+  const [animeList, setAnimeList] = useState([]);
+  const [newAnime, setNewAnime] = useState({
     title: '',
     episodes: 0,
     rating: 0
@@ -30,7 +29,7 @@ function App() {
       .catch(err => console.error("POST Error:", err));
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewAnime({
       ...newAnime,

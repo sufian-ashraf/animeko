@@ -1,37 +1,52 @@
 const express = require('express');
-const { Pool } = require('pg');
 const cors = require('cors');
+const { Pool } = require('pg');
+require('dotenv').config();
+
+// Initialize the Express app
 const app = express();
 
-// Middleware
-const corsOptions = {
-  origin: "http://localhost:3000", // Allow only React app
-  methods: "GET,POST" // Allow only needed methods
-};
-app.use(cors(corsOptions));
+// Enable CORS for all requests (or restrict it to your frontend URL)
+app.use(cors());  // This enables CORS for all origins
+// Or, to allow only from localhost:3000 (for development):
+// app.use(cors({ origin: 'http://localhost:3000' }));
+
+// Parse JSON bodies
 app.use(express.json());
 
-// Mock database (replace with real PostgreSQL later)
-let animeList = [
-  { id: 1, title: "Attack on Titan", episodes: 75, rating: 9.0 },
-  { id: 2, title: "Demon Slayer", episodes: 44, rating: 8.8 },
-  { id: 3, title: "Jujutsu Kaisen", episodes: 24, rating: 8.7 }
-];
+// PostgreSQL database setup
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
+  password: process.env.DB_PASSWORD,
+});
 
-// Routes
+// Test database connection
+pool.connect()
+  .then(() => console.log('Database connected successfully'))
+  .catch(err => console.error('Database connection error', err));
+
+// Test query to check if the connection is working
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) console.error('Database connection error', err);
+  else console.log('Connected to PostgreSQL at', res.rows[0].now);
+});
+
+// Example API route
 app.get('/api/anime', (req, res) => {
-  res.json(animeList);
-});
-// In backend/server.js
-app.post('/api/anime', (req, res) => {
-  const newAnime = {
-    id: animeList.length + 1, // Simple ID generation
-    ...req.body
-  };
-  animeList.push(newAnime);
-  res.status(201).json(newAnime); // 201 Created status
+  // Example of how you could fetch anime data from your database
+  pool.query('SELECT * FROM anime', (err, result) => {
+    if (err) {
+      console.error('Error fetching anime data', err);
+      return res.status(500).send('Error fetching anime data');
+    }
+    res.json(result.rows);
+  });
 });
 
-// Start server
-const PORT = 5000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+// Set the server to listen on port 5000 (or your preferred port)
+app.listen(5000, () => {
+  console.log('Server is running on http://localhost:5000');
+});
