@@ -4,19 +4,21 @@ import { Anime, NewAnime } from './types';
 
 function App() {
   const [animeList, setAnimeList] = useState<Anime[]>([]);
-  const [newAnime, setNewAnime] = useState<NewAnime>({ 
-    title: '', 
-    episodes: 0, 
-    rating: 0 
+  const [newAnime, setNewAnime] = useState<NewAnime>({
+    title: '',
+    episodes: 0,
+    rating: 0
   });
 
+  // Fetch anime data
   useEffect(() => {
     fetch('http://localhost:5000/api/anime')
       .then(res => res.json())
-      .then((data: Anime[]) => setAnimeList(data))
-      .catch(err => console.error("Fetch error:", err));
+      .then(data => setAnimeList(data))
+      .catch(err => console.error("API Error:", err));
   }, []);
 
+  // Add new anime
   const handleAddAnime = () => {
     fetch('http://localhost:5000/api/anime', {
       method: 'POST',
@@ -24,8 +26,8 @@ function App() {
       body: JSON.stringify(newAnime)
     })
       .then(res => res.json())
-      .then((data: Anime) => setAnimeList([...animeList, data]))
-      .catch(err => console.error("POST error:", err));
+      .then(data => setAnimeList([...animeList, data]))
+      .catch(err => console.error("POST Error:", err));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,7 +68,7 @@ function App() {
       </div>
       <ul className="anime-list">
         {animeList.map(anime => (
-          <li key={anime.id}>
+          <li key={(anime.id, anime.title)}> {/* Ensure 'anime.id' is unique */}
             <h3>{anime.title}</h3>
             <p>Episodes: {anime.episodes}</p>
             <p>Rating: {anime.rating}/10</p>
