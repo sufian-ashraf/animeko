@@ -1,14 +1,18 @@
 -- database/seed.sql
--- Populate all tables with sample data
+-- Populate all tables with sample data for new schema
 
--- Clear existing data (optional)
-TRUNCATE TABLE user_favorite, list_anime, anime_genre, anime_character, 
-              friendship, user_anime_status, review, list, 
-              media, character, voice_actor, anime, genre, company, "user" 
-              RESTART IDENTITY CASCADE;
+-- Clear existing data in proper order
+TRUNCATE TABLE 
+  "CONTINUE_WATCHING", "WATCH_HISTORY", "EPISODE", 
+  "TRANSACTION_HISTORY", "LIST_ANIME", "ANIME_GENRE", 
+  "ANIME_CHARACTER", "FRIENDSHIP", "USER_ANIME_STATUS", 
+  "USER_FAVORITE", "LIST", "REVIEW", "MEDIA", 
+  "CHARACTER", "ANIME", "VOICE_ACTOR", "GENRE", 
+  "COMPANY", "USER" 
+RESTART IDENTITY CASCADE;
 
 -- Insert companies
-INSERT INTO company (name, country, founded) VALUES
+INSERT INTO "COMPANY" (name, country, founded) VALUES
 ('Studio Ghibli', 'Japan', '1985-06-15'),
 ('Bones', 'Japan', '1998-10-01'),
 ('Madhouse', 'Japan', '1972-10-17'),
@@ -21,7 +25,7 @@ INSERT INTO company (name, country, founded) VALUES
 ('Toei Animation', 'Japan', '1948-01-23');
 
 -- Insert genres
-INSERT INTO genre (name, description) VALUES
+INSERT INTO "GENRE" (name, description) VALUES
 ('Action', 'Exciting fights and physical challenges'),
 ('Adventure', 'Journeys and exploration'),
 ('Comedy', 'Humor and lighthearted stories'),
@@ -34,7 +38,7 @@ INSERT INTO genre (name, description) VALUES
 ('Slice of Life', 'Everyday life experiences');
 
 -- Insert voice actors
-INSERT INTO voice_actor (name, birth_date, nationality) VALUES
+INSERT INTO "VOICE_ACTOR" (name, birth_date, nationality) VALUES
 ('Mamoru Miyano', '1983-06-08', 'Japanese'),
 ('Kana Hanazawa', '1989-02-25', 'Japanese'),
 ('Hiroshi Kamiya', '1975-01-28', 'Japanese'),
@@ -46,52 +50,21 @@ INSERT INTO voice_actor (name, birth_date, nationality) VALUES
 ('Nobuhiko Okamoto', '1986-10-24', 'Japanese'),
 ('Maaya Uchida', '1989-12-27', 'Japanese');
 
-INSERT INTO anime (title, release_date, episodes, synopsis, rating, company_id) VALUES
--- User-provided examples
-('Attack on Titan', '2013-04-07', 75, 'Humanity fights giant humanoid creatures', 9.0, 6),
-('Fullmetal Alchemist: Brotherhood', '2009-04-05', 64, 'Two brothers search for the Philosopher''s Stone', 9.1, 2),
-('Spirited Away', '2001-07-20', 1, 'A girl works in a bathhouse for spirits', 8.6, 1),
-('Demon Slayer', '2019-04-06', 44, 'A boy becomes a demon slayer to save his sister', 8.7, 4),
-('Death Note', '2006-10-03', 37, 'A student gains a notebook that can kill people', 8.6, 3),
-('Your Lie in April', '2014-10-09', 22, 'A pianist meets a violinist who changes his life', 8.7, 5),
-('Cowboy Bebop', '1998-04-03', 26, 'Bounty hunters travel through space', 8.8, 8),
-('Jujutsu Kaisen', '2020-10-03', 24, 'A boy becomes a jujutsu sorcerer to fight curses', 8.8, 10),
-('Neon Genesis Evangelion', '1995-10-04', 26, 'Teenagers pilot giant mechs to save humanity', 8.3, 7),
-('One Punch Man', '2015-10-05', 12, 'A hero defeats enemies with a single punch', 8.7, 3),
-
--- From Spring 2025 search results :cite[2]:cite[3]
-('Kusuriya no Hitorigoto 2nd Season', '2025-04-01', 12, 'Maomao faces palace conspiracies as a food taster for a pregnant concubine.', NULL, 4),
-('WIND BREAKER Season 2', '2025-04-03', 12, 'Sakura evolves from delinquent to protector as a Grade Captain.', 8.5, 6),
-('Saikyou no Ousama, Nidome no Jinsei wa Nani o Suru?', '2025-04-02', 24, 'Reborn king Arthur Leywin seeks redemption through magic.', NULL, 3),
-('Danjo no Yuujou wa Seiritsu suru? (Iya, Shinai!!)', '2025-04-04', 12, 'Childhood friends confront romantic tensions in high school.', 7.8, 5),
-('Enn Enn no Shouboutai San no Shou', '2025-04-05', 24, 'Fire Force Company 8 battles the Tokyo Imperial Army.', 8.4, 7),
-('Katainaka no Ossan, Kensei ni Naru', '2025-04-05', 12, 'A rural swordsman faces chaos from his past.', NULL, 9),
-('Isshun de Chiryou shiteita noni...', '2025-04-03', 12, 'Exiled healer Zenos becomes a shadow legend.', 8.0, 4),
-('Haite Kudasai, Takamine-san', '2025-04-02', 12, 'A student discovers a time-traveling lingerie secret.', 7.5, 2),
-('A-Rank Party wo Ridatsu shita Ore wa...', '2025-04-10', 24, 'A mage leads former students to conquer dungeons.', NULL, 8),
-('Slime Taoshite 300-nen... ~Sono ni~', '2025-04-05', 12, 'Witch Azusa continues her laid-back adventures.', 8.1, 5),
-('Kanchigai no Atelier Meister', '2025-03-30', 12, 'Exiled errand boy discovers hidden SSS-rank skills.', 7.9, 3),
-('Kimi to Boku no Saigo no Senjou... II', '2025-05-01', 12, 'Alice and Iska unravel a conspiracy to prevent war.', 8.3, 6),
-('Ore wa Seikan Kokka no Akutoku Ryoushu!', '2025-03-25', 12, 'A tyrant’s plans hilariously backfire into peace.', 8.2, 4),
-('WITCH WATCH', '2025-04-06', 24, 'Ogre and witch duo navigate supernatural chaos.', 8.5, 7),
-('Shiunji-ke no Kodomotachi', '2025-04-08', 12, 'Siblings confront familial secrets in Tokyo.', 7.7, 2),
-('Lazarus', '2025-04-06', 12, 'Task force Lazarus races to stop a global drug crisis.', 8.6, 10),
-('Mobile Suit Gundam SEED Recollection', '2025-04-30', 12, 'Bridges SEED and DESTINY through Kira and Athrun’s battles.', NULL, 9),
-
--- Additional popular titles (industry knowledge)
-('Steins;Gate', '2011-04-06', 24, 'A scientist accidentally invents time travel.', 9.1, 5),
-('Hunter x Hunter', '2011-10-02', 148, 'A boy seeks his father in a dangerous world.', 9.0, 6),
-('Clannad: After Story', '2008-10-03', 24, 'A heartfelt story of family and loss.', 9.0, 1),
-('Code Geass', '2006-10-05', 50, 'A prince leads a rebellion using strategic genius.', 8.8, 8),
-('Naruto Shippuden', '2007-02-15', 500, 'Ninja battles and the quest for peace.', 8.7, 4),
-('My Hero Academia', '2016-04-03', 113, 'A boy trains to become the greatest hero.', 8.5, 3),
-('Re:Zero', '2016-04-04', 50, 'A boy relives death loops to protect loved ones.', 8.3, 7),
-('Vinland Saga', '2019-07-07', 48, 'Viking revenge saga set in medieval Europe.', 8.8, 2),
-('Made in Abyss', '2017-07-07', 13, 'Children explore a deadly, mystical abyss.', 8.7, 5),
-('Mob Psycho 100', '2016-07-12', 37, 'A psychic boy navigates adolescence.', 8.6, 3);
+-- Insert anime
+INSERT INTO "ANIME" (title, release_date, season, episodes, synopsis, rating, company_id) VALUES
+('Attack on Titan', '2013-04-07', 'Spring 2013', 75, 'Humanity fights giant humanoid creatures', 9.0, 6),
+('Fullmetal Alchemist: Brotherhood', '2009-04-05', 'Spring 2009', 64, 'Two brothers search for the Philosopher''s Stone', 9.1, 2),
+('Spirited Away', '2001-07-20', 'Summer 2001', 1, 'A girl works in a bathhouse for spirits', 8.6, 1),
+('Demon Slayer', '2019-04-06', 'Spring 2019', 44, 'A boy becomes a demon slayer to save his sister', 8.7, 4),
+('Death Note', '2006-10-03', 'Fall 2006', 37, 'A student gains a notebook that can kill people', 8.6, 3),
+('Your Lie in April', '2014-10-09', 'Fall 2014', 22, 'A pianist meets a violinist who changes his life', 8.7, 5),
+('Cowboy Bebop', '1998-04-03', 'Spring 1998', 26, 'Bounty hunters travel through space', 8.8, 8),
+('Jujutsu Kaisen', '2020-10-03', 'Fall 2020', 24, 'A boy becomes a jujutsu sorcerer to fight curses', 8.8, 10),
+('Neon Genesis Evangelion', '1995-10-04', 'Fall 1995', 26, 'Teenagers pilot giant mechs to save humanity', 8.3, 7),
+('One Punch Man', '2015-10-05', 'Fall 2015', 12, 'A hero defeats enemies with a single punch', 8.7, 3);
 
 -- Insert characters
-INSERT INTO character (name, description, voice_actor_id) VALUES
+INSERT INTO "CHARACTER" (name, description, voice_actor_id) VALUES
 ('Eren Yeager', 'Protagonist of Attack on Titan', 5),
 ('Edward Elric', 'Protagonist of Fullmetal Alchemist', 5),
 ('Chihiro Ogino', 'Protagonist of Spirited Away', 4),
@@ -104,7 +77,7 @@ INSERT INTO character (name, description, voice_actor_id) VALUES
 ('Saitama', 'Protagonist of One Punch Man', 9);
 
 -- Insert users
-INSERT INTO "user" (username, email, password_hash, display_name, profile_bio, searchable) VALUES
+INSERT INTO "USER" (username, email, password_hash, display_name, profile_bio, visible) VALUES
 ('animefan1', 'user1@example.com', '$2a$10$xJwL5v5Jz5UJz5UJz5UJzO', 'Anime Lover', 'I love all kinds of anime!', TRUE),
 ('otaku42', 'user2@example.com', '$2a$10$xJwL5v5Jz5UJz5UJz5UJzO', 'Otaku King', 'Watching anime since 1995', TRUE),
 ('neonangel', 'user3@example.com', '$2a$10$xJwL5v5Jz5UJz5UJz5UJzO', 'Neon', 'Sci-fi enthusiast', TRUE),
@@ -117,33 +90,33 @@ INSERT INTO "user" (username, email, password_hash, display_name, profile_bio, s
 ('actionhero', 'user10@example.com', '$2a$10$xJwL5v5Jz5UJz5UJz5UJzO', 'Action Hero', 'Fights and battles', TRUE);
 
 -- Insert media
-INSERT INTO media (url, entity_type, entity_id, caption) VALUES
-('https://example.com/attack-on-titan.jpg', 'anime', 1, 'Attack on Titan poster'),
-('https://example.com/fmab.jpg', 'anime', 2, 'Fullmetal Alchemist Brotherhood poster'),
-('https://example.com/spirited-away.jpg', 'anime', 3, 'Spirited Away poster'),
-('https://example.com/eren.jpg', 'character', 1, 'Eren Yeager character art'),
-('https://example.com/edward.jpg', 'character', 2, 'Edward Elric character art'),
-('https://example.com/user1.jpg', 'user', 1, 'Profile picture'),
-('https://example.com/user2.jpg', 'user', 2, 'Profile picture'),
-('https://example.com/demon-slayer.jpg', 'anime', 4, 'Demon Slayer poster'),
-('https://example.com/tanjiro.jpg', 'character', 4, 'Tanjiro Kamado character art'),
-('https://example.com/death-note.jpg', 'anime', 5, 'Death Note poster');
+INSERT INTO "MEDIA" (url, entity_type, entity_id, media_type, caption) VALUES
+('https://example.com/attack-on-titan.jpg', 'anime', 1, 'poster', 'Attack on Titan poster'),
+('https://example.com/fmab.jpg', 'anime', 2, 'poster', 'Fullmetal Alchemist Brotherhood poster'),
+('https://example.com/spirited-away.jpg', 'anime', 3, 'poster', 'Spirited Away poster'),
+('https://example.com/eren.jpg', 'character', 1, 'character_art', 'Eren Yeager character art'),
+('https://example.com/edward.jpg', 'character', 2, 'character_art', 'Edward Elric character art'),
+('https://example.com/user1.jpg', 'user', 1, 'profile_picture', 'Profile picture'),
+('https://example.com/user2.jpg', 'user', 2, 'profile_picture', 'Profile picture'),
+('https://example.com/demon-slayer.jpg', 'anime', 4, 'poster', 'Demon Slayer poster'),
+('https://example.com/tanjiro.jpg', 'character', 4, 'character_art', 'Tanjiro Kamado character art'),
+('https://example.com/death-note.jpg', 'anime', 5, 'poster', 'Death Note poster');
 
 -- Insert anime-genre relationships
-INSERT INTO anime_genre (anime_id, genre_id) VALUES
-(1, 1), (1, 2), (1, 5),  -- Attack on Titan: Action, Adventure, Fantasy
-(2, 1), (2, 2), (2, 5),  -- FMAB: Action, Adventure, Fantasy
-(3, 2), (3, 5),           -- Spirited Away: Adventure, Fantasy
-(4, 1), (4, 2), (4, 5),   -- Demon Slayer: Action, Adventure, Fantasy
-(5, 1), (5, 7), (5, 4),   -- Death Note: Action, Mystery, Drama
-(6, 4), (6, 8), (6, 10),  -- Your Lie in April: Drama, Romance, Slice of Life
-(7, 1), (7, 9),           -- Cowboy Bebop: Action, Sci-Fi
-(8, 1), (8, 5),           -- Jujutsu Kaisen: Action, Fantasy
-(9, 1), (9, 4), (9, 9),   -- Evangelion: Action, Drama, Sci-Fi
-(10, 1), (10, 3);         -- One Punch Man: Action, Comedy
+INSERT INTO "ANIME_GENRE" (anime_id, genre_id) VALUES
+(1, 1), (1, 2), (1, 5),
+(2, 1), (2, 2), (2, 5),
+(3, 2), (3, 5),
+(4, 1), (4, 2), (4, 5),
+(5, 1), (5, 7), (5, 4),
+(6, 4), (6, 8), (6, 10),
+(7, 1), (7, 9),
+(8, 1), (8, 5),
+(9, 1), (9, 4), (9, 9),
+(10, 1), (10, 3);
 
 -- Insert anime-character relationships
-INSERT INTO anime_character (anime_id, character_id, role) VALUES
+INSERT INTO "ANIME_CHARACTER" (anime_id, character_id, role) VALUES
 (1, 1, 'Main Protagonist'),
 (2, 2, 'Main Protagonist'),
 (3, 3, 'Main Protagonist'),
@@ -156,7 +129,7 @@ INSERT INTO anime_character (anime_id, character_id, role) VALUES
 (10, 10, 'Main Protagonist');
 
 -- Insert reviews
-INSERT INTO review (user_id, anime_id, content, rating) VALUES
+INSERT INTO "REVIEW" (user_id, anime_id, content, rating) VALUES
 (1, 1, 'Amazing story and animation!', 10),
 (2, 1, 'The best anime I''ve ever seen', 10),
 (3, 2, 'Perfect adaptation of the manga', 10),
@@ -169,7 +142,7 @@ INSERT INTO review (user_id, anime_id, content, rating) VALUES
 (10, 9, 'Deep and philosophical', 9);
 
 -- Insert lists
-INSERT INTO list (user_id, name, description, is_public) VALUES
+INSERT INTO "LIST" (user_id, name, description, is_public) VALUES
 (1, 'My Top 10', 'My personal favorite anime', TRUE),
 (2, 'To Watch', 'Anime I plan to watch', TRUE),
 (3, 'Completed', 'Anime I''ve finished', FALSE),
@@ -182,7 +155,7 @@ INSERT INTO list (user_id, name, description, is_public) VALUES
 (10, 'Action Packed', 'Best action anime', TRUE);
 
 -- Insert list-anime relationships
-INSERT INTO list_anime (list_id, anime_id, position, notes) VALUES
+INSERT INTO "LIST_ANIME" (list_id, anime_id, position, notes) VALUES
 (1, 1, 1, 'Absolute masterpiece'),
 (1, 2, 2, 'Perfect story'),
 (2, 3, 1, 'Planning to watch soon'),
@@ -195,7 +168,7 @@ INSERT INTO list_anime (list_id, anime_id, position, notes) VALUES
 (9, 10, 1, 'So relaxing');
 
 -- Insert user favorites
-INSERT INTO user_favorite (user_id, entity_type, entity_id, note) VALUES
+INSERT INTO "USER_FAVORITE" (user_id, entity_type, entity_id, note) VALUES
 (1, 'anime', 1, 'Favorite anime ever'),
 (2, 'anime', 2, 'Love the story'),
 (3, 'character', 1, 'Best protagonist'),
@@ -208,7 +181,7 @@ INSERT INTO user_favorite (user_id, entity_type, entity_id, note) VALUES
 (10, 'anime', 6, 'Made me cry');
 
 -- Insert user anime statuses
-INSERT INTO user_anime_status (user_id, anime_id, status, episodes_watched) VALUES
+INSERT INTO "USER_ANIME_STATUS" (user_id, anime_id, status, episodes_watched) VALUES
 (1, 1, 'completed', 75),
 (2, 1, 'completed', 75),
 (3, 2, 'completed', 64),
@@ -221,7 +194,7 @@ INSERT INTO user_anime_status (user_id, anime_id, status, episodes_watched) VALU
 (10, 9, 'completed', 26);
 
 -- Insert friendships
-INSERT INTO friendship (requester_id, addressee_id, status) VALUES
+INSERT INTO "FRIENDSHIP" (requester_id, addressee_id, status) VALUES
 (1, 2, 'accepted'),
 (1, 3, 'accepted'),
 (2, 4, 'accepted'),
@@ -233,5 +206,38 @@ INSERT INTO friendship (requester_id, addressee_id, status) VALUES
 (8, 10, 'pending'),
 (9, 1, 'accepted');
 
--- Verify data was inserted
-SELECT 'Database populated successfully!' AS message;
+-- Insert episodes
+INSERT INTO "EPISODE" (anime_id, episode_number, title, duration_seconds, air_date, video_url) VALUES
+(1, 1, 'To You, in 2000 Years', 1440, '2013-04-07', 'https://example.com/aot-ep1'),
+(1, 2, 'That Day', 1440, '2013-04-14', 'https://example.com/aot-ep2'),
+(2, 1, 'Fullmetal Alchemist', 1440, '2009-04-05', 'https://example.com/fma-ep1'),
+(3, 1, 'The Day I Became a Spirit', 125, '2001-07-20', 'https://example.com/spirited-ep1'),
+(4, 1, 'Cruelty', 1440, '2019-04-06', 'https://example.com/ds-ep1'),
+(5, 1, 'Rebirth', 1440, '2006-10-03', 'https://example.com/dn-ep1');
+
+-- Insert watch history
+INSERT INTO "WATCH_HISTORY" (user_id, episode_id, watched_seconds, completed) VALUES
+(1, 1, 1440, TRUE),
+(1, 2, 1440, TRUE),
+(2, 3, 1440, TRUE),
+(3, 4, 125, TRUE),
+(4, 5, 1440, TRUE);
+
+-- Insert continue watching
+INSERT INTO "CONTINUE_WATCHING" (user_id, episode_id, watched_percentage, timestamp_position) VALUES
+(5, 1, 75.5, 1080),
+(6, 2, 50.0, 720),
+(7, 3, 25.3, 360);
+
+-- Insert transactions
+INSERT INTO "TRANSACTION_HISTORY" (user_id, status, payment_method) VALUES
+(1, 'completed', 'credit_card'),
+(2, 'pending', 'paypal'),
+(3, 'completed', 'crypto');
+
+-- Update users with active transactions
+UPDATE "USER" SET active_transaction_id = 1 WHERE user_id = 1;
+UPDATE "USER" SET active_transaction_id = 3 WHERE user_id = 3;
+
+-- Verify data
+SELECT 'Database successfully seeded!' AS verification_message;
