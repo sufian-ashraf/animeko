@@ -1,26 +1,20 @@
 {
-    "compilerOptions": {
-      "target": "ES6",                         // Set target to ES6 as the standard
-      "lib": ["dom", "dom.iterable", "esnext"], // Include necessary libraries
-      "allowJs": true,                         // Allow JavaScript files
-      "skipLibCheck": true,                     // Skip library checking for faster compilation
-      "esModuleInterop": true,                  // Enable interop between CommonJS and ES Modules
-      "allowSyntheticDefaultImports": true,     // Allow synthetic default imports
-      "strict": true,                           // Enable strict type-checking options
-      "forceConsistentCasingInFileNames": true, // Ensure consistent casing in file names
-      "noFallthroughCasesInSwitch": true,       // Prevent fallthrough in switch statements
-      "module": "ESNext",                       // Use ESNext module syntax
-      "moduleResolution": "node",               // Use Node.js module resolution
-      "resolveJsonModule": true,                // Allow importing of JSON modules
-      "isolatedModules": true,                  // Ensure each file can be safely transpiled independently
-      "jsx": "react-jsx"                       // Use the JSX transform introduced in React 17
-    },
-    "include": [
-      "frontend/src"  // Adjusted to include the 'src' folder inside 'frontend'
-    ],
-    "exclude": [
-      "backend",      // Optionally exclude the 'backend' folder
-      "node_modules"  // Exclude 'node_modules' as well
-    ]
-  }
-  
+  "compilerOptions": {
+    "target": "ES6",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["frontend/src"],
+  "exclude": ["backend", "node_modules"]
+}

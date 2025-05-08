@@ -1,52 +1,153 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
 
-// Initialize the Express app
+// Load environment variables from .env file
+const result = dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+if (result.error) {
+  console.warn('Warning: .env file not found or cannot be read');
+  console.log('Using hardcoded database credentials');
+}
+
+// Log the loaded environment variables (without sensitive data)
+console.log('Environment loaded:', {
+  DB_USER: process.env.DB_USER || 'postgres',
+  DB_HOST: process.env.DB_HOST || 'localhost',
+  DB_NAME: process.env.DB_NAME || 'anime_db',
+  DB_PORT: process.env.DB_PORT || 5432,
+  NODE_ENV: process.env.NODE_ENV || 'development'
+});
+
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// Enable CORS for all requests (or restrict it to your frontend URL)
-app.use(cors());  // This enables CORS for all origins
-// Or, to allow only from localhost:3000 (for development):
-// app.use(cors({ origin: 'http://localhost:3000' }));
-
-// Parse JSON bodies
+// Middleware
+app.use(cors());
 app.use(express.json());
 
-// PostgreSQL database setup
+// Database connection
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
-  password: process.env.DB_PASSWORD,
+  user: process.env.DB_USER || 'postgres',
+  host: process.env.DB_HOST || 'localhost',
+  database: process.env.DB_NAME || 'anime_db',
+  password: process.env.DB_PASSWORD ? String(process.env.DB_PASSWORD) : 'sufian098',
+  port: process.env.DB_PORT || 5432,
 });
 
 // Test database connection
 pool.connect()
-  .then(() => console.log('Database connected successfully'))
-  .catch(err => console.error('Database connection error', err));
+  .then(() => console.log('Connected to PostgreSQL database'))
+  .catch(err => console.error('Database connection error:', err));
 
-// Test query to check if the connection is working
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) console.error('Database connection error', err);
-  else console.log('Connected to PostgreSQL at', res.rows[0].now);
-});
+// Input validation middleware
+const validateAnimeInput = (req, res, next) => {
+  const { title, genre, year, description } = req.body;
+  
+  if (!title || title.trim() === '') {
+    return res.status(400).json({ error: 'Title is required' });
+  }
+  
+  if (year && (isNaN(year) || year < 1900 || year > 2100)) {
+    return res.status(400).json({ error: 'Year must be a number between 1900 and 2100' });
+  }
+  
+  next();
+};
 
-// Example API route
-app.get('/api/anime', (req, res) => {
-  // Example of how you could fetch anime data from your database
-  pool.query('SELECT * FROM anime', (err, result) => {
-    if (err) {
-      console.error('Error fetching anime data', err);
-      return res.status(500).send('Error fetching anime data');
-    }
-    res.json(result.rows);
+// Error handling middleware
+const errorHandler = (err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ 
+    error: 'An unexpected error occurred', 
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined 
   });
+};
+
+// Update the GET /api/anime endpoint
+app.get('/api/anime', async (req, res, next) => {
+  try {
+    // console.log('Received search request with params:', req.query);
+    
+    // Query parameters
+    const { title, genre, year } = req.query;
+    
+    // Base query with proper column names from your schema
+    let query = `
+      SELECT 
+        anime_id AS id,
+        title,
+        (SELECT STRING_AGG(g.name, ', ') 
+         FROM anime_genre ag
+         JOIN genre g ON ag.genre_id = g.genre_id
+         WHERE ag.anime_id = anime.anime_id) AS genre,
+        EXTRACT(YEAR FROM release_date) AS year,
+        synopsis AS description
+      FROM anime
+      WHERE 1=1
+    `;
+    
+    const params = [];
+    let paramCount = 1;
+
+    // Fuzzy search for title
+    if (title) {
+      params.push(`%${title}%`);
+      query += ` AND title ILIKE $${paramCount++}`;
+    }
+
+    // Fuzzy search for genre (through anime_genre relationship)
+    if (genre) {
+      params.push(`%${genre}%`);
+      query += ` AND EXISTS (
+        SELECT 1 FROM anime_genre ag
+        JOIN genre g ON ag.genre_id = g.genre_id
+        WHERE ag.anime_id = anime.anime_id
+        AND g.name ILIKE $${paramCount++}
+      )`;
+    }
+
+    // Exact year match
+    if (year) {
+      if (isNaN(year) || year < 1900 || year > 2100) {
+        return res.status(400).json({ error: 'Year must be a number between 1900 and 2100' });
+      }
+      params.push(year);
+      query += ` AND EXTRACT(YEAR FROM release_date) = $${paramCount++}`;
+    }
+
+    // Add sorting
+    query += ' ORDER BY title ASC';
+
+    // console.log('Executing SQL query:', query, 'with params:', params);
+    
+    const result = await pool.query(query, params);
+    // console.log(`Query returned ${result.rows.length} results`);
+    
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Database query error:', err);
+    next(err);
+  }
+});
+// Register error handler
+app.use(errorHandler);
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
 
-// Set the server to listen on port 5000 (or your preferred port)
-app.listen(5000, () => {
-  console.log('Server is running on http://localhost:5000');
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });

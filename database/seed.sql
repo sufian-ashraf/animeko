@@ -46,8 +46,8 @@ INSERT INTO voice_actor (name, birth_date, nationality) VALUES
 ('Nobuhiko Okamoto', '1986-10-24', 'Japanese'),
 ('Maaya Uchida', '1989-12-27', 'Japanese');
 
--- Insert anime
 INSERT INTO anime (title, release_date, episodes, synopsis, rating, company_id) VALUES
+-- User-provided examples
 ('Attack on Titan', '2013-04-07', 75, 'Humanity fights giant humanoid creatures', 9.0, 6),
 ('Fullmetal Alchemist: Brotherhood', '2009-04-05', 64, 'Two brothers search for the Philosopher''s Stone', 9.1, 2),
 ('Spirited Away', '2001-07-20', 1, 'A girl works in a bathhouse for spirits', 8.6, 1),
@@ -57,7 +57,38 @@ INSERT INTO anime (title, release_date, episodes, synopsis, rating, company_id) 
 ('Cowboy Bebop', '1998-04-03', 26, 'Bounty hunters travel through space', 8.8, 8),
 ('Jujutsu Kaisen', '2020-10-03', 24, 'A boy becomes a jujutsu sorcerer to fight curses', 8.8, 10),
 ('Neon Genesis Evangelion', '1995-10-04', 26, 'Teenagers pilot giant mechs to save humanity', 8.3, 7),
-('One Punch Man', '2015-10-05', 12, 'A hero defeats enemies with a single punch', 8.7, 3);
+('One Punch Man', '2015-10-05', 12, 'A hero defeats enemies with a single punch', 8.7, 3),
+
+-- From Spring 2025 search results :cite[2]:cite[3]
+('Kusuriya no Hitorigoto 2nd Season', '2025-04-01', 12, 'Maomao faces palace conspiracies as a food taster for a pregnant concubine.', NULL, 4),
+('WIND BREAKER Season 2', '2025-04-03', 12, 'Sakura evolves from delinquent to protector as a Grade Captain.', 8.5, 6),
+('Saikyou no Ousama, Nidome no Jinsei wa Nani o Suru?', '2025-04-02', 24, 'Reborn king Arthur Leywin seeks redemption through magic.', NULL, 3),
+('Danjo no Yuujou wa Seiritsu suru? (Iya, Shinai!!)', '2025-04-04', 12, 'Childhood friends confront romantic tensions in high school.', 7.8, 5),
+('Enn Enn no Shouboutai San no Shou', '2025-04-05', 24, 'Fire Force Company 8 battles the Tokyo Imperial Army.', 8.4, 7),
+('Katainaka no Ossan, Kensei ni Naru', '2025-04-05', 12, 'A rural swordsman faces chaos from his past.', NULL, 9),
+('Isshun de Chiryou shiteita noni...', '2025-04-03', 12, 'Exiled healer Zenos becomes a shadow legend.', 8.0, 4),
+('Haite Kudasai, Takamine-san', '2025-04-02', 12, 'A student discovers a time-traveling lingerie secret.', 7.5, 2),
+('A-Rank Party wo Ridatsu shita Ore wa...', '2025-04-10', 24, 'A mage leads former students to conquer dungeons.', NULL, 8),
+('Slime Taoshite 300-nen... ~Sono ni~', '2025-04-05', 12, 'Witch Azusa continues her laid-back adventures.', 8.1, 5),
+('Kanchigai no Atelier Meister', '2025-03-30', 12, 'Exiled errand boy discovers hidden SSS-rank skills.', 7.9, 3),
+('Kimi to Boku no Saigo no Senjou... II', '2025-05-01', 12, 'Alice and Iska unravel a conspiracy to prevent war.', 8.3, 6),
+('Ore wa Seikan Kokka no Akutoku Ryoushu!', '2025-03-25', 12, 'A tyrant’s plans hilariously backfire into peace.', 8.2, 4),
+('WITCH WATCH', '2025-04-06', 24, 'Ogre and witch duo navigate supernatural chaos.', 8.5, 7),
+('Shiunji-ke no Kodomotachi', '2025-04-08', 12, 'Siblings confront familial secrets in Tokyo.', 7.7, 2),
+('Lazarus', '2025-04-06', 12, 'Task force Lazarus races to stop a global drug crisis.', 8.6, 10),
+('Mobile Suit Gundam SEED Recollection', '2025-04-30', 12, 'Bridges SEED and DESTINY through Kira and Athrun’s battles.', NULL, 9),
+
+-- Additional popular titles (industry knowledge)
+('Steins;Gate', '2011-04-06', 24, 'A scientist accidentally invents time travel.', 9.1, 5),
+('Hunter x Hunter', '2011-10-02', 148, 'A boy seeks his father in a dangerous world.', 9.0, 6),
+('Clannad: After Story', '2008-10-03', 24, 'A heartfelt story of family and loss.', 9.0, 1),
+('Code Geass', '2006-10-05', 50, 'A prince leads a rebellion using strategic genius.', 8.8, 8),
+('Naruto Shippuden', '2007-02-15', 500, 'Ninja battles and the quest for peace.', 8.7, 4),
+('My Hero Academia', '2016-04-03', 113, 'A boy trains to become the greatest hero.', 8.5, 3),
+('Re:Zero', '2016-04-04', 50, 'A boy relives death loops to protect loved ones.', 8.3, 7),
+('Vinland Saga', '2019-07-07', 48, 'Viking revenge saga set in medieval Europe.', 8.8, 2),
+('Made in Abyss', '2017-07-07', 13, 'Children explore a deadly, mystical abyss.', 8.7, 5),
+('Mob Psycho 100', '2016-07-12', 37, 'A psychic boy navigates adolescence.', 8.6, 3);
 
 -- Insert characters
 INSERT INTO character (name, description, voice_actor_id) VALUES
