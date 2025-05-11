@@ -14,15 +14,15 @@ if (result.error) {
 
 // Log the loaded environment variables (without sensitive data)
 console.log('Environment loaded:', {
-  DB_USER: process.env.DB_USER || 'postgres',
-  DB_HOST: process.env.DB_HOST || 'localhost',
-  DB_NAME: process.env.DB_NAME || 'anime_db',
-  DB_PORT: process.env.DB_PORT || 5432,
-  NODE_ENV: process.env.NODE_ENV || 'development'
+  DB_USER: process.env.DB_USER,
+  DB_HOST: process.env.DB_HOST,
+  DB_NAME: process.env.DB_NAME,
+  DB_PORT: process.env.DB_PORT,
+  NODE_ENV: process.env.NODE_ENV
 });
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 
 // Middleware
 app.use(cors());
@@ -30,11 +30,11 @@ app.use(express.json());
 
 // Database connection
 const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'anime_db',
-  password: process.env.DB_PASSWORD ? String(process.env.DB_PASSWORD) : 'sufian098',
-  port: process.env.DB_PORT || 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: String(process.env.DB_PASSWORD),
+  port: process.env.DB_PORT,
 });
 
 // Test database connection
