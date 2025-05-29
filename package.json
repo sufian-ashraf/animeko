@@ -15,7 +15,9 @@
         "start": "concurrently \"npm run server\" \"npm run client\"",
         "client": "cd frontend && npm start",
         "server": "node backend/server.js",
-        "build": "cd frontend && npm run build"
+        "build": "cd frontend && npm run build",
+        "install-all": "npm --prefix frontend install && npm --prefix backend install",
+        "postinstall": "npm run install-all"
     },
     "devDependencies": {
         "concurrently": "^9.1.2"
