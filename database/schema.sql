@@ -17,9 +17,9 @@ DROP TABLE IF EXISTS anime CASCADE;
 DROP TABLE IF EXISTS voice_actor CASCADE;
 DROP TABLE IF EXISTS genre CASCADE;
 DROP TABLE IF EXISTS company CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS user CASCADE;
 
--- DROP all indices if they exists (this helps to reset database more than once)
+-- DROP all indices if they exist (this helps to reset database more than once)
 DROP INDEX IF EXISTS idx_anime_title;
 DROP INDEX IF EXISTS idx_anime_company;
 DROP INDEX IF EXISTS idx_user_email;
@@ -30,7 +30,7 @@ DROP INDEX IF EXISTS idx_review_anime;
 DROP INDEX IF EXISTS idx_character_va;
 
 -- Create tables
-CREATE TABLE users (
+CREATE TABLE user (
   user_id SERIAL PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -67,6 +67,7 @@ CREATE TABLE voice_actor (
 CREATE TABLE anime (
   anime_id SERIAL PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
+  alternative_title VARCHAR(255),
   release_date DATE,
   season VARCHAR(50),
   episodes INTEGER,
@@ -106,7 +107,6 @@ CREATE TABLE list (
   user_id INTEGER NOT NULL,
   name VARCHAR(255) NOT NULL,
   description TEXT,
-  is_public BOOLEAN DEFAULT FALSE,
   visibility_level INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -186,10 +186,9 @@ CREATE TABLE watch_history (
   user_id INTEGER NOT NULL,
   episode_id INTEGER NOT NULL,
   watched_date TIMESTAMPTZ DEFAULT NOW(),
-  watched_seconds INTEGER NOT NULL,
+  timestamp_position INTEGER NOT NULL,
   completed BOOLEAN DEFAULT FALSE,
-  watched_percentage DECIMAL(5,2),
-  timestamp_position INTEGER
+  watched_percentage DECIMAL(5,2)
 );
 
 CREATE TABLE continue_watching (
@@ -198,12 +197,11 @@ CREATE TABLE continue_watching (
   watched_percentage DECIMAL(5,2),
   timestamp_position INTEGER NOT NULL,
   last_watched TIMESTAMPTZ DEFAULT NOW(),
-  hidden BOOLEAN DEFAULT FALSE,
   PRIMARY KEY (user_id, episode_id)
 );
 
 -- Add foreign key constraints
-ALTER TABLE users ADD CONSTRAINT fk_user_transaction
+ALTER TABLE user ADD CONSTRAINT fk_user_transaction
   FOREIGN KEY (active_transaction_id) 
   REFERENCES transaction_history (transaction_id);
 
@@ -217,7 +215,7 @@ ALTER TABLE character ADD CONSTRAINT fk_character_voice_actor
 
 ALTER TABLE review ADD CONSTRAINT fk_review_user
   FOREIGN KEY (user_id) 
-  REFERENCES users (user_id);
+  REFERENCES user (user_id);
 
 ALTER TABLE review ADD CONSTRAINT fk_review_anime
   FOREIGN KEY (anime_id) 
@@ -225,15 +223,15 @@ ALTER TABLE review ADD CONSTRAINT fk_review_anime
 
 ALTER TABLE list ADD CONSTRAINT fk_list_user
   FOREIGN KEY (user_id) 
-  REFERENCES users (user_id);
+  REFERENCES user (user_id);
 
 ALTER TABLE user_favorite ADD CONSTRAINT fk_user_favorite_user
   FOREIGN KEY (user_id) 
-  REFERENCES users (user_id);
+  REFERENCES user (user_id);
 
 ALTER TABLE user_anime_status ADD CONSTRAINT fk_user_anime_status_user
   FOREIGN KEY (user_id) 
-  REFERENCES users (user_id);
+  REFERENCES user (user_id);
 
 ALTER TABLE user_anime_status ADD CONSTRAINT fk_user_anime_status_anime
   FOREIGN KEY (anime_id) 
@@ -241,11 +239,11 @@ ALTER TABLE user_anime_status ADD CONSTRAINT fk_user_anime_status_anime
 
 ALTER TABLE friendship ADD CONSTRAINT fk_friendship_requester
   FOREIGN KEY (requester_id) 
-  REFERENCES users (user_id);
+  REFERENCES user (user_id);
 
 ALTER TABLE friendship ADD CONSTRAINT fk_friendship_addressee
   FOREIGN KEY (addressee_id) 
-  REFERENCES users (user_id);
+  REFERENCES user (user_id);
 
 ALTER TABLE anime_character ADD CONSTRAINT fk_anime_character_anime
   FOREIGN KEY (anime_id) 
@@ -273,7 +271,7 @@ ALTER TABLE list_anime ADD CONSTRAINT fk_list_anime_anime
 
 ALTER TABLE transaction_history ADD CONSTRAINT fk_transaction_user
   FOREIGN KEY (user_id) 
-  REFERENCES users (user_id);
+  REFERENCES user (user_id);
 
 ALTER TABLE episode ADD CONSTRAINT fk_episode_anime
   FOREIGN KEY (anime_id) 
@@ -281,7 +279,7 @@ ALTER TABLE episode ADD CONSTRAINT fk_episode_anime
 
 ALTER TABLE watch_history ADD CONSTRAINT fk_watch_history_user
   FOREIGN KEY (user_id) 
-  REFERENCES users (user_id);
+  REFERENCES user (user_id);
 
 ALTER TABLE watch_history ADD CONSTRAINT fk_watch_history_episode
   FOREIGN KEY (episode_id) 
@@ -289,7 +287,7 @@ ALTER TABLE watch_history ADD CONSTRAINT fk_watch_history_episode
 
 ALTER TABLE continue_watching ADD CONSTRAINT fk_continue_watching_user
   FOREIGN KEY (user_id) 
-  REFERENCES users (user_id);
+  REFERENCES user (user_id);
 
 ALTER TABLE continue_watching ADD CONSTRAINT fk_continue_watching_episode
   FOREIGN KEY (episode_id) 
@@ -298,8 +296,8 @@ ALTER TABLE continue_watching ADD CONSTRAINT fk_continue_watching_episode
 -- Indexes for performance
 CREATE INDEX idx_anime_title ON anime (title);
 CREATE INDEX idx_anime_company ON anime (company_id);
-CREATE INDEX idx_user_email ON users (email);
-CREATE INDEX idx_user_username ON users (username);
+CREATE INDEX idx_user_email ON user (email);
+CREATE INDEX idx_user_username ON user (username);
 CREATE INDEX idx_media_entity ON media (entity_type, entity_id);
 CREATE INDEX idx_review_user ON review (user_id);
 CREATE INDEX idx_review_anime ON review (anime_id);
