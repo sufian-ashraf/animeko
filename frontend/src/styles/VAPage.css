@@ -1,0 +1,17 @@
+.va-page {
+    padding: 1.5rem;
+}
+
+.va-name {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.va-bio {
+    margin: 1rem 0;
+}
+
+.va-roles ul {
+    list-style-type: disc;
+    margin-left: 1.5rem;
+}

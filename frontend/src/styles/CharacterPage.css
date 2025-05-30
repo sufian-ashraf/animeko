@@ -1,0 +1,20 @@
+.character-page {
+    padding: 1.5rem;
+}
+
+.character-title {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.character-description {
+    margin: 1rem 0;
+}
+
+.character-voiced-by {
+    margin-bottom: 1rem;
+}
+
+.character-anime-list li {
+    margin: 0.5rem 0;
+}

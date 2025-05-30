@@ -1,0 +1,44 @@
+.anime-card-link {
+    text-decoration: none;
+    color: inherit;
+}
+.anime-card {
+    border: 1px solid #ccc;
+    padding: 1em;
+    border-radius: 10px;
+    transition: box-shadow 0.2s ease-in-out;
+}
+.anime-card:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+}
+
+.anime-page {
+    padding: 1.5rem;
+}
+
+.anime-title {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.anime-synopsis {
+    margin: 1rem 0;
+    font-style: italic;
+}
+
+.anime-meta {
+    margin-top: 1rem;
+}
+
+.anime-genres span {
+    margin-right: 0.5rem;
+}
+
+.anime-link {
+    text-decoration: none;
+    color: #3b82f6;
+}
+
+.anime-link:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,16 @@
+.genre-page {
+    padding: 1.5rem;
+}
+
+.genre-name {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.genre-description {
+    margin: 1rem 0;
+}
+
+.genre-anime-list li {
+    margin: 0.5rem 0;
+}

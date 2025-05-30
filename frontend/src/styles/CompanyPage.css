@@ -1,0 +1,16 @@
+.company-page {
+    padding: 1.5rem;
+}
+
+.company-name {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.company-info {
+    margin: 1rem 0;
+}
+
+.company-anime-list li {
+    margin: 0.5rem 0;
+}
