@@ -1,20 +1,113 @@
 .character-page {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Header card */
+.character-header-card {
+    display: flex;
+    max-width: 800px;
+    width: 100%;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.character-photo {
+    width: 200px;
+    height: 300px;
+    object-fit: cover;
+}
+
+.character-meta {
     padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
 }
 
-.character-title {
+.character-name {
+    margin: 0;
     font-size: 2rem;
-    font-weight: bold;
 }
 
-.character-description {
+.character-desc {
     margin: 1rem 0;
+    line-height: 1.5;
+    color: #555;
 }
 
-.character-voiced-by {
+.character-va {
+    margin-top: auto;
+}
+
+.va-link {
+    color: #1e90ff;
+    text-decoration: none;
+}
+
+.va-link:hover {
+    text-decoration: underline;
+}
+
+.va-unknown {
+    color: #888;
+}
+
+/* Appearances grid */
+.appearances-heading {
+    align-self: flex-start;
+    max-width: 800px;
+    width: 100%;
+    margin-left: calc((100% - 800px) / 2);
+    font-size: 1.5rem;
     margin-bottom: 1rem;
 }
 
-.character-anime-list li {
-    margin: 0.5rem 0;
+.appearances-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+    max-width: 800px;
+    width: 100%;
+}
+
+.appearance-card {
+    background: #fafafa;
+    border-radius: 6px;
+    text-align: center;
+    padding: 0.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    text-decoration: none;
+    color: inherit;
+}
+
+.appearance-thumb {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.appearance-title {
+    margin: 0.5rem 0 0;
+    font-size: 1rem;
+}
+
+.no-appearances {
+    color: #888;
+    margin-top: 1rem;
+}
+
+/* Loading & error */
+.char-loading, .char-error {
+    font-size: 1.2rem;
+    margin-top: 2rem;
+}
+
+.char-error {
+    color: red;
 }

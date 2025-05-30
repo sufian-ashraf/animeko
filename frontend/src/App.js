@@ -33,10 +33,7 @@ function App() {
             <div className="App">
                 <header className="App-header">
                     <div className="header-content">
-                        <Link to="/" className="logo-link">
-                            <h1>Animeko</h1>
-                        </Link>
-                        <Navigation/> {/* ⬅ This replaces the hardcoded nav */}
+                        <Navigation/>
                     </div>
                 </header>
                 <main>

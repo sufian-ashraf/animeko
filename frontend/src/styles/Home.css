@@ -1,4 +1,5 @@
-/* Home Page Styles */
+/* Home.css */
+
 .home-page {
     max-width: 1200px;
     margin: 0 auto;
@@ -38,6 +39,17 @@
     padding: 40px;
     color: #666;
     font-size: 1.1rem;
+}
+
+/* Link overrides: white, no underline */
+.anime-card-link,
+.anime-card-link .anime-card h3,
+.anime-card-link .anime-card p {
+    color: white;
+}
+.anime-card-link,
+.anime-card-link .anime-card {
+    text-decoration: none;
 }
 
 /* Responsive Design */

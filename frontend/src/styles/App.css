@@ -7,7 +7,7 @@
 
 .App-header {
     background-color: #282c34;
-    padding: 20px;
+    padding: 0.5rem 1rem;
     color: white;
     text-align: center;
     border-radius: 5px;
@@ -93,7 +93,9 @@ button:hover {
 
 .top-nav {
     display: flex;
+    align-items: center; /* vertically centers links */
     gap: 1rem;
+    padding: 0.25rem 0; /* smaller top/bottom padding */
 }
 
 .nav-link {
@@ -102,6 +104,10 @@ button:hover {
     padding: 0.5rem 1rem;
     border-radius: 4px;
     transition: background-color 0.2s;
+}
+
+.top-nav .nav-link {
+    font-size: 0.9rem;
 }
 
 .nav-link:hover {

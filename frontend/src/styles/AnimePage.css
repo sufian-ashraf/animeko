@@ -1,44 +1,119 @@
-.anime-card-link {
-    text-decoration: none;
-    color: inherit;
-}
-.anime-card {
-    border: 1px solid #ccc;
-    padding: 1em;
-    border-radius: 10px;
-    transition: box-shadow 0.2s ease-in-out;
-}
-.anime-card:hover {
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
-}
-
+/* Container */
 .anime-page {
-    padding: 1.5rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.anime-title {
-    font-size: 2rem;
-    font-weight: bold;
+/* Header card */
+.anime-header-card {
+    display: flex;
+    max-width: 800px;
+    width: 100%;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
 }
 
-.anime-synopsis {
-    margin: 1rem 0;
-    font-style: italic;
+.anime-photo {
+    width: 250px;
+    height: 375px;
+    object-fit: cover;
 }
 
 .anime-meta {
-    margin-top: 1rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
 }
 
-.anime-genres span {
-    margin-right: 0.5rem;
+.anime-name {
+    margin: 0;
+    font-size: 2rem;
 }
 
-.anime-link {
+.anime-desc {
+    margin: 1rem 0;
+    line-height: 1.5;
+    color: #555;
+}
+
+.anime-company,
+.anime-genres {
+    margin: 0.5rem 0;
+}
+
+/* Cast grid */
+.cast-heading {
+    align-self: flex-start;
+    max-width: 800px;
+    width: 100%;
+    margin-left: calc((100% - 800px) / 2);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.cast-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    max-width: 800px;
+    width: 100%;
+}
+
+
+
+.cast-card p {
+    margin: 0.5rem 0 0;
+    color: #333;
+}
+
+.link {
+    color: #888;
     text-decoration: none;
-    color: #3b82f6;
 }
 
-.anime-link:hover {
+.link:hover {
     text-decoration: underline;
+}
+
+.no-cast {
+    color: #888;
+}
+
+.anime-loading,
+.anime-error {
+    margin-top: 2rem;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.anime-error {
+    color: red;
+}
+
+.cast-card {
+    background: #fafafa;
+    border-radius: 6px;
+    padding: 0.75rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.character-thumb {
+    width: 60px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.cast-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }

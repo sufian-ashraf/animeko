@@ -1,5 +1,6 @@
 import {Link, useParams} from 'react-router-dom';
 import {useEffect, useState} from 'react';
+import placeholder from '../images/image_not_available.jpg';
 import '../styles/AnimePage.css';
 
 export default function AnimePage() {
@@ -8,59 +9,74 @@ export default function AnimePage() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        async function fetchAnime() {
-            try {
-                const response = await fetch(`/api/anime/${animeId}`);
-                const text = await response.text();
-                console.log("Raw response text:", text);
-                const data = JSON.parse(text);
-                setAnime(data);
-            } catch (err) {
-                console.error("Fetch error:", err);
-                setError("Failed to load anime data");
-            }
-        }
-
-        fetchAnime();
+        fetch(`/api/anime/${animeId}`)
+            .then(r => {
+                if (!r.ok) throw new Error(`Status ${r.status}`);
+                return r.json();
+            })
+            .then(data => setAnime(data))
+            .catch(err => {
+                console.error('Fetch anime error:', err);
+                setError('Failed to load anime');
+            });
     }, [animeId]);
 
-    if (error) return <div style={{color: 'red'}}>{error}</div>;
-    if (!anime) return <div>Loading anime…</div>;
+    if (error) return <div className="anime-error">{error}</div>;
+    if (!anime) return <div className="anime-loading">Loading anime…</div>;
+
+    const {title, synopsis, company, genres = [], cast = []} = anime;
 
     return (<div className="anime-page">
-            <h2 className="anime-title">{anime.title}</h2>
-            <p className="anime-synopsis">{anime.synopsis}</p>
-
+        {/* Header Card */}
+        <div className="anime-header-card">
+            <img
+                src={placeholder}
+                alt={`${title} placeholder`}
+                className="anime-photo"
+            />
             <div className="anime-meta">
-                {anime.company && (<p>
-                        <strong>Company:</strong>{' '}
-                        <Link to={`/company/${anime.company.companyId}`} className="anime-link">
-                            {anime.company.name}
-                        </Link>
-                    </p>)}
-
-                {anime.genres && anime.genres.length > 0 && (<div className="anime-genres">
-                        <strong>Genres:</strong>{' '}
-                        {anime.genres.map((g, i) => (<span key={g.genreId}>
-                                <Link to={`/genre/${g.genreId}`} className="anime-link">{g.name}</Link>
-                                {i < anime.genres.length - 1 && ', '}
-                            </span>))}
-                    </div>)}
+                <h2 className="anime-name">{title}</h2>
+                {synopsis && <p className="anime-desc">{synopsis}</p>}
+                {company && (<p className="anime-company">
+                    <strong>Company:</strong>{' '}
+                    <Link to={`/company/${company.companyId}`} className="link">
+                        {company.name}
+                    </Link>
+                </p>)}
+                {genres.length > 0 && (<p className="anime-genres">
+                    <strong>Genres:</strong>{' '}
+                    {genres.map((g, i) => (<span key={g.genreId}>
+                  <Link to={`/genre/${g.genreId}`} className="link">
+                    {g.name}
+                  </Link>
+                        {i < genres.length - 1 && ', '}
+                </span>))}
+                </p>)}
             </div>
+        </div>
 
-            {anime.cast && anime.cast.length > 0 && (<div className="anime-cast">
-                    <h3>Cast</h3>
-                    <ul>
-                        {anime.cast.map(member => (<li key={member.characterId}>
-                                <Link to={`/character/${member.characterId}`} className="anime-link">
-                                    {member.characterName}
-                                </Link>{' '}
+        {/* Cast Grid */}
+        <h3 className="cast-heading">Cast & Voice Actors</h3>
+        {cast.length > 0 ? (<div className="cast-grid">
+                {cast.map(({characterId, characterName, vaId, vaName}) => (<div key={characterId} className="cast-card">
+                        <img
+                            src={placeholder}
+                            alt={`${characterName} placeholder`}
+                            className="character-thumb"
+                        />
+                        <div className="cast-info">
+                            <Link to={`/character/${characterId}`} className="link">
+                                <strong>{characterName}</strong>
+                            </Link>
+                            <p>
                                 voiced by{' '}
-                                <Link to={`/va/${member.vaId}`} className="anime-link">
-                                    {member.vaName}
+                                <Link to={`/va/${vaId}`} className="link">
+                                    {vaName}
                                 </Link>
-                            </li>))}
-                    </ul>
-                </div>)}
-        </div>);
+                            </p>
+                        </div>
+                    </div>))}
+            </div>) : (<p className="no-cast">No cast information available.</p>)}
+
+    </div>);
 }

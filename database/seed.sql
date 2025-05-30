@@ -965,9 +965,9 @@ VALUES (1, 1, 'To You, 2000 Years From Now', 1440, '2013-04-07', 'https://exampl
 
 -- Insert media
 INSERT INTO media (url, entity_type, entity_id, media_type, caption, uploaded_at)
-VALUES ('https://example.com/images/anime/1/cover.jpg', 'ANIME', 1, 'IMAGE', 'Main promotional image',
+VALUES ('https://example.com/images/anime/1/cover.jpg', 'ANIME', 1, 'IMAGE', 'Main promotional images',
         '2021-01-01 00:00:00'),
-       ('https://example.com/images/anime/1/banner.jpg', 'ANIME', 1, 'IMAGE', 'Banner image', '2021-01-01 00:00:00'),
+       ('https://example.com/images/anime/1/banner.jpg', 'ANIME', 1, 'IMAGE', 'Banner images', '2021-01-01 00:00:00'),
        ('https://example.com/images/anime/2/cover.jpg', 'ANIME', 2, 'IMAGE', 'Cover art', '2020-04-01 00:00:00'),
        ('https://example.com/images/characters/1/profile.jpg', 'CHARACTER', 1, 'IMAGE', 'Character profile',
         '2021-01-05 00:00:00'),
