@@ -51,11 +51,11 @@ export default function FriendProfile() {
 
     if (error) {
         return (<div className="profile-page">
-                <div className="profile-card">
-                    <div className="profile-error">{error}</div>
-                    <button onClick={() => navigate('/profile')}>Back to My Profile</button>
-                </div>
-            </div>);
+            <div className="profile-card">
+                <div className="profile-error">{error}</div>
+                <button onClick={() => navigate('/profile')}>Back to My Profile</button>
+            </div>
+        </div>);
     }
 
     if (!profileData) {
@@ -65,29 +65,29 @@ export default function FriendProfile() {
     const {user, friends, favorites} = profileData;
 
     return (<div className="profile-page">
-            {/* Navigation */}
-            <div className="profile-nav">
-                <button onClick={() => navigate('/profile')} className="back-btn">
-                    ← Back to My Profile
-                </button>
-            </div>
+        {/* Navigation */}
+        <div className="profile-nav">
+            <button onClick={() => navigate('/profile')} className="back-btn">
+                ← Back to My Profile
+            </button>
+        </div>
 
-            {/* Friend's Profile Card */}
-            <div className="profile-card">
-                <h2>{user.display_name || user.username}'s Profile</h2>
-                <div className="profile-info">
-                    <p><strong>Username:</strong> {user.username}</p>
-                    <p><strong>Display Name:</strong> {user.display_name || 'Not set'}</p>
-                    <p><strong>Bio:</strong> {user.profile_bio || 'No bio provided'}</p>
-                    <p><strong>Member Since:</strong> {new Date(user.created_at).toLocaleDateString()}</p>
-                </div>
+        {/* Friend's Profile Card */}
+        <div className="profile-card">
+            <h2>{user.display_name || user.username}'s Profile</h2>
+            <div className="profile-info">
+                <p><strong>Username:</strong> {user.username}</p>
+                <p><strong>Display Name:</strong> {user.display_name || 'Not set'}</p>
+                <p><strong>Bio:</strong> {user.profile_bio || 'No bio provided'}</p>
+                <p><strong>Member Since:</strong> {new Date(user.created_at).toLocaleDateString()}</p>
             </div>
+        </div>
 
-            {/* Friend's Friends List */}
-            <section>
-                <h3>Their Friends ({friends.length})</h3>
-                <div className="scroll-box">
-                    {friends.length ? friends.map(f => (<div key={f.user_id} className="row">
+        {/* Friend's Friends List */}
+        <section>
+            <h3>Their Friends ({friends.length})</h3>
+            <div className="scroll-box">
+                {friends.length ? friends.map(f => (<div key={f.user_id} className="row">
                             <span
                                 className="friend-name clickable"
                                 onClick={() => navigate(`/profile/${f.user_id}`)}
@@ -95,19 +95,19 @@ export default function FriendProfile() {
                             >
                                 {f.display_name} (@{f.username})
                             </span>
-                        </div>)) : <p>No friends to display</p>}
-                </div>
-            </section>
+                </div>)) : <p>No friends to display</p>}
+            </div>
+        </section>
 
-            {/* Friend's Favorites */}
-            <section>
-                <h3>Their Favorites ({favorites.length})</h3>
-                <div className="fav-grid">
-                    {favorites.length ? favorites.map(f => (
-                        <div key={`${f.entityType}-${f.entityId}`} className="fav-card readonly">
-                            <span>{f.entityType.toUpperCase()} #{f.entityId}</span>
-                        </div>)) : <p>No favorites to display</p>}
-                </div>
-            </section>
-        </div>);
+        {/* Friend's Favorites */}
+        <section>
+            <h3>Their Favorites ({favorites.length})</h3>
+            <div className="fav-grid">
+                {favorites.length ? favorites.map(f => (
+                    <div key={`${f.entityType}-${f.entityId}`} className="fav-card readonly">
+                        <span>{f.entityType.toUpperCase()} #{f.entityId}</span>
+                    </div>)) : <p>No favorites to display</p>}
+            </div>
+        </section>
+    </div>);
 }

@@ -33,32 +33,32 @@ export default function CompanyPage() {
     const {name, country, founded, animeList = []} = company;
 
     return (<div className="company-page">
-            {/* Header Card */}
-            <div className="company-header-card">
-                <div className="company-meta">
-                    <h2 className="company-name">{name}</h2>
-                    <p className="company-info">
-                        {country && <>Country: {country}<br/></>}
-                        {founded && <>Founded: {new Date(founded).toLocaleDateString()}<br/></>}
-                    </p>
-                </div>
+        {/* Header Card */}
+        <div className="company-header-card">
+            <div className="company-meta">
+                <h2 className="company-name">{name}</h2>
+                <p className="company-info">
+                    {country && <>Country: {country}<br/></>}
+                    {founded && <>Founded: {new Date(founded).toLocaleDateString()}<br/></>}
+                </p>
             </div>
+        </div>
 
-            {/* Anime Grid */}
-            <h3 className="company-anime-heading">Anime produced by {name}</h3>
-            {animeList.length > 0 ? (<div className="company-anime-grid">
-                    {animeList.map(({animeId, title}) => (<Link
-                            to={`/anime/${animeId}`}
-                            key={animeId}
-                            className="company-anime-card"
-                        >
-                            <img
-                                src={placeholder}
-                                alt={`${title} placeholder`}
-                                className="anime-thumb"
-                            />
-                            <p className="anime-title">{title}</p>
-                        </Link>))}
-                </div>) : (<p className="no-anime">No anime found for this company.</p>)}
-        </div>);
+        {/* Anime Grid */}
+        <h3 className="company-anime-heading">Anime produced by {name}</h3>
+        {animeList.length > 0 ? (<div className="company-anime-grid">
+            {animeList.map(({animeId, title}) => (<Link
+                to={`/anime/${animeId}`}
+                key={animeId}
+                className="company-anime-card"
+            >
+                <img
+                    src={placeholder}
+                    alt={`${title} placeholder`}
+                    className="anime-thumb"
+                />
+                <p className="anime-title">{title}</p>
+            </Link>))}
+        </div>) : (<p className="no-anime">No anime found for this company.</p>)}
+    </div>);
 }

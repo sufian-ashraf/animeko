@@ -111,3 +111,29 @@
 .char-error {
     color: red;
 }
+
+/* favorite button styling */
+.favorite-btn {
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+}
+
+.favorite-btn.favorited {
+    color: gold;
+}
+
+.favorite-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* headers with favorite button */
+.va-info-header,
+.character-meta-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

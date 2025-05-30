@@ -76,91 +76,91 @@ const Register = () => {
     };
 
     return (<div className="auth-container">
-            <div className="auth-card">
-                <h2>Create an Account</h2>
+        <div className="auth-card">
+            <h2>Create an Account</h2>
 
-                {error && <div className="auth-error">{error}</div>}
+            {error && <div className="auth-error">{error}</div>}
 
-                <form onSubmit={handleSubmit} className="auth-form">
-                    <div className="form-group">
-                        <label htmlFor="username">Username*</label>
-                        <input
-                            id="username"
-                            name="username"
-                            type="text"
-                            value={formData.username}
-                            onChange={handleChange}
-                            disabled={isLoading}
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="email">Email*</label>
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            disabled={isLoading}
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="display_name">Display Name</label>
-                        <input
-                            id="display_name"
-                            name="display_name"
-                            type="text"
-                            value={formData.display_name}
-                            onChange={handleChange}
-                            disabled={isLoading}
-                            placeholder="Optional"
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="password">Password*</label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            disabled={isLoading}
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="confirmPassword">Confirm Password*</label>
-                        <input
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            type="password"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            disabled={isLoading}
-                            required
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="auth-button"
+            <form onSubmit={handleSubmit} className="auth-form">
+                <div className="form-group">
+                    <label htmlFor="username">Username*</label>
+                    <input
+                        id="username"
+                        name="username"
+                        type="text"
+                        value={formData.username}
+                        onChange={handleChange}
                         disabled={isLoading}
-                    >
-                        {isLoading ? 'Creating Account...' : 'Register'}
-                    </button>
-                </form>
+                        required
+                    />
+                </div>
 
-                <p className="auth-link">
-                    Already have an account? <Link to="/login">Login</Link>
-                </p>
-            </div>
-        </div>);
+                <div className="form-group">
+                    <label htmlFor="email">Email*</label>
+                    <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        required
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="display_name">Display Name</label>
+                    <input
+                        id="display_name"
+                        name="display_name"
+                        type="text"
+                        value={formData.display_name}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        placeholder="Optional"
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="password">Password*</label>
+                    <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        required
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="confirmPassword">Confirm Password*</label>
+                    <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        required
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    className="auth-button"
+                    disabled={isLoading}
+                >
+                    {isLoading ? 'Creating Account...' : 'Register'}
+                </button>
+            </form>
+
+            <p className="auth-link">
+                Already have an account? <Link to="/login">Login</Link>
+            </p>
+        </div>
+    </div>);
 };
 
 export default Register;

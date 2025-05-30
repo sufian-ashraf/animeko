@@ -33,29 +33,29 @@ export default function GenrePage() {
     const {name, description, animeList = []} = genre;
 
     return (<div className="genre-page">
-            {/* Header Card */}
-            <div className="genre-header-card">
-                <div className="genre-meta">
-                    <h2 className="genre-name">{name}</h2>
-                    {description && <p className="genre-desc">{description}</p>}
-                </div>
+        {/* Header Card */}
+        <div className="genre-header-card">
+            <div className="genre-meta">
+                <h2 className="genre-name">{name}</h2>
+                {description && <p className="genre-desc">{description}</p>}
             </div>
+        </div>
 
-            {/* Anime Grid */}
-            <h3 className="genre-anime-heading">Anime in “{name}”</h3>
-            {animeList.length > 0 ? (<div className="genre-anime-grid">
-                    {animeList.map(({animeId, title}) => (<Link
-                            to={`/anime/${animeId}`}
-                            key={animeId}
-                            className="genre-anime-card"
-                        >
-                            <img
-                                src={placeholder}
-                                alt={`${title} placeholder`}
-                                className="anime-thumb"
-                            />
-                            <p className="anime-title">{title}</p>
-                        </Link>))}
-                </div>) : (<p className="no-anime">No anime found for this genre.</p>)}
-        </div>);
+        {/* Anime Grid */}
+        <h3 className="genre-anime-heading">Anime in “{name}”</h3>
+        {animeList.length > 0 ? (<div className="genre-anime-grid">
+            {animeList.map(({animeId, title}) => (<Link
+                to={`/anime/${animeId}`}
+                key={animeId}
+                className="genre-anime-card"
+            >
+                <img
+                    src={placeholder}
+                    alt={`${title} placeholder`}
+                    className="anime-thumb"
+                />
+                <p className="anime-title">{title}</p>
+            </Link>))}
+        </div>) : (<p className="no-anime">No anime found for this genre.</p>)}
+    </div>);
 }

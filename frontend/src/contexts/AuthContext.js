@@ -1,5 +1,5 @@
 // frontend/src/contexts/AuthContext.js
-import React, {createContext, useContext, useEffect, useState} from 'react';
+import React, {createContext, useCallback, useContext, useEffect, useState} from 'react';
 
 export const AuthContext = createContext(null);
 
@@ -9,24 +9,13 @@ export const AuthProvider = ({children}) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        if (token) {
-            fetchUserProfile();
-        } else {
-            setLoading(false);
-        }
-    }, [token]);
+    const logout = () => {
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem('token');
+    };
 
-    // Store token in localStorage when it changes
-    useEffect(() => {
-        if (token) {
-            localStorage.setItem('token', token);
-        } else {
-            localStorage.removeItem('token');
-        }
-    }, [token]);
-
-    const fetchUserProfile = async () => {
+    const fetchUserProfile = useCallback(async () => {
         try {
             setError(null);
             const response = await fetch('http://localhost:5000/api/auth/profile', {
@@ -37,7 +26,6 @@ export const AuthProvider = ({children}) => {
 
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
-                    // Token invalid or expired
                     logout();
                     throw new Error('Session expired. Please login again.');
                 }
@@ -52,7 +40,24 @@ export const AuthProvider = ({children}) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]); // ✅ Proper memoization
+
+    useEffect(() => {
+        if (token) {
+            fetchUserProfile();
+        } else {
+            setLoading(false);
+        }
+    }, [token, fetchUserProfile]); // ✅ No more warning
+
+    // Store token in localStorage when it changes
+    useEffect(() => {
+        if (token) {
+            localStorage.setItem('token', token);
+        } else {
+            localStorage.removeItem('token');
+        }
+    }, [token]);
 
     const login = async (username, password) => {
         try {
@@ -135,12 +140,6 @@ export const AuthProvider = ({children}) => {
         }
     };
 
-    const logout = () => {
-        setToken(null);
-        setUser(null);
-        localStorage.removeItem('token');
-    };
-
     return (<AuthContext.Provider
             value={{
                 user, token, loading, error, login, register, logout, updateProfile
@@ -157,4 +156,5 @@ export const useAuth = () => {
     }
     return context;
 };
+
 export default AuthContext;

@@ -1,4 +1,27 @@
 /* frontend/src/styles/Profile.css */
+
+:root {
+    --primary-color: #2196f3;
+    --primary-hover: #1976d2;
+    --secondary-bg: #f5f5f5;
+    --secondary-hover: #e0e0e0;
+    --error-bg: #ffebee;
+    --error-color: #c62828;
+    --success-bg: #e8f5e9;
+    --success-color: #2e7d32;
+    --border-color: #ddd;
+    --light-border: #eee;
+    --row-bg: #f8f9fa;
+    --row-hover-bg: #e9ecef;
+}
+
+/* Layout */
+.profile-page {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
 .profile-container {
     display: flex;
     justify-content: center;
@@ -15,43 +38,33 @@
     margin-bottom: 2rem;
 }
 
+.logout-btn {
+    float: right;
+}
+
+/* Headings & Text */
 .profile-card h2 {
     color: #333;
     margin-bottom: 25px;
     text-align: center;
 }
 
-.profile-error {
-    background-color: #ffebee;
-    color: #c62828;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-}
-
-.profile-success {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-}
-
 .profile-info .info-row {
     margin-bottom: 15px;
 }
 
-.profile-info .info-row strong {
+.profile-info strong {
     display: block;
     color: #555;
     margin-bottom: 5px;
 }
 
-.profile-info .info-row p {
+.profile-info p {
     margin: 0;
     color: #333;
 }
 
+/* Forms & Buttons */
 .profile-form .form-group {
     margin-bottom: 20px;
 }
@@ -67,7 +80,7 @@
 .profile-form textarea {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 16px;
 }
@@ -80,7 +93,7 @@
 .profile-form input:focus,
 .profile-form textarea:focus {
     outline: none;
-    border-color: #2196f3;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
@@ -92,33 +105,32 @@
 
 .primary-button,
 .secondary-button {
+    flex: 1;
     padding: 10px 20px;
     border-radius: 4px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background-color 0.2s;
     border: none;
 }
 
 .primary-button {
-    background-color: #2196f3;
-    color: white;
-    flex: 1;
+    background-color: var(--primary-color);
+    color: #fff;
 }
 
-.primary-button:hover {
-    background-color: #1976d2;
+.primary-button:hover:not(:disabled) {
+    background-color: var(--primary-hover);
 }
 
 .secondary-button {
-    background-color: #f5f5f5;
+    background-color: var(--secondary-bg);
     color: #333;
-    border: 1px solid #ddd;
-    flex: 1;
+    border: 1px solid var(--border-color);
 }
 
-.secondary-button:hover {
-    background-color: #e0e0e0;
+.secondary-button:hover:not(:disabled) {
+    background-color: var(--secondary-hover);
 }
 
 .primary-button:disabled,
@@ -127,88 +139,182 @@
     cursor: not-allowed;
 }
 
-.profile-page {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+/* Alerts */
+.profile-error,
+.profile-success {
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
 }
 
-.logout-btn {
-    float: right;
+.profile-error {
+    background-color: var(--error-bg);
+    color: var(--error-color);
 }
 
+.profile-success {
+    background-color: var(--success-bg);
+    color: var(--success-color);
+}
+
+/* Scrollable Boxes */
 .scroll-box {
     max-height: 180px;
     overflow-y: auto;
+    overflow-x: auto;
     border: 1px solid #ccc;
     border-radius: 4px;
     padding: 0.5rem;
+    white-space: nowrap;
 }
 
-.row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.25rem 0;
-    border-bottom: 1px solid #eee;
-}
-
-.row:last-child {
-    border-bottom: none;
-}
-
+/* Card & Grid for Favorites */
 .fav-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 1rem;
+    gap: 0.75rem;
+    padding: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
 }
 
 .fav-card {
-    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     padding: 0.5rem;
-    border-radius: 4px;
+    background-color: var(--row-bg);
+    border: 1px solid var(--light-border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
     text-align: center;
+}
+
+.fav-card.readonly button {
+    display: none;
 }
 
 .fav-card button {
     margin-top: 0.5rem;
 }
 
-
-.row button {
-    margin-left: 0.5rem;
+.fav-image {
+    width: 60px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
 }
 
+.fav-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #222;
+    line-height: 1.2;
+    max-height: 2.4em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-/* Add these styles to your Profile.css file */
+.fav-card:hover .hover-preview {
+    display: block;
+}
 
-/* Clickable friend names */
-.friend-name.clickable {
+.hover-preview {
+    display: none;
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translate(-50%, -100%);
+    padding: 0.5rem;
+    border: 1px solid #888;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.preview-img,
+.preview-name {
+    display: block;
+    text-align: center;
+}
+
+.preview-img {
+    width: 120px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 0.25rem;
+}
+
+.preview-name {
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+/* List Rows (Friends, Generic Rows) */
+.row,
+.friend-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    margin: 4px 0;
+    background-color: var(--row-bg);
+    border-radius: 4px;
+    border: 1px solid var(--light-border);
+    transition: background-color 0.2s;
+}
+
+.row:hover,
+.friend-row:hover {
+    background-color: var(--row-hover-bg);
+}
+
+.row:last-child {
+    margin-bottom: 0;
+}
+
+/* Friends List & Avatars */
+.friends-list {
+    padding: 10px;
+}
+
+.friend-avatar,
+.user-profile-pic,
+.friend-profile-pic {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    margin-bottom: 10px;
+}
+
+.friend-name {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.friend-name.clickable,
+.view-profile-link {
     cursor: pointer;
-    color: #007bff;
+    color: var(--primary-color);
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: color 0.2s;
 }
 
-.friend-name.clickable:hover {
-    color: #0056b3;
+.friend-name.clickable:hover,
+.view-profile-link:hover {
+    color: var(--primary-hover);
     text-decoration: underline;
 }
 
-/* View profile link in search results */
-.view-profile-link {
-    cursor: pointer;
-    color: #007bff;
-    margin-left: 8px;
-    font-size: 14px;
-    transition: color 0.2s ease;
-}
-
-.view-profile-link:hover {
-    color: #0056b3;
-}
-
-/* Status badges for friend relationships */
+/* Status Badges & Small Buttons */
 .status-badge {
     padding: 2px 8px;
     border-radius: 12px;
@@ -229,7 +335,6 @@
     border: 1px solid #ffeaa7;
 }
 
-/* Small buttons for accept/reject */
 .btn-small {
     padding: 4px 8px;
     margin: 0 2px;
@@ -237,70 +342,70 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s;
 }
 
 .btn-small.accept {
     background-color: #28a745;
-    color: white;
+    color: #fff;
+}
+
+.btn-small.reject {
+    background-color: #dc3545;
+    color: #fff;
 }
 
 .btn-small.accept:hover {
     background-color: #218838;
 }
 
-.btn-small.reject {
-    background-color: #dc3545;
-    color: white;
-}
-
 .btn-small.reject:hover {
     background-color: #c82333;
 }
 
-/* Navigation for friend profiles */
-.profile-nav {
-    margin-bottom: 20px;
+.btn-small.unfriend {
+    background: #ff4444;
+    color: #fff;
+    margin-left: auto;
+    padding: 5px 10px;
 }
 
-.back-btn {
+.btn-small.unfriend:hover {
+    background: #c0392b;
+}
+
+/* Favorites Section Wrapper */
+.favorites-section {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.favorite-type-container {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--light-border);
+}
+
+.favorite-type-container:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+/* Navigation Back Button */
+.profile-nav .back-btn {
     background-color: #6c757d;
-    color: white;
+    color: #fff;
     border: none;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s;
 }
 
-.back-btn:hover {
+.profile-nav .back-btn:hover {
     background-color: #5a6268;
 }
-
-/* Read-only favorites */
-.fav-card.readonly {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-}
-
-.fav-card.readonly button {
-    display: none;
-}
-
-/* Enhanced row styling */
-.row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    margin: 4px 0;
-    background-color: #f8f9fa;
-    border-radius: 4px;
-    border: 1px solid #dee2e6;
-}
-
-.row:hover {
-    background-color: #e9ecef;
-}
-

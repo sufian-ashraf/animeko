@@ -14,21 +14,21 @@ function Navigation() {
     };
 
     return (<nav className="top-nav">
-            <Link to="/" className="nav-link">Home</Link>
-            {user ? (<>
-                    <Link to="/profile" className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}>
-                        Profile
-                    </Link>
-                    <button onClick={handleLogout} className="nav-link">Logout</button>
-                </>) : (<>
-                    <Link to="/login" className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`}>
-                        Login
-                    </Link>
-                    <Link to="/register" className={`nav-link ${location.pathname === '/register' ? 'active' : ''}`}>
-                        Register
-                    </Link>
-                </>)}
-        </nav>);
+        <Link to="/" className="nav-link">Home</Link>
+        {user ? (<>
+            <Link to="/profile" className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}>
+                Profile
+            </Link>
+            <button onClick={handleLogout} className="nav-link">Logout</button>
+        </>) : (<>
+            <Link to="/login" className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`}>
+                Login
+            </Link>
+            <Link to="/register" className={`nav-link ${location.pathname === '/register' ? 'active' : ''}`}>
+                Register
+            </Link>
+        </>)}
+    </nav>);
 }
 
 export default Navigation;

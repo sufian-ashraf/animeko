@@ -5,7 +5,6 @@ import authenticate from '../middlewares/authenticate.js';
 const router = express.Router();
 
 
-
 /**
  * Toggle favorite
  * POST /api/favorites

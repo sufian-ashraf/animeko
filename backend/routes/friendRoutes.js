@@ -229,4 +229,32 @@ router.get('/users/debug', authenticate, async (req, res) => {
     }
 });
 
+/**
+ * Unfriend someone
+ * DELETE /api/friends/:friendId
+ */
+router.delete('/friends/:friendId', authenticate, async (req, res) => {
+    const me = req.user.user_id;
+    const friendId = parseInt(req.params.friendId, 10);
+
+    try {
+        const result = await pool.query(`DELETE
+                                         FROM friendship
+                                         WHERE (requester_id = $1 AND addressee_id = $2)
+                                            OR (requester_id = $2 AND addressee_id = $1)`, [me, friendId]);
+
+        if (result.rowCount === 0) {
+            return res
+                .status(404)
+                .json({message: 'Friendship not found'});
+        }
+
+        return res.json({message: 'Unfriended successfully'});
+    } catch (err) {
+        console.error('Unfriend error:', err);
+        return res.status(500).json({message: 'Server error'});
+    }
+});
+
+
 export default router;

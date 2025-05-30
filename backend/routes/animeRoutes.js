@@ -77,7 +77,7 @@ router.get('/animes', async (req, res, next) => {
  * Returns full anime info + its cast (character + VA)
  */
 router.get('/anime/:animeId', async (req, res) => {
-    const { animeId } = req.params;
+    const {animeId} = req.params;
 
     try {
         // 1) Get base anime info
@@ -90,7 +90,7 @@ router.get('/anime/:animeId', async (req, res) => {
             WHERE anime_id = $1`, [animeId]);
 
         if (animeResult.rows.length === 0) {
-            return res.status(404).json({ message: 'Anime not found' });
+            return res.status(404).json({message: 'Anime not found'});
         }
 
         const anime = animeResult.rows[0];
@@ -123,8 +123,8 @@ router.get('/anime/:animeId', async (req, res) => {
                    c.voice_actor_id AS "vaId",
                    va.name          AS "vaName"
             FROM anime_character ac
-            JOIN characters c ON c.character_id = ac.character_id
-            LEFT JOIN voice_actor va ON va.voice_actor_id = c.voice_actor_id
+                     JOIN characters c ON c.character_id = ac.character_id
+                     LEFT JOIN voice_actor va ON va.voice_actor_id = c.voice_actor_id
             WHERE ac.anime_id = $1`, [animeId]);
 
         anime.cast = castResult.rows;
@@ -132,10 +132,9 @@ router.get('/anime/:animeId', async (req, res) => {
         return res.json(anime);
     } catch (err) {
         console.error('Error fetching anime detail:', err);
-        return res.status(500).json({ message: 'Server error' });
+        return res.status(500).json({message: 'Server error'});
     }
 });
-
 
 
 /**

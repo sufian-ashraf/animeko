@@ -38,50 +38,50 @@ const Login = () => {
     };
 
     return (<div className="auth-container">
-            <div className="auth-card">
-                <h2>Login to Animeko</h2>
+        <div className="auth-card">
+            <h2>Login to Animeko</h2>
 
-                {error && <div className="auth-error">{error}</div>}
+            {error && <div className="auth-error">{error}</div>}
 
-                <form onSubmit={handleSubmit} className="auth-form">
-                    <div className="form-group">
-                        <label htmlFor="username">Username</label>
-                        <input
-                            id="username"
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            disabled={isLoading}
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            disabled={isLoading}
-                            required
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="auth-button"
+            <form onSubmit={handleSubmit} className="auth-form">
+                <div className="form-group">
+                    <label htmlFor="username">Username</label>
+                    <input
+                        id="username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                         disabled={isLoading}
-                    >
-                        {isLoading ? 'Logging in...' : 'Login'}
-                    </button>
-                </form>
+                        required
+                    />
+                </div>
 
-                <p className="auth-link">
-                    Don't have an account? <Link to="/register">Sign up</Link>
-                </p>
-            </div>
-        </div>);
+                <div className="form-group">
+                    <label htmlFor="password">Password</label>
+                    <input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={isLoading}
+                        required
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    className="auth-button"
+                    disabled={isLoading}
+                >
+                    {isLoading ? 'Logging in...' : 'Login'}
+                </button>
+            </form>
+
+            <p className="auth-link">
+                Don't have an account? <Link to="/register">Sign up</Link>
+            </p>
+        </div>
+    </div>);
 };
 
 export default Login;
