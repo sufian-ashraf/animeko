@@ -1,5 +1,5 @@
 import React from 'react';
-import {BrowserRouter as Router, Link, Route, Routes} from 'react-router-dom';
+import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import {AuthProvider} from './contexts/AuthContext';
 import {ProtectedRoute} from './components/ProtectedRoute';
 import Navigation from './components/HomeNavigation';
@@ -13,6 +13,7 @@ import CharacterPage from './pages/CharacterPage';
 import VAPage from './pages/VAPage';
 import GenrePage from './pages/GenrePage';
 import CompanyPage from './pages/CompanyPage';
+import FriendProfile from './pages/FriendProfile';
 // import Friends from './pages/Friends';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
@@ -47,6 +48,7 @@ function App() {
                         <Route path="/va/:vaId" element={<VAPage/>}/>
                         <Route path="/genre/:genreId" element={<GenrePage/>}/>
                         <Route path="/company/:companyId" element={<CompanyPage/>}/>
+                        <Route path="/profile/:userId" element={<FriendProfile/>}/>
 
                         {/* Protected Routes */}
                         <Route

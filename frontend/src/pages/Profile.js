@@ -1,195 +1,291 @@
-// frontend/src/pages/Profile.js
+// src/pages/Profile.js
 import React, {useEffect, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
 import '../styles/Profile.css';
 
-const Profile = () => {
-    console.log('Profile component rendering...'); // Debug log
+export default function Profile() {
+    const {user, token, updateProfile, logout} = useAuth();
+    const navigate = useNavigate();
 
-    const {user, updateProfile, logout, token} = useAuth();
-    console.log('Auth context values:', {user, token: token ? 'exists' : 'missing'}); // Debug log
-
+    // Profile edit state
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         display_name: user?.display_name || '', profile_bio: user?.profile_bio || ''
     });
-    const [error, setError] = useState('');
-    const [message, setMessage] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [loadingEdit, setLoadingEdit] = useState(false);
+    const [editError, setEditError] = useState('');
+    const [editMessage, setEditMessage] = useState('');
 
-    // Add this useEffect to see if component is mounting
+    // Social & favorites state
+    const [incoming, setIncoming] = useState([]);
+    const [friends, setFriends] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [favorites, setFavorites] = useState([]);
+
+    // Fetch social & favs on mount
     useEffect(() => {
-        console.log('Profile component mounted!');
-        console.log('Token from useAuth:', token);
-        console.log('User from useAuth:', user);
+        if (!token) return;
+        const headers = {Authorization: `Bearer ${token}`};
 
-        // Force a profile fetch request
-        if (token) {
-            console.log('Token exists, making profile request...');
+        fetch('/api/friends/requests', {headers})
+            .then(r => r.json()).then(setIncoming);
 
-            fetch('http://localhost:5000/api/auth/profile', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-                .then(response => {
-                    console.log('Profile response received:', response.status);
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Profile data:', data);
-                })
-                .catch(error => {
-                    console.error('Profile fetch error:', error);
-                });
-        } else {
-            console.log('No token found, cannot fetch profile');
-        }
-    }, []); // Empty dependency array - runs once on mount
+        fetch('/api/friends', {headers})
+            .then(r => r.json()).then(setFriends);
 
-    // Also add this to track when token changes
-    useEffect(() => {
-        console.log('Token changed in Profile component:', token);
+        fetch('/api/favorites', {headers})
+            .then(r => r.json()).then(setFavorites);
     }, [token]);
 
-    const handleChange = (e) => {
+    // Search users
+    useEffect(() => {
+        if (searchQuery.length < 2) return setSearchResults([]);
+
+        fetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}`, {
+            headers: {Authorization: `Bearer ${token}`}
+        })
+            .then(r => {
+                if (!r.ok) throw new Error(`Status ${r.status}`);
+                return r.json();
+            })
+            .then(data => {
+                setSearchResults(data);
+            })
+            .catch(err => {
+                console.error('Frontend: Search error:', err);
+            });
+    }, [searchQuery, token]);
+
+    // Profile handlers
+    const handleChange = e => {
         const {name, value} = e.target;
-        setFormData(prev => ({...prev, [name]: value}));
+        setFormData(f => ({...f, [name]: value}));
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async e => {
         e.preventDefault();
-        setError('');
-        setMessage('');
-
+        setEditError('');
+        setEditMessage('');
         try {
-            setIsLoading(true);
-            const result = await updateProfile(formData);
-            setMessage('Profile updated successfully');
+            setLoadingEdit(true);
+            await updateProfile(formData);
+            setEditMessage('Profile updated successfully');
             setIsEditing(false);
         } catch (err) {
-            setError(err.message || 'Failed to update profile');
+            setEditError(err.message || 'Failed to update profile');
         } finally {
-            setIsLoading(false);
+            setLoadingEdit(false);
         }
     };
 
     const handleCancel = () => {
         setFormData({
-            display_name: user?.display_name || '', profile_bio: user?.profile_bio || ''
+            display_name: user.display_name || '', profile_bio: user.profile_bio || ''
         });
+        setEditError('');
+        setEditMessage('');
         setIsEditing(false);
-        setError('');
-        setMessage('');
     };
 
-    console.log('About to render Profile JSX'); // Debug log
+    // Social handlers
+    const respondRequest = (requesterId, action) => {
+        fetch(`/api/friends/requests/${requesterId}/${action}`, {
+            method: 'POST', headers: {Authorization: `Bearer ${token}`}
+        }).then(() => {
+            setIncoming(incoming.filter(r => r.user_id !== requesterId));
+            if (action === 'accept') {
+                fetch('/api/friends', {headers: {Authorization: `Bearer ${token}`}})
+                    .then(r => r.json()).then(setFriends);
+            }
+        });
+    };
 
-    if (!user && !token) {
-        console.log('No user and no token - showing loading'); // Debug log
-        return <div className="loading">Please log in to view profile...</div>;
+    const sendFriendRequest = async (toUserId) => {
+        try {
+            const response = await fetch('/api/friends/requests', {
+                method: 'POST', headers: {
+                    'Content-Type': 'application/json', Authorization: `Bearer ${token}`
+                }, body: JSON.stringify({addresseeId: toUserId})
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.message || 'Failed to send friend request');
+                return;
+            }
+
+            // Clear search and refresh results
+            setSearchQuery('');
+            alert('Friend request sent!');
+
+        } catch (err) {
+            console.error('Error sending friend request:', err);
+            alert('Failed to send friend request');
+        }
+    };
+
+    const toggleFavorite = (entityType, entityId) => {
+        fetch('/api/favorites', {
+            method: 'POST', headers: {
+                'Content-Type': 'application/json', Authorization: `Bearer ${token}`
+            }, body: JSON.stringify({entityType, entityId})
+        }).then(() => {
+            fetch('/api/favorites', {headers: {Authorization: `Bearer ${token}`}})
+                .then(r => r.json()).then(setFavorites);
+        });
+    };
+
+    const getButtonForUser = (searchUser) => {
+        switch (searchUser.friendship_status) {
+            case 'friend':
+                return <span className="status-badge friend">Friends</span>;
+            case 'request_sent':
+                return <span className="status-badge pending">Request Sent</span>;
+            case 'request_received':
+                return (<div>
+                        <button
+                            className="btn-small accept"
+                            onClick={() => respondRequest(searchUser.user_id, 'accept')}
+                        >
+                            Accept
+                        </button>
+                        <button
+                            className="btn-small reject"
+                            onClick={() => respondRequest(searchUser.user_id, 'reject')}
+                        >
+                            Reject
+                        </button>
+                    </div>);
+            default:
+                return (<button onClick={() => sendFriendRequest(searchUser.user_id)}>
+                        Add Friend
+                    </button>);
+        }
+    };
+
+    if (!user) {
+        return <div className="loading">Please log in to view your profile...</div>;
     }
 
-    return (<div className="profile-container">
+    return (<div className="profile-page">
+            {/* Profile Card */}
             <div className="profile-card">
                 <h2>My Profile</h2>
-
-                {/*/!* Add debug info *!/*/}
-                {/*<div style={{background: '#f0f0f0', padding: '10px', margin: '10px 0', fontSize: '12px'}}>*/}
-                {/*    <strong>Debug Info:</strong><br/>*/}
-                {/*    Token: {token ? 'Present' : 'Missing'}<br/>*/}
-                {/*    User: {user ? 'Loaded' : 'Not loaded'}<br/>*/}
-                {/*    Component mounted: Yes*/}
-                {/*</div>*/}
-
-                {error && <div className="profile-error">{error}</div>}
-                {message && <div className="profile-success">{message}</div>}
+                {editError && <div className="profile-error">{editError}</div>}
+                {editMessage && <div className="profile-success">{editMessage}</div>}
 
                 {isEditing ? (<form onSubmit={handleSubmit} className="profile-form">
                         <div className="form-group">
-                            <label htmlFor="display_name">Display Name</label>
+                            <label>Display Name</label>
                             <input
-                                id="display_name"
                                 name="display_name"
-                                type="text"
                                 value={formData.display_name}
                                 onChange={handleChange}
-                                disabled={isLoading}
+                                disabled={loadingEdit}
                             />
                         </div>
-
                         <div className="form-group">
-                            <label htmlFor="profile_bio">Bio</label>
+                            <label>Bio</label>
                             <textarea
-                                id="profile_bio"
                                 name="profile_bio"
                                 value={formData.profile_bio}
                                 onChange={handleChange}
-                                disabled={isLoading}
-                                rows="4"
+                                rows="3"
+                                disabled={loadingEdit}
                             />
                         </div>
-
                         <div className="profile-buttons">
-                            <button
-                                type="submit"
-                                className="primary-button"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? 'Saving...' : 'Save Changes'}
+                            <button type="submit" disabled={loadingEdit}>
+                                {loadingEdit ? 'Saving…' : 'Save Changes'}
                             </button>
-                            <button
-                                type="button"
-                                className="secondary-button"
-                                onClick={handleCancel}
-                                disabled={isLoading}
-                            >
+                            <button type="button" onClick={handleCancel} disabled={loadingEdit}>
                                 Cancel
                             </button>
                         </div>
                     </form>) : (<div className="profile-info">
-                        <div className="info-row">
-                            <strong>Username:</strong>
-                            <span>{user?.username || 'Loading...'}</span>
-                        </div>
-
-                        <div className="info-row">
-                            <strong>Email:</strong>
-                            <span>{user?.email || 'Loading...'}</span>
-                        </div>
-
-                        <div className="info-row">
-                            <strong>Display Name:</strong>
-                            <span>{user?.display_name || 'Not set'}</span>
-                        </div>
-
-                        <div className="info-row">
-                            <strong>Bio:</strong>
-                            <p>{user?.profile_bio || 'No bio provided'}</p>
-                        </div>
-
-                        <div className="info-row">
-                            <strong>Member Since:</strong>
-                            <span>{user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Loading...'}</span>
-                        </div>
-
+                        <p><strong>Username:</strong> {user.username}</p>
+                        <p><strong>Email:</strong> {user.email}</p>
+                        <p><strong>Display Name:</strong> {user.display_name || 'Not set'}</p>
+                        <p><strong>Bio:</strong> {user.profile_bio || 'No bio provided'}</p>
+                        <p><strong>Member Since:</strong> {new Date(user.created_at).toLocaleDateString()}</p>
                         <div className="profile-buttons">
-                            <button
-                                className="primary-button"
-                                onClick={() => setIsEditing(true)}
-                            >
-                                Edit Profile
-                            </button>
-                            <button
-                                className="secondary-button"
-                                onClick={logout}
-                            >
-                                Logout
-                            </button>
+                            <button onClick={() => setIsEditing(true)}>Edit Profile</button>
+                            <button onClick={logout}>Logout</button>
                         </div>
                     </div>)}
             </div>
-        </div>);
-};
 
-export default Profile;
+            {/* Incoming Friend Requests */}
+            <section>
+                <h3>Incoming Friend Requests</h3>
+                <div className="scroll-box">
+                    {incoming.length ? incoming.map(r => (<div key={r.user_id} className="row">
+                            <span>{r.display_name} (@{r.username})</span>
+                            <div>
+                                <button onClick={() => respondRequest(r.user_id, 'accept')}>Accept</button>
+                                <button onClick={() => respondRequest(r.user_id, 'reject')}>Reject</button>
+                            </div>
+                        </div>)) : <p>No pending requests</p>}
+                </div>
+            </section>
+
+            {/* Friends List */}
+            <section>
+                <h3>Your Friends</h3>
+                <div className="scroll-box">
+                    {friends.length ? friends.map(f => (<div key={f.user_id} className="row">
+                            <span
+                                className="friend-name clickable"
+                                onClick={() => navigate(`/profile/${f.user_id}`)}
+                                title="Click to view profile"
+                            >
+                                {f.display_name} (@{f.username})
+                            </span>
+                        </div>)) : <p>You have no friends yet</p>}
+                </div>
+            </section>
+
+            {/* Search Users */}
+            <section>
+                <h3>Find & Add Friends</h3>
+                <input
+                    type="text"
+                    placeholder="Search users..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                />
+                <div className="scroll-box">
+                    {searchResults.length ? searchResults.map(u => (<div key={u.user_id} className="row">
+                            <span>
+                                {u.display_name} (@{u.username})
+                                {u.friendship_status === 'friend' && (<span
+                                        className="view-profile-link"
+                                        onClick={() => navigate(`/profile/${u.user_id}`)}
+                                        title="View Profile"
+                                    >
+                                        {' '}👁️
+                                    </span>)}
+                            </span>
+                            {getButtonForUser(u)}
+                        </div>)) : <p>Type at least 2 characters to search</p>}
+                </div>
+            </section>
+
+            {/* Favorites */}
+            <section>
+                <h3>Your Favorites</h3>
+                <div className="fav-grid">
+                    {favorites.length ? favorites.map(f => (
+                        <div key={`${f.entityType}-${f.entityId}`} className="fav-card">
+                            <span>{f.entityType.toUpperCase()} #{f.entityId}</span>
+                            <button onClick={() => toggleFavorite(f.entityType, f.entityId)}>
+                                Unfavorite
+                            </button>
+                        </div>)) : <p>No favorites yet</p>}
+                </div>
+            </section>
+        </div>);
+}

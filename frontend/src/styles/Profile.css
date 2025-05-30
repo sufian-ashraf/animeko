@@ -12,6 +12,7 @@
     padding: 30px;
     width: 100%;
     max-width: 600px;
+    margin-bottom: 2rem;
 }
 
 .profile-card h2 {
@@ -125,3 +126,181 @@
     opacity: 0.7;
     cursor: not-allowed;
 }
+
+.profile-page {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.logout-btn {
+    float: right;
+}
+
+.scroll-box {
+    max-height: 180px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.row:last-child {
+    border-bottom: none;
+}
+
+.fav-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.fav-card {
+    background: #fafafa;
+    padding: 0.5rem;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.fav-card button {
+    margin-top: 0.5rem;
+}
+
+
+.row button {
+    margin-left: 0.5rem;
+}
+
+
+/* Add these styles to your Profile.css file */
+
+/* Clickable friend names */
+.friend-name.clickable {
+    cursor: pointer;
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.friend-name.clickable:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* View profile link in search results */
+.view-profile-link {
+    cursor: pointer;
+    color: #007bff;
+    margin-left: 8px;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.view-profile-link:hover {
+    color: #0056b3;
+}
+
+/* Status badges for friend relationships */
+.status-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-badge.friend {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-badge.pending {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* Small buttons for accept/reject */
+.btn-small {
+    padding: 4px 8px;
+    margin: 0 2px;
+    font-size: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-small.accept {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-small.accept:hover {
+    background-color: #218838;
+}
+
+.btn-small.reject {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-small.reject:hover {
+    background-color: #c82333;
+}
+
+/* Navigation for friend profiles */
+.profile-nav {
+    margin-bottom: 20px;
+}
+
+.back-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.back-btn:hover {
+    background-color: #5a6268;
+}
+
+/* Read-only favorites */
+.fav-card.readonly {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+.fav-card.readonly button {
+    display: none;
+}
+
+/* Enhanced row styling */
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 4px 0;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.row:hover {
+    background-color: #e9ecef;
+}
+

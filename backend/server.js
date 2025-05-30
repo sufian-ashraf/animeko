@@ -12,6 +12,8 @@ import authRoutes from './routes/authRoutes.js';
 import animeRoutes from './routes/animeRoutes.js';
 import genreRoutes from './routes/genreRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';
+import friendRoutes from './routes/friendRoutes.js';
+import favoriteRoutes from './routes/favoriteRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,14 +22,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+// Enable CORS for requests from your frontend
+app.use(cors({
+    origin: 'http://localhost:3000', // or whatever your frontend runs on
+    credentials: true // if you're using cookies or auth headers
+}));
 app.use(express.json());
 
-// routing APIs
 app.use('/api/auth', authRoutes);
 app.use('/api', animeRoutes);
 app.use('/api', genreRoutes);
 app.use('/api', companyRoutes);
+app.use('/api', friendRoutes);
+app.use('/api', favoriteRoutes);
+
 // Test database connection
 pool.connect()
     .then(() => console.log('Connected to PostgreSQL database'))
