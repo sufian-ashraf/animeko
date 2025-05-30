@@ -2,17 +2,9 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { Pool } from 'pg';
+import pool from './db.js';
 
 const router = express.Router();
-
-const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: String(process.env.DB_PASSWORD),
-    port: process.env.DB_PORT,
-});
 
 // Register new user
 router.post('/register', async (req, res) => {

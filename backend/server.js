@@ -1,45 +1,21 @@
 import express from 'express';
 import cors from 'cors';
-import pg from 'pg';
-import path, {dirname} from 'path';
-import dotenv from 'dotenv';
-import authRoutes from './authRoutes.js';
+import {dirname} from 'path';
 import {fileURLToPath} from 'url';
+import authRoutes from './authRoutes.js';
+import pool from './db.js'; // ✅ import shared pool
+import authenticate from './middlewares/authenticate.js';
 
-const {Pool} = pg;
-
-// Emulate __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables from .env file
-dotenv.config({path: path.resolve(__dirname, '.env')});
-
-// Log the loaded environment variables (without sensitive data)
-console.log('Environment loaded:', {
-    DB_USER: process.env.DB_USER,
-    DB_HOST: process.env.DB_HOST,
-    DB_NAME: process.env.DB_NAME,
-    DB_PORT: process.env.DB_PORT,
-    NODE_ENV: process.env.NODE_ENV
-});
-
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
-
-// Database connection
-const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: String(process.env.DB_PASSWORD),
-    port: process.env.DB_PORT,
-});
 
 // Test database connection
 pool.connect()
@@ -107,7 +83,7 @@ app.get('/api/anime', async (req, res, next) => {
         SELECT 1 FROM anime_genre ag
         JOIN genre g ON ag.genre_id = g.genre_id
         WHERE ag.anime_id = anime.anime_id
-        AND g.name ILIKE $${paramCount++}
+        AND g.name LIKE $${paramCount++}
       )`;
         }
 
@@ -134,6 +110,23 @@ app.get('/api/anime', async (req, res, next) => {
         next(err);
     }
 });
+
+app.get('/api/auth/profile', authenticate, (req, res) => {
+    if (!req.user) {
+        return res.status(401).json({message: "Unauthorized"});
+    }
+
+    // ✅ Send full profile object
+    return res.status(200).json({
+        username: req.user.username,
+        email: req.user.email,
+        display_name: req.user.display_name,
+        profile_bio: req.user.profile_bio,
+        created_at: req.user.created_at
+    });
+});
+
+
 // Register error handler
 app.use(errorHandler);
 
