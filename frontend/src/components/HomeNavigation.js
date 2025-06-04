@@ -28,7 +28,6 @@ function Navigation() {
                 Register
             </Link>
         </>)}
-        <Link to="/my-lists">My Lists</Link>
     </nav>);
 }
 

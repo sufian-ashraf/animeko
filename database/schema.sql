@@ -132,6 +132,8 @@ CREATE TABLE list_items
 (
     list_id  INTEGER REFERENCES lists (id) ON DELETE CASCADE,
     anime_id INTEGER REFERENCES anime (anime_id) ON DELETE CASCADE,
+    rank INTEGER,
+    note TEXT,
     PRIMARY KEY (list_id, anime_id)
 );
 

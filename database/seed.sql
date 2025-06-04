@@ -1040,33 +1040,46 @@ VALUES (1, 'Must Watch', '2023-01-25 12:00:00'),
        (13, 'Winter 2024 Watchlist', '2024-01-05 10:00:00');
 
 -- Insert into updated 'list_items' table (only list_id and anime_id retained)
-INSERT INTO list_items (list_id, anime_id)
-VALUES (1, 1),
-       (1, 3),
-       (1, 5),
-       (2, 2),
-       (2, 4),
-       (3, 1),
-       (3, 3),
-       (3, 5),
-       (4, 2),
-       (5, 9),
-       (6, 1),
-       (6, 4),
-       (7, 43),
-       (7, 44),
-       (8, 5),
-       (8, 12),
-       (9, 3),
-       (9, 23),
-       (10, 46),
-       (10, 13),
-       (11, 25),
-       (11, 27),
-       (12, 14),
-       (12, 23),
-       (13, 10),
-       (13, 67);
+INSERT INTO list_items (list_id, anime_id, rank, note)
+VALUES
+    (1, 1,  1, 'Perfect starter anime'),
+    (1, 3,  2, 'Amazing story'),
+    (1, 5,  3, 'Great for action fans'),
+
+    (2, 2,  1, 'Heard good things about this'),
+    (2, 4,  2, 'Need to check this out'),
+
+    (3, 1,  1, 'Masterpiece!'),
+    (3, 3,  2, 'Revolutionary for its genre'),
+    (3, 5,  3, 'Classic that never gets old'),
+
+    (4, 2,  1, 'So relaxing to watch'),
+
+    (5, 9,  1, 'Best mecha designs ever'),
+
+    (6, 1,  1, 'Action-packed and thrilling!'),
+    (6, 4,  2, 'Visually stunning fights.'),
+
+    (7, 43, 1, 'Original Naruto series, always a classic.'),
+    (7, 44, 2, 'Shippuden continues the epic story.'),
+
+    (8, 5,  1, 'Death Note is a true mind game.'),
+    (8, 12, 2, 'Steins;Gate makes you think.'),
+
+    (9, 3,  1, 'My neighbor Totoro is my favorite Ghibli film.'),
+    (9, 23, 2, 'Your Name is so beautiful.'),
+
+    (10, 46, 1, 'One Piece is an undeniable epic.'),
+    (10, 13, 2, 'Hunter x Hunter has amazing power system.'),
+
+    (11, 25, 1, 'Monster is a truly underrated gem.'),
+    (11, 27, 2, 'Mushishi is calm and unique.'),
+
+    (12, 14, 1, 'Violet Evergarden’s animation is breathtaking.'),
+    (12, 23, 2, 'Your Name has stunning visuals and story.'),
+
+    (13, 10, 1, 'One Punch Man always makes me laugh.'),
+    (13, 67, 2, 'Saiki K is pure comedy gold.');
 
 -- Insert user_favorite
 INSERT INTO user_favorite (user_id, entity_type, entity_id, added_at, note)

@@ -39,3 +39,147 @@
     padding: 0.5rem;
     width: 200px;
 }
+
+/* src/styles/ListDetail.css */
+
+.list-detail-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.anime-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.anime-card {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px;
+    width: 180px;
+    background: #fafafa;
+}
+
+.anime-thumbnail {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.anime-info {
+    margin-top: 0.5rem;
+}
+
+.anime-title {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.rank-input,
+.note-input {
+    width: 100%;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    padding: 4px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 0.9rem;
+}
+
+.remove-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.remove-btn:hover {
+    background: #c0392b;
+}
+
+/* Save button */
+.save-container {
+    text-align: right;
+    margin-bottom: 2rem;
+}
+
+.save-btn {
+    background: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.save-btn:hover {
+    background: #27ae60;
+}
+
+/* Search & Add Section */
+.search-add-section {
+    margin-top: 2rem;
+}
+
+.search-input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.loading-text {
+    margin-bottom: 0.5rem;
+}
+
+.search-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.search-card {
+    border: 1px solid #ddd;
+    padding: 8px;
+    width: 200px;
+    border-radius: 6px;
+    background: #f9f9f9;
+    text-align: center;
+}
+
+.anime-thumbnail-small {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.anime-title-small {
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.add-btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.add-btn:disabled {
+    background: #95a5a6;
+    cursor: default;
+}

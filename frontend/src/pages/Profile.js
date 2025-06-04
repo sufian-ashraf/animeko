@@ -2,26 +2,23 @@
 import React, {useEffect, useState} from 'react';
 import {Link, useNavigate, useParams} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
-import '../styles/Profile.css';
-
-// placeholder image
 import placeholderImg from '../images/image_not_available.jpg';
+import MyLists from './MyLists'; // ← import your MyLists component
+import '../styles/Profile.css';
 
 export default function Profile() {
     const {userId} = useParams(); // If present, viewing someone else's profile
     const {user: currentUser, token, updateProfile, logout} = useAuth();
     const navigate = useNavigate();
 
-    // Determine if we're viewing own profile or someone else's
     const isOwnProfile = !userId || userId === currentUser?.user_id?.toString();
     const viewingUserId = isOwnProfile ? currentUser?.user_id : userId;
 
-    // Profile data state
     const [profileUser, setProfileUser] = useState(isOwnProfile ? currentUser : null);
     const [loading, setLoading] = useState(!isOwnProfile);
     const [error, setError] = useState('');
 
-    // Profile edit state (only for own profile)
+    // Profile‐edit state (own profile only)
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         display_name: '', profile_bio: '',
@@ -30,7 +27,7 @@ export default function Profile() {
     const [editError, setEditError] = useState('');
     const [editMessage, setEditMessage] = useState('');
 
-    // Social & favorites state
+    // Social & favorites (only own profile)
     const [incoming, setIncoming] = useState([]);
     const [friends, setFriends] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -38,7 +35,7 @@ export default function Profile() {
     const [sendMessage, setSendMessage] = useState('');
     const [favorites, setFavorites] = useState([]);
 
-    // Initialize form data when profile user changes
+    // Initialize form data when profileUser changes
     useEffect(() => {
         if (profileUser && isOwnProfile) {
             setFormData({
@@ -47,7 +44,7 @@ export default function Profile() {
         }
     }, [profileUser, isOwnProfile]);
 
-    // Fetch profile data
+    // Fetch profile data (own or someone else’s)
     useEffect(() => {
         if (!token) return;
 
@@ -57,12 +54,10 @@ export default function Profile() {
                 setError('');
 
                 if (isOwnProfile) {
-                    // For own profile, we already have user data from context
                     setProfileUser(currentUser);
                 } else {
-                    // Fetch other user's profile
                     const response = await fetch(`/api/users/profile/${userId}`, {
-                        headers: {Authorization: `Bearer ${token}`}
+                        headers: {Authorization: `Bearer ${token}`},
                     });
 
                     if (!response.ok) {
@@ -90,32 +85,29 @@ export default function Profile() {
         fetchProfileData();
     }, [token, userId, currentUser, isOwnProfile]);
 
-    // Fetch social data and favorites for own profile
+    // Fetch incoming & friends & favorites (own profile)
     useEffect(() => {
         if (!token || !isOwnProfile) return;
 
         const headers = {Authorization: `Bearer ${token}`};
 
-        // Fetch incoming requests (only for own profile)
         fetch('/api/friends/requests', {headers})
-            .then(r => r.json())
+            .then((r) => r.json())
             .then(setIncoming)
             .catch(console.error);
 
-        // Fetch friends list
         fetch('/api/friends', {headers})
-            .then(r => r.json())
+            .then((r) => r.json())
             .then(setFriends)
             .catch(console.error);
 
-        // Fetch favorites
         fetch('/api/favorites', {headers})
-            .then(r => r.json())
+            .then((r) => r.json())
             .then(setFavorites)
             .catch(console.error);
     }, [token, isOwnProfile]);
 
-    // Search users (only for own profile)
+    // Search users (own profile only)
     useEffect(() => {
         if (!isOwnProfile || searchQuery === '') {
             setSearchResults([]);
@@ -125,24 +117,22 @@ export default function Profile() {
         fetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}`, {
             headers: {Authorization: `Bearer ${token}`},
         })
-            .then(r => (r.ok ? r.json() : Promise.reject(r)))
+            .then((r) => (r.ok ? r.json() : Promise.reject(r)))
             .then(setSearchResults)
-            .catch(err => {
-                console.error('Search error:', err);
-                setSearchResults([]);
-            });
+            .catch(() => setSearchResults([]));
     }, [searchQuery, token, isOwnProfile]);
 
     // Profile edit handlers
-    const handleChange = e => {
+    const handleChange = (e) => {
         const {name, value} = e.target;
-        setFormData(f => ({...f, [name]: value}));
+        setFormData((f) => ({...f, [name]: value}));
     };
 
-    const handleSubmit = async e => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setEditError('');
         setEditMessage('');
+
         try {
             setLoadingEdit(true);
             await updateProfile(formData);
@@ -164,21 +154,21 @@ export default function Profile() {
         setIsEditing(false);
     };
 
-    // Social handlers (only for own profile)
+    // Social handlers (own profile)
     const respondRequest = (requesterId, action) => {
         fetch(`/api/friends/requests/${requesterId}/${action}`, {
             method: 'POST', headers: {Authorization: `Bearer ${token}`},
         }).then(() => {
-            setIncoming(incoming.filter(r => r.user_id !== requesterId));
+            setIncoming((inc) => inc.filter((r) => r.user_id !== requesterId));
             if (action === 'accept') {
                 fetch('/api/friends', {headers: {Authorization: `Bearer ${token}`}})
-                    .then(r => r.json())
+                    .then((r) => r.json())
                     .then(setFriends);
             }
         });
     };
 
-    const sendFriendRequest = async toUserId => {
+    const sendFriendRequest = async (toUserId) => {
         try {
             const response = await fetch('/api/friends/requests', {
                 method: 'POST', headers: {
@@ -200,7 +190,7 @@ export default function Profile() {
         }
     };
 
-    const removeFriend = async friendId => {
+    const removeFriend = async (friendId) => {
         try {
             const resp = await fetch(`/api/friends/${friendId}`, {
                 method: 'DELETE', headers: {Authorization: `Bearer ${token}`},
@@ -229,7 +219,7 @@ export default function Profile() {
         }
     };
 
-    const getButtonForUser = searchUser => {
+    const getButtonForUser = (searchUser) => {
         switch (searchUser.friendship_status) {
             case 'friend':
                 return <span className="status-badge friend">Friends</span>;
@@ -257,27 +247,19 @@ export default function Profile() {
         }
     };
 
-    // Loading and error states
-    if (loading) {
-        return <div className="loading">Loading profile...</div>;
-    }
-
-    if (error) {
-        return (<div className="profile-page">
-                <div className="profile-card">
-                    <div className="profile-error">{error}</div>
-                    <button onClick={() => navigate('/profile')}>
-                        {isOwnProfile ? 'Please log in' : 'Back to My Profile'}
-                    </button>
-                </div>
-            </div>);
-    }
-
-    if (!profileUser) {
-        return <div className="loading">
+    // Loading/Error states
+    if (loading) return <div className="loading">Loading profile…</div>;
+    if (error) return (<div className="profile-page">
+            <div className="profile-card">
+                <div className="profile-error">{error}</div>
+                <button onClick={() => navigate('/profile')}>
+                    {isOwnProfile ? 'Please log in' : 'Back to My Profile'}
+                </button>
+            </div>
+        </div>);
+    if (!profileUser) return (<div className="loading">
             {isOwnProfile ? 'Please log in to view your profile…' : 'No profile data found'}
-        </div>;
-    }
+        </div>);
 
     const profileTitle = isOwnProfile ? 'My Profile' : `${profileUser.display_name || profileUser.username}'s Profile`;
     const friendsTitle = isOwnProfile ? 'Your Friends' : 'Their Friends';
@@ -285,7 +267,7 @@ export default function Profile() {
     const favoritesPrefix = isOwnProfile ? 'Favorite' : 'Their Favorite';
 
     return (<div className="profile-page">
-            {/* Back button for viewing other profiles */}
+            {/* Back button if viewing someone else’s profile */}
             {!isOwnProfile && (<div className="profile-nav">
                     <button onClick={() => navigate('/profile')} className="back-btn">
                         ← Back to My Profile
@@ -335,31 +317,42 @@ export default function Profile() {
                     </form>) : (<div className="profile-info">
                         <p>Username: {profileUser.username}</p>
                         {!isOwnProfile || <p>Email: {profileUser.email}</p>}
-                        <p>Display Name: {profileUser.display_name || 'Not set'}</p>
+                        <p>
+                            Display Name: {profileUser.display_name || 'Not set'}
+                        </p>
                         <p>Bio: {profileUser.profile_bio || 'No bio provided'}</p>
-                        <p>Member Since: {new Date(profileUser.created_at).toLocaleDateString()}</p>
+                        <p>
+                            Member Since:{' '}
+                            {new Date(profileUser.created_at).toLocaleDateString()}
+                        </p>
                         <div className="profile-buttons">
                             {isOwnProfile ? (<>
-                                    <button onClick={() => setIsEditing(true)}>Edit Profile</button>
+                                    <button onClick={() => setIsEditing(true)}>
+                                        Edit Profile
+                                    </button>
                                     <button onClick={logout}>Logout</button>
-                                </>) : (<button onClick={() => navigate('/profile')}>Back to My Profile</button>)}
+                                </>) : (<button onClick={() => navigate('/profile')}>
+                                    Back to My Profile
+                                </button>)}
                         </div>
                     </div>)}
             </div>
 
-            {/* Incoming Friend Requests - Only for own profile */}
+            {/* Incoming Friend Requests (own profile) */}
             {isOwnProfile && (<section>
                     <h3>Incoming Friend Requests</h3>
                     <div className="scroll-box">
-                        {incoming.length ? (incoming.map(r => (<div key={r.user_id} className="row">
-                                    <span>
-                                        {r.display_name} (@{r.username})
-                                    </span>
+                        {incoming.length ? (incoming.map((r) => (<div key={r.user_id} className="row">
+                  <span>
+                    {r.display_name} (@{r.username})
+                  </span>
                                     <div>
                                         <button onClick={() => respondRequest(r.user_id, 'accept')}>
                                             Accept
                                         </button>
-                                        <button onClick={() => respondRequest(r.user_id, 'reject')}>
+                                        <button
+                                            onClick={() => respondRequest(r.user_id, 'reject')}
+                                        >
                                             Reject
                                         </button>
                                     </div>
@@ -371,7 +364,7 @@ export default function Profile() {
             <section>
                 <h3>{friendsTitle}</h3>
                 <div className="scroll-box friends-list">
-                    {friends.length ? (friends.map(f => (<div key={f.user_id} className="friend-row">
+                    {friends.length ? (friends.map((f) => (<div key={f.user_id} className="friend-row">
                                 <img
                                     src={f.profile_picture_url || placeholderImg}
                                     alt={f.display_name}
@@ -381,8 +374,8 @@ export default function Profile() {
                                     className="friend-name clickable"
                                     onClick={() => navigate(`/profile/${f.user_id}`)}
                                 >
-                                    {f.display_name} (@{f.username})
-                                </span>
+                  {f.display_name} (@{f.username})
+                </span>
                                 {isOwnProfile && (<button
                                         className="btn-small unfriend"
                                         onClick={() => removeFriend(f.user_id)}
@@ -393,29 +386,30 @@ export default function Profile() {
                 </div>
             </section>
 
-            {/* Search Users - Only for own profile */}
+            {/* Search Users (own profile) */}
             {isOwnProfile && (<section>
                     <h3>Find & Add Friends</h3>
                     <input
                         type="text"
                         placeholder="Search users..."
                         value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                     />
                     {sendMessage && <div className="inline-message">{sendMessage}</div>}
 
                     {searchResults.length > 0 && (<div className="scroll-box">
-                            {searchResults.map(u => (<div key={u.user_id} className="row">
-                                    <span>
-                                        {u.display_name} (@{u.username})
-                                        {u.friendship_status === 'friend' && (<span
-                                                className="view-profile-link"
-                                                onClick={() => navigate(`/profile/${u.user_id}`)}
-                                                title="View Profile"
-                                            >
-                                                {' '}👁️
-                                            </span>)}
-                                    </span>
+                            {searchResults.map((u) => (<div key={u.user_id} className="row">
+                  <span>
+                    {u.display_name} (@{u.username})
+                      {u.friendship_status === 'friend' && (<span
+                              className="view-profile-link"
+                              onClick={() => navigate(`/profile/${u.user_id}`)}
+                              title="View Profile"
+                          >
+                        {' '}
+                              👁️
+                      </span>)}
+                  </span>
                                     {getButtonForUser(u)}
                                 </div>))}
                         </div>)}
@@ -423,12 +417,15 @@ export default function Profile() {
 
             {/* Favorites Section */}
             <section className="favorites-section">
-                {['anime', 'character', 'va'].map(type => (<div key={type} className="favorite-type-container">
-                        <h4>{favoritesPrefix} {type.charAt(0).toUpperCase() + type.slice(1)}s</h4>
+                {['anime', 'character', 'va'].map((type) => (<div key={type} className="favorite-type-container">
+                        <h4>
+                            {favoritesPrefix}{' '}
+                            {type.charAt(0).toUpperCase() + type.slice(1)}s
+                        </h4>
                         <div className="scroll-box fav-grid">
-                            {favorites.filter(f => f.entityType === type).length ? (favorites
-                                    .filter(f => f.entityType === type)
-                                    .map(f => {
+                            {favorites.filter((f) => f.entityType === type).length ? (favorites
+                                    .filter((f) => f.entityType === type)
+                                    .map((f) => {
                                         const path = `/${type}/${f.entityId}`;
                                         return (<div key={`${type}-${f.entityId}`} className="fav-item">
                                                 <Link to={path} className="fav-card">
@@ -444,5 +441,10 @@ export default function Profile() {
                         </div>
                     </div>))}
             </section>
+
+            {/* ───────────── Integrate “My Anime Lists” Here ───────────── */}
+            {isOwnProfile && (<section className="my-lists-section">
+                    <MyLists/>
+                </section>)}
         </div>);
 }
