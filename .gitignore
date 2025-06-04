@@ -6,5 +6,3 @@ node_modules/
 # dotenv environment file
 .env
 
-# temporary login system code
-login.txt

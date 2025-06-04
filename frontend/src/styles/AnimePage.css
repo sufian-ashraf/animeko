@@ -139,3 +139,225 @@
     opacity: 0.5;
     cursor: default;
 }
+
+/* ─────────────────────────────────────────
+   Reviews Section + Star Styling
+   ───────────────────────────────────────── */
+
+.reviews-section {
+    margin-top: 2rem;
+    border-top: 1px solid #ddd;
+    padding-top: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.reviews-section h3 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+/* “Your Review” form – full width */
+.your-review-form {
+    width: 100%;
+    background-color: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    box-sizing: border-box;
+}
+
+.your-review-form h4 {
+    margin-bottom: 0.5rem;
+    color: #555;
+}
+
+.your-review-form form {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Star selection row */
+.star-selection {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.star {
+    font-size: 1.5rem;
+    color: #ccc;
+    cursor: pointer;
+    transition: color 0.2s;
+    user-select: none;
+}
+
+.star.selected {
+    color: #ffb400; /* golden */
+}
+
+.star:hover,
+.star:hover ~ .star {
+    /* Hover any star, color all stars up to that point: */
+    color: #ffd54f;
+}
+
+.your-review-form label {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    color: #333;
+}
+
+.your-review-form textarea {
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.your-review-form .review-error {
+    color: #c62828;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.your-review-form button {
+    align-self: flex-start;
+    margin-top: 0.75rem;
+    background-color: #2196f3;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+.your-review-form button:disabled {
+    background-color: #90caf9;
+    cursor: not-allowed;
+}
+
+.your-review-form button:hover:not(:disabled) {
+    background-color: #1976d2;
+}
+
+/* “All Reviews” list – full width styling */
+.all-reviews-list {
+    margin-top: 2rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.all-reviews-list h4 {
+    margin-bottom: 0.75rem;
+    color: #555;
+}
+
+.no-reviews {
+    font-style: italic;
+    color: #666;
+}
+
+/* Each review card – full width */
+.review-card {
+    width: 100%;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    box-sizing: border-box;
+}
+
+.reviewer-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reviewer-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.reviewer-name {
+    font-weight: bold;
+    color: #333;
+}
+
+.review-timestamp {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: #999;
+}
+
+.review-body {
+    padding-left: 2.5rem; /* indent so it doesn’t overlap avatar */
+}
+
+.review-rating {
+    font-weight: 500;
+    color: #444;
+}
+
+.review-content {
+    margin-top: 0.25rem;
+    color: #333;
+    line-height: 1.4;
+}
+
+/* ─────────────────────────────────────────
+   Anime average rating + rank styling
+   ───────────────────────────────────────── */
+
+.anime-average-rating {
+    margin-top: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.no-rating {
+    color: #666;
+    font-style: italic;
+}
+
+.stars-and-rank {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.star-row {
+    font-size: 1.25rem;
+    color: #ffb400; /* filled star color */
+}
+
+.star-row span {
+    margin-right: 0.1rem;
+    user-select: none;
+}
+
+.avg-number {
+    font-size: 0.9rem;
+    color: #333;
+    margin-left: 0.25rem;
+}
+
+.anime-rank {
+    font-size: 0.9rem;
+    color: #555;
+    margin-left: 1rem;
+}

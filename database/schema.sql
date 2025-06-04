@@ -28,6 +28,7 @@ DROP INDEX IF EXISTS idx_media_entity;
 DROP INDEX IF EXISTS idx_review_user;
 DROP INDEX IF EXISTS idx_review_anime;
 DROP INDEX IF EXISTS idx_character_va;
+DROP INDEX IF EXISts idx_anime_rating;
 
 -- visibility_level type
 DROP TYPE IF EXISTS visibility_type;
@@ -82,6 +83,7 @@ CREATE TABLE anime
     episodes          INTEGER,
     synopsis          TEXT,
     rating            FLOAT,
+    rank              INTEGER,
     company_id        INTEGER
 );
 
@@ -111,8 +113,9 @@ CREATE TABLE review
     anime_id   INTEGER NOT NULL,
     content    TEXT    NOT NULL,
     rating     INTEGER CHECK (rating BETWEEN 1 AND 10),
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT fk_review_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_review_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE);
 
 CREATE TABLE list
 (
@@ -233,11 +236,29 @@ ALTER TABLE anime
 ALTER TABLE characters
     ADD CONSTRAINT fk_character_voice_actor FOREIGN KEY (voice_actor_id) REFERENCES voice_actor (voice_actor_id);
 
+ALTER TABLE review DROP CONSTRAINT fk_review_user;
 ALTER TABLE review
-    ADD CONSTRAINT fk_review_user FOREIGN KEY (user_id) REFERENCES users (user_id);
+    ADD CONSTRAINT fk_review_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE;
+
+ALTER TABLE review DROP CONSTRAINT fk_review_anime;
+ALTER TABLE review
+    ADD CONSTRAINT fk_review_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE;
+
+-- ─────────────────────────────────────────────
+-- 1) Drop & re-create `review.rating` constraint
+-- ─────────────────────────────────────────────
+
+-- (If “review” already exists, drop the old CHECK on rating)
+ALTER TABLE review
+DROP
+CONSTRAINT IF EXISTS review_rating_check;
+
+-- Re-create it so that rating ∈ [1,5], not [1,10].
+ALTER TABLE review
+    ADD CONSTRAINT review_rating_check CHECK (rating BETWEEN 1 AND 5);
 
 ALTER TABLE review
-    ADD CONSTRAINT fk_review_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id);
+    ADD CONSTRAINT unique_user_anime_review UNIQUE (user_id, anime_id);
 
 ALTER TABLE list
     ADD CONSTRAINT fk_list_user FOREIGN KEY (user_id) REFERENCES users (user_id);
@@ -300,6 +321,7 @@ CREATE INDEX idx_user_username ON users (username);
 CREATE INDEX idx_media_entity ON media (entity_type, entity_id);
 CREATE INDEX idx_review_user ON review (user_id);
 CREATE INDEX idx_review_anime ON review (anime_id);
+CREATE INDEX idx_anime_rating ON anime (rating DESC);
 CREATE INDEX idx_character_va ON characters (voice_actor_id);
 
 -- Create a function to manage continue watching entries (keep only 5 latest animes per users)
@@ -315,9 +337,7 @@ FROM continue_watching
 WHERE user_id = NEW.user_id
   AND episode_id IN (SELECT e.episode_id
                      FROM episode e
-                     WHERE e.anime_id = (SELECT anime_id FROM new_anime)
-                       AND e.episode_id
-    != NEW.episode_id );
+                     WHERE e.anime_id = (SELECT anime_id FROM new_anime) AND e.episode_id != NEW.episode_id );
 
 -- Delete oldest entries if count exceeds 5 (counting unique animes)
 DELETE
@@ -375,3 +395,184 @@ CREATE TRIGGER tr_manage_subscription
     AFTER INSERT
     ON transaction_history
     FOR EACH ROW WHEN (NEW.status = 'completed') EXECUTE FUNCTION manage_subscription();
+
+
+-- ─────────────────────────────────────────────
+-- 3) Create a function + trigger for keeping `anime.rating` and `anime.rank` up-to-date
+-- ─────────────────────────────────────────────
+
+-- ───────────────────────────────────────────────────────────
+--  Add seed_rating and seed_count columns to anime
+-- ───────────────────────────────────────────────────────────
+
+ALTER TABLE anime
+    ADD COLUMN seed_rating FLOAT NOT NULL DEFAULT 0,
+  ADD COLUMN seed_count  INTEGER  NOT NULL DEFAULT 0;
+
+-- Copy any existing rating into seed_rating, and set seed_count = 1
+UPDATE anime
+SET seed_rating = COALESCE(rating, 0),
+    seed_count  = CASE WHEN rating IS NULL OR rating = 0 THEN 0 ELSE 1 END;
+-- If rating was NULL or 0, we treat seed as nonexistent (seed_count = 0).
+-- Otherwise, each anime that already had rating > 0 gets seed_count = 1.
+
+-- (At this point, you may choose to NULL out anime.rating, or leave it.
+--  We’ll let the trigger recalc `anime.rating` on the next review event.
+--  If you want `anime.rating` to immediately reflect the seed alone, run:)
+--
+-- UPDATE anime
+-- SET rating = seed_rating
+-- WHERE seed_count = 1;
+--
+
+-- 3a) Function to recalculate average rating and rank for a single anime_id
+CREATE
+OR REPLACE FUNCTION fn_update_anime_rating_and_rank()
+RETURNS TRIGGER AS $$
+DECLARE
+real_sum     FLOAT;
+  real_count
+INTEGER;
+  weighted_sum
+FLOAT;
+  weighted_cnt
+INTEGER;
+  new_avg
+FLOAT;
+  this_rank
+INTEGER;
+BEGIN
+  -- 1) Sum & count of real review ratings for this anime
+SELECT COALESCE(SUM(r.rating)::FLOAT, 0), COUNT(r.rating)
+INTO real_sum, real_count
+FROM review r
+WHERE r.anime_id = NEW.anime_id;
+
+-- 2) Compute weighted sum & count (seed + real reviews)
+SELECT a.seed_rating, a.seed_count
+INTO weighted_sum, -- placeholder: will store seed_rating * seed_count
+    weighted_cnt -- placeholder: will store seed_count
+FROM anime a
+WHERE a.anime_id = NEW.anime_id;
+
+weighted_sum
+:= weighted_sum * weighted_cnt;   -- seed_rating * seed_count
+  weighted_cnt
+:= weighted_cnt;                  -- seed_count
+
+  -- 3) Add real reviews to weighted totals
+  weighted_sum
+:= weighted_sum + real_sum;
+  weighted_cnt
+:= weighted_cnt + real_count;
+
+  -- 4) Compute new average (avoid division by zero)
+  IF
+weighted_cnt > 0 THEN
+    new_avg := weighted_sum / weighted_cnt;
+ELSE
+    new_avg := 0;
+END IF;
+
+  -- 5) Update anime.rating to the new weighted average
+UPDATE anime
+SET rating = new_avg
+WHERE anime_id = NEW.anime_id;
+
+-- 6) Recompute rank for every anime (1 = highest rating)
+WITH ranked AS (SELECT anime_id, RANK() OVER (ORDER BY rating DESC NULLS LAST) AS new_rank FROM anime)
+UPDATE anime
+SET rank = ranked.new_rank FROM ranked
+WHERE anime.anime_id = ranked.anime_id;
+
+RETURN NEW;
+END;
+$$
+LANGUAGE plpgsql;
+
+
+-- 3b) Attach the trigger to review INSERT/UPDATE
+CREATE TRIGGER tr_review_update_anime_rating_rank
+    AFTER INSERT OR
+UPDATE ON review FOR EACH ROW EXECUTE FUNCTION fn_update_anime_rating_and_rank();
+
+-- ─────────────────────────────────────────────
+-- 4) (Optional) On DELETE of a review, you may also want to recalc the average/rank.
+--    If so, add a similar trigger for AFTER DELETE.
+-- ─────────────────────────────────────────────
+
+CREATE
+OR REPLACE FUNCTION fn_update_anime_rating_and_rank_on_delete()
+RETURNS TRIGGER AS $$
+DECLARE
+real_sum     FLOAT;
+  real_count
+INTEGER;
+  weighted_sum
+FLOAT;
+  weighted_cnt
+INTEGER;
+  new_avg
+FLOAT;
+  this_rank
+INTEGER;
+BEGIN
+  -- 1) Sum & count of remaining real review ratings (after deletion)
+SELECT COALESCE(SUM(r.rating)::FLOAT, 0), COUNT(r.rating)
+INTO real_sum, real_count
+FROM review r
+WHERE r.anime_id = OLD.anime_id;
+
+-- 2) Fetch seed_rating & seed_count
+SELECT a.seed_rating, a.seed_count
+INTO weighted_sum, -- placeholder
+    weighted_cnt -- placeholder
+FROM anime a
+WHERE a.anime_id = OLD.anime_id;
+
+weighted_sum
+:= weighted_sum * weighted_cnt;  -- seed_rating * seed_count
+  weighted_cnt
+:= weighted_cnt;                 -- seed_count
+
+  -- 3) Add the real reviews
+  weighted_sum
+:= weighted_sum + real_sum;
+  weighted_cnt
+:= weighted_cnt + real_count;
+
+  -- 4) Compute new weighted average
+  IF
+weighted_cnt > 0 THEN
+    new_avg := weighted_sum / weighted_cnt;
+ELSE
+    new_avg := 0;
+END IF;
+
+  -- 5) Update anime.rating
+UPDATE anime
+SET rating = new_avg
+WHERE anime_id = OLD.anime_id;
+
+-- 6) Recompute rank across all anime
+WITH ranked AS (SELECT anime_id, RANK() OVER (ORDER BY rating DESC NULLS LAST) AS new_rank FROM anime)
+UPDATE anime
+SET rank = ranked.new_rank FROM ranked
+WHERE anime.anime_id = ranked.anime_id;
+
+RETURN OLD;
+END;
+$$
+LANGUAGE plpgsql;
+-- 4) Re-attach triggers to review (DROP old if necessary)
+
+DROP TRIGGER IF EXISTS tr_review_update_anime_rating_rank ON review;
+CREATE TRIGGER tr_review_update_anime_rating_rank
+    AFTER INSERT OR
+UPDATE ON review FOR EACH ROW EXECUTE FUNCTION fn_update_anime_rating_and_rank();
+
+DROP TRIGGER IF EXISTS tr_review_delete_anime_rating_rank ON review;
+CREATE TRIGGER tr_review_delete_anime_rating_rank
+    AFTER DELETE
+    ON review
+    FOR EACH ROW EXECUTE FUNCTION fn_update_anime_rating_and_rank_on_delete();
