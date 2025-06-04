@@ -1,6 +1,6 @@
 // src/pages/Profile.js
 import React, {useEffect, useState} from 'react';
-import {Link, useNavigate} from 'react-router-dom';
+import {Link, useNavigate, useParams} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
 import '../styles/Profile.css';
 
@@ -8,13 +8,23 @@ import '../styles/Profile.css';
 import placeholderImg from '../images/image_not_available.jpg';
 
 export default function Profile() {
-    const {user, token, updateProfile, logout} = useAuth();
+    const {userId} = useParams(); // If present, viewing someone else's profile
+    const {user: currentUser, token, updateProfile, logout} = useAuth();
     const navigate = useNavigate();
 
-    // Profile edit state
+    // Determine if we're viewing own profile or someone else's
+    const isOwnProfile = !userId || userId === currentUser?.user_id?.toString();
+    const viewingUserId = isOwnProfile ? currentUser?.user_id : userId;
+
+    // Profile data state
+    const [profileUser, setProfileUser] = useState(isOwnProfile ? currentUser : null);
+    const [loading, setLoading] = useState(!isOwnProfile);
+    const [error, setError] = useState('');
+
+    // Profile edit state (only for own profile)
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
-        display_name: user?.display_name || '', profile_bio: user?.profile_bio || '',
+        display_name: '', profile_bio: '',
     });
     const [loadingEdit, setLoadingEdit] = useState(false);
     const [editError, setEditError] = useState('');
@@ -25,31 +35,89 @@ export default function Profile() {
     const [friends, setFriends] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
-    const [sendMessage, setSendMessage] = useState(''); // inline confirmation
+    const [sendMessage, setSendMessage] = useState('');
     const [favorites, setFavorites] = useState([]);
 
-    // Fetch social & favs on mount
+    // Initialize form data when profile user changes
+    useEffect(() => {
+        if (profileUser && isOwnProfile) {
+            setFormData({
+                display_name: profileUser.display_name || '', profile_bio: profileUser.profile_bio || '',
+            });
+        }
+    }, [profileUser, isOwnProfile]);
+
+    // Fetch profile data
     useEffect(() => {
         if (!token) return;
+
+        const fetchProfileData = async () => {
+            try {
+                setLoading(true);
+                setError('');
+
+                if (isOwnProfile) {
+                    // For own profile, we already have user data from context
+                    setProfileUser(currentUser);
+                } else {
+                    // Fetch other user's profile
+                    const response = await fetch(`/api/users/profile/${userId}`, {
+                        headers: {Authorization: `Bearer ${token}`}
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 403) {
+                            throw new Error('You can only view profiles of friends');
+                        } else if (response.status === 404) {
+                            throw new Error('User not found');
+                        } else {
+                            throw new Error('Failed to load profile');
+                        }
+                    }
+
+                    const data = await response.json();
+                    setProfileUser(data.user);
+                    setFriends(data.friends || []);
+                    setFavorites(data.favorites || []);
+                }
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProfileData();
+    }, [token, userId, currentUser, isOwnProfile]);
+
+    // Fetch social data and favorites for own profile
+    useEffect(() => {
+        if (!token || !isOwnProfile) return;
+
         const headers = {Authorization: `Bearer ${token}`};
 
+        // Fetch incoming requests (only for own profile)
         fetch('/api/friends/requests', {headers})
             .then(r => r.json())
-            .then(setIncoming);
+            .then(setIncoming)
+            .catch(console.error);
 
+        // Fetch friends list
         fetch('/api/friends', {headers})
             .then(r => r.json())
-            .then(setFriends);
+            .then(setFriends)
+            .catch(console.error);
 
-        // Favorites
+        // Fetch favorites
         fetch('/api/favorites', {headers})
             .then(r => r.json())
-            .then(setFavorites);
-    }, [token]);
+            .then(setFavorites)
+            .catch(console.error);
+    }, [token, isOwnProfile]);
 
-    // Search users
+    // Search users (only for own profile)
     useEffect(() => {
-        if (searchQuery === '') {
+        if (!isOwnProfile || searchQuery === '') {
             setSearchResults([]);
             return;
         }
@@ -63,9 +131,9 @@ export default function Profile() {
                 console.error('Search error:', err);
                 setSearchResults([]);
             });
-    }, [searchQuery, token]);
+    }, [searchQuery, token, isOwnProfile]);
 
-    // Profile handlers
+    // Profile edit handlers
     const handleChange = e => {
         const {name, value} = e.target;
         setFormData(f => ({...f, [name]: value}));
@@ -89,14 +157,14 @@ export default function Profile() {
 
     const handleCancel = () => {
         setFormData({
-            display_name: user.display_name || '', profile_bio: user.profile_bio || '',
+            display_name: profileUser.display_name || '', profile_bio: profileUser.profile_bio || '',
         });
         setEditError('');
         setEditMessage('');
         setIsEditing(false);
     };
 
-    // Social handlers
+    // Social handlers (only for own profile)
     const respondRequest = (requesterId, action) => {
         fetch(`/api/friends/requests/${requesterId}/${action}`, {
             method: 'POST', headers: {Authorization: `Bearer ${token}`},
@@ -124,14 +192,11 @@ export default function Profile() {
                 return;
             }
 
-            // Clear the search field so the “Request Sent” badge appears
             setSearchQuery('');
-            // Show a 1-second inline confirmation
             setSendMessage('Friend request sent!');
             setTimeout(() => setSendMessage(''), 1000);
         } catch (err) {
             console.error('Error sending friend request:', err);
-            // we do NOT show an alert popup
         }
     };
 
@@ -153,7 +218,6 @@ export default function Profile() {
                 throw new Error(message || `Server responded ${resp.status}`);
             }
 
-            // Refresh the friends list
             const friendsRes = await fetch('/api/friends', {
                 headers: {Authorization: `Bearer ${token}`},
             });
@@ -173,183 +237,212 @@ export default function Profile() {
                 return <span className="status-badge pending">Request Sent</span>;
             case 'request_received':
                 return (<div>
-                    <button
-                        className="btn-small accept"
-                        onClick={() => respondRequest(searchUser.user_id, 'accept')}
-                    >
-                        Accept
-                    </button>
-                    <button
-                        className="btn-small reject"
-                        onClick={() => respondRequest(searchUser.user_id, 'reject')}
-                    >
-                        Reject
-                    </button>
-                </div>);
+                        <button
+                            className="btn-small accept"
+                            onClick={() => respondRequest(searchUser.user_id, 'accept')}
+                        >
+                            Accept
+                        </button>
+                        <button
+                            className="btn-small reject"
+                            onClick={() => respondRequest(searchUser.user_id, 'reject')}
+                        >
+                            Reject
+                        </button>
+                    </div>);
             default:
                 return (<button onClick={() => sendFriendRequest(searchUser.user_id)}>
-                    Add Friend
-                </button>);
+                        Add Friend
+                    </button>);
         }
     };
 
-    if (!user) {
-        return <div className="loading">Please log in to view your profile…</div>;
+    // Loading and error states
+    if (loading) {
+        return <div className="loading">Loading profile...</div>;
     }
 
+    if (error) {
+        return (<div className="profile-page">
+                <div className="profile-card">
+                    <div className="profile-error">{error}</div>
+                    <button onClick={() => navigate('/profile')}>
+                        {isOwnProfile ? 'Please log in' : 'Back to My Profile'}
+                    </button>
+                </div>
+            </div>);
+    }
+
+    if (!profileUser) {
+        return <div className="loading">
+            {isOwnProfile ? 'Please log in to view your profile…' : 'No profile data found'}
+        </div>;
+    }
+
+    const profileTitle = isOwnProfile ? 'My Profile' : `${profileUser.display_name || profileUser.username}'s Profile`;
+    const friendsTitle = isOwnProfile ? 'Your Friends' : 'Their Friends';
+    const noFriendsText = isOwnProfile ? 'You have no friends yet' : 'They have no friends yet';
+    const favoritesPrefix = isOwnProfile ? 'Favorite' : 'Their Favorite';
+
     return (<div className="profile-page">
-        {/* Profile Card */}
-        <div className="profile-card">
-            <h2>My Profile</h2>
-            <img
-                src={user.profile_picture_url || placeholderImg}
-                alt="Profile"
-                className="user-profile-pic"
-            />
-
-            {editError && <div className="profile-error">{editError}</div>}
-            {editMessage && <div className="profile-success">{editMessage}</div>}
-
-            {isEditing ? (<form onSubmit={handleSubmit} className="profile-form">
-                <div className="form-group">
-                    <label>Display Name</label>
-                    <input
-                        name="display_name"
-                        value={formData.display_name}
-                        onChange={handleChange}
-                        disabled={loadingEdit}
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Bio</label>
-                    <textarea
-                        name="profile_bio"
-                        value={formData.profile_bio}
-                        onChange={handleChange}
-                        rows="3"
-                        disabled={loadingEdit}
-                    />
-                </div>
-                <div className="profile-buttons">
-                    <button type="submit" disabled={loadingEdit}>
-                        {loadingEdit ? 'Saving…' : 'Save Changes'}
+            {/* Back button for viewing other profiles */}
+            {!isOwnProfile && (<div className="profile-nav">
+                    <button onClick={() => navigate('/profile')} className="back-btn">
+                        ← Back to My Profile
                     </button>
-                    <button type="button" onClick={handleCancel} disabled={loadingEdit}>
-                        Cancel
-                    </button>
-                </div>
-            </form>) : (<div className="profile-info">
-                <p>Username: {user.username}</p>
-                <p>Email: {user.email}</p>
-                <p>Display Name: {user.display_name || 'Not set'}</p>
-                <p>Bio: {user.profile_bio || 'No bio provided'}</p>
-                <p>Member Since: {new Date(user.created_at).toLocaleDateString()}</p>
-                <div className="profile-buttons">
-                    <button onClick={() => setIsEditing(true)}>Edit Profile</button>
-                    <button onClick={logout}>Logout</button>
-                </div>
-            </div>)}
-        </div>
+                </div>)}
 
-        {/* Incoming Friend Requests */}
-        <section>
-            <h3>Incoming Friend Requests</h3>
-            <div className="scroll-box">
-                {incoming.length ? (incoming.map(r => (<div key={r.user_id} className="row">
-                <span>
-                  {r.display_name} (@{r.username})
-                </span>
-                    <div>
-                        <button onClick={() => respondRequest(r.user_id, 'accept')}>
-                            Accept
-                        </button>
-                        <button onClick={() => respondRequest(r.user_id, 'reject')}>
-                            Reject
-                        </button>
+            {/* Profile Card */}
+            <div className="profile-card">
+                <h2>{profileTitle}</h2>
+                <img
+                    src={profileUser.profile_picture_url || placeholderImg}
+                    alt="Profile"
+                    className="user-profile-pic"
+                />
+
+                {editError && <div className="profile-error">{editError}</div>}
+                {editMessage && <div className="profile-success">{editMessage}</div>}
+
+                {isOwnProfile && isEditing ? (<form onSubmit={handleSubmit} className="profile-form">
+                        <div className="form-group">
+                            <label>Display Name</label>
+                            <input
+                                name="display_name"
+                                value={formData.display_name}
+                                onChange={handleChange}
+                                disabled={loadingEdit}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Bio</label>
+                            <textarea
+                                name="profile_bio"
+                                value={formData.profile_bio}
+                                onChange={handleChange}
+                                rows="3"
+                                disabled={loadingEdit}
+                            />
+                        </div>
+                        <div className="profile-buttons">
+                            <button type="submit" disabled={loadingEdit}>
+                                {loadingEdit ? 'Saving…' : 'Save Changes'}
+                            </button>
+                            <button type="button" onClick={handleCancel} disabled={loadingEdit}>
+                                Cancel
+                            </button>
+                        </div>
+                    </form>) : (<div className="profile-info">
+                        <p>Username: {profileUser.username}</p>
+                        {!isOwnProfile || <p>Email: {profileUser.email}</p>}
+                        <p>Display Name: {profileUser.display_name || 'Not set'}</p>
+                        <p>Bio: {profileUser.profile_bio || 'No bio provided'}</p>
+                        <p>Member Since: {new Date(profileUser.created_at).toLocaleDateString()}</p>
+                        <div className="profile-buttons">
+                            {isOwnProfile ? (<>
+                                    <button onClick={() => setIsEditing(true)}>Edit Profile</button>
+                                    <button onClick={logout}>Logout</button>
+                                </>) : (<button onClick={() => navigate('/profile')}>Back to My Profile</button>)}
+                        </div>
+                    </div>)}
+            </div>
+
+            {/* Incoming Friend Requests - Only for own profile */}
+            {isOwnProfile && (<section>
+                    <h3>Incoming Friend Requests</h3>
+                    <div className="scroll-box">
+                        {incoming.length ? (incoming.map(r => (<div key={r.user_id} className="row">
+                                    <span>
+                                        {r.display_name} (@{r.username})
+                                    </span>
+                                    <div>
+                                        <button onClick={() => respondRequest(r.user_id, 'accept')}>
+                                            Accept
+                                        </button>
+                                        <button onClick={() => respondRequest(r.user_id, 'reject')}>
+                                            Reject
+                                        </button>
+                                    </div>
+                                </div>))) : (<p>No pending requests</p>)}
                     </div>
-                </div>))) : (<p>No pending requests</p>)}
-            </div>
-        </section>
+                </section>)}
 
-        {/* Friends List */}
-        <section>
-            <h3>Your Friends</h3>
-            <div className="scroll-box friends-list">
-                {friends.length ? (friends.map(f => (<div key={f.user_id} className="friend-row">
-                    <img
-                        src={f.profile_picture_url || placeholderImg}
-                        alt={f.display_name}
-                        className="friend-avatar"
-                    />
-                    <span
-                        className="friend-name clickable"
-                        onClick={() => navigate(`/profile/${f.user_id}`)}
-                    >
-                  {f.display_name} (@{f.username})
-                </span>
-                    <button
-                        className="btn-small unfriend"
-                        onClick={() => removeFriend(f.user_id)}
-                    >
-                        Unfriend
-                    </button>
-                </div>))) : (<p>You have no friends yet</p>)}
-            </div>
-        </section>
-
-        {/* Search Users */}
-        <section>
-            <h3>Find & Add Friends</h3>
-            <input
-                type="text"
-                placeholder="Search users..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-            />
-            {/* Inline confirmation message */}
-            {sendMessage && <div className="inline-message">{sendMessage}</div>}
-
-            {searchResults.length > 0 && (<div className="scroll-box">
-                {searchResults.map(u => (<div key={u.user_id} className="row">
-                <span>
-                    {u.display_name} (@{u.username})
-                    {u.friendship_status === 'friend' && (<span
-                        className="view-profile-link"
-                        onClick={() => navigate(`/profile/${u.user_id}`)}
-                        title="View Profile"
-                    >
-                            {' '}👁️
-                        </span>)}
-                </span>
-                    {getButtonForUser(u)}
-                </div>))}
-            </div>)}
-
-        </section>
-
-        {/* Favorites Section */}
-        <section className="favorites-section">
-
-            {['anime', 'character', 'va'].map(type => (<div key={type} className="favorite-type-container">
-                <h4>Favorite {type.charAt(0).toUpperCase() + type.slice(1)}s</h4>
-                <div className="scroll-box fav-grid">
-                    {favorites.filter(f => f.entityType === type).length ? (favorites
-                        .filter(f => f.entityType === type)
-                        .map(f => {
-                            const path = `/${type}/${f.entityId}`;
-                            return (<div key={`${type}-${f.entityId}`} className="fav-item">
-                                <Link to={path} className="fav-card">
-                                    <img
-                                        src={f.imageUrl || placeholderImg}
-                                        alt={f.name}
-                                        className="fav-image"
-                                    />
-                                    <span className="fav-name">{f.name}</span>
-                                </Link>
-                            </div>);
-                        })) : (<p>No favorite {type}</p>)}
+            {/* Friends List */}
+            <section>
+                <h3>{friendsTitle}</h3>
+                <div className="scroll-box friends-list">
+                    {friends.length ? (friends.map(f => (<div key={f.user_id} className="friend-row">
+                                <img
+                                    src={f.profile_picture_url || placeholderImg}
+                                    alt={f.display_name}
+                                    className="friend-avatar"
+                                />
+                                <span
+                                    className="friend-name clickable"
+                                    onClick={() => navigate(`/profile/${f.user_id}`)}
+                                >
+                                    {f.display_name} (@{f.username})
+                                </span>
+                                {isOwnProfile && (<button
+                                        className="btn-small unfriend"
+                                        onClick={() => removeFriend(f.user_id)}
+                                    >
+                                        Unfriend
+                                    </button>)}
+                            </div>))) : (<p>{noFriendsText}</p>)}
                 </div>
-            </div>))}
-        </section>
-    </div>);
+            </section>
+
+            {/* Search Users - Only for own profile */}
+            {isOwnProfile && (<section>
+                    <h3>Find & Add Friends</h3>
+                    <input
+                        type="text"
+                        placeholder="Search users..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                    />
+                    {sendMessage && <div className="inline-message">{sendMessage}</div>}
+
+                    {searchResults.length > 0 && (<div className="scroll-box">
+                            {searchResults.map(u => (<div key={u.user_id} className="row">
+                                    <span>
+                                        {u.display_name} (@{u.username})
+                                        {u.friendship_status === 'friend' && (<span
+                                                className="view-profile-link"
+                                                onClick={() => navigate(`/profile/${u.user_id}`)}
+                                                title="View Profile"
+                                            >
+                                                {' '}👁️
+                                            </span>)}
+                                    </span>
+                                    {getButtonForUser(u)}
+                                </div>))}
+                        </div>)}
+                </section>)}
+
+            {/* Favorites Section */}
+            <section className="favorites-section">
+                {['anime', 'character', 'va'].map(type => (<div key={type} className="favorite-type-container">
+                        <h4>{favoritesPrefix} {type.charAt(0).toUpperCase() + type.slice(1)}s</h4>
+                        <div className="scroll-box fav-grid">
+                            {favorites.filter(f => f.entityType === type).length ? (favorites
+                                    .filter(f => f.entityType === type)
+                                    .map(f => {
+                                        const path = `/${type}/${f.entityId}`;
+                                        return (<div key={`${type}-${f.entityId}`} className="fav-item">
+                                                <Link to={path} className="fav-card">
+                                                    <img
+                                                        src={f.imageUrl || placeholderImg}
+                                                        alt={f.name}
+                                                        className="fav-image"
+                                                    />
+                                                    <span className="fav-name">{f.name}</span>
+                                                </Link>
+                                            </div>);
+                                    })) : (<p>No favorite {type}</p>)}
+                        </div>
+                    </div>))}
+            </section>
+        </div>);
 }
