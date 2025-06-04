@@ -3,9 +3,9 @@
 
 -- Clear existing data in proper order
 TRUNCATE TABLE continue_watching, watch_history, episode,
-  transaction_history, list_anime, anime_genre,
+  transaction_history, list_items, anime_genre,
   anime_character, friendship, user_anime_status,
-  user_favorite, list, review, media,
+  user_favorite, lists, review, media,
   characters, anime, voice_actor, genre,
   company, users
 RESTART IDENTITY CASCADE;
@@ -1022,53 +1022,51 @@ VALUES (1, 1, 'Amazing story and character development. The animation is top-not
         '2023-08-05 14:00:00');
 
 
--- Insert lists with proper visibility_type values
-INSERT INTO list (user_id, name, description, visibility_level, created_at)
-VALUES (1, 'Must Watch', 'My top anime recommendations for beginners', 'public', '2023-01-25 12:00:00'),
-       (1, 'Plan to Watch', 'Anime I want to check out soon', 'private', '2023-01-26 13:30:00'),
-       (2, 'All-Time Favorites', 'The best anime I''ve ever watched', 'public', '2023-02-28 16:45:00'),
-       (3, 'Slice of Life Collection', 'My favorite relaxing anime series', 'friends_only', '2023-03-20 09:15:00'),
-       (4, 'Mecha Masterpieces', 'The greatest robot anime ever made', 'public', '2023-04-15 14:20:00'),
-       (5, 'Action Anime', 'Best action-packed series', 'private', '2023-05-18 18:30:00'),
-       (6, 'Naruto Universe', 'Everything related to Naruto', 'public', '2023-05-20 21:30:00'),
-       (7, 'Psychological Thrillers', 'Anime that messes with your mind.', 'public', '2023-06-12 10:30:00'),
-       (8, 'Ghibli Gems', 'All the amazing Studio Ghibli films.', 'public', '2023-06-22 16:00:00'),
-       (9, 'Top Shonen', 'My absolute favorite Shonen Jump series.', 'public', '2023-07-08 11:30:00'),
-       (10, 'Hidden Gems', 'Underrated anime that deserve more recognition.', 'private', '2023-07-25 09:45:00'),
-       (11, 'Beautiful Animation', 'Anime with stunning visuals.', 'public', '2023-08-08 15:00:00'),
-       (12, 'Comedy Gold', 'Anime that always make me laugh.', 'friends_only', '2023-08-20 22:30:00'),
-       (13, 'Winter 2024 Watchlist', 'New anime I''m following this season.', 'private', '2024-01-05 10:00:00');
+-- Insert into updated 'lists' table
+INSERT INTO lists (user_id, title, created_at)
+VALUES (1, 'Must Watch', '2023-01-25 12:00:00'),
+       (1, 'Plan to Watch', '2023-01-26 13:30:00'),
+       (2, 'All-Time Favorites', '2023-02-28 16:45:00'),
+       (3, 'Slice of Life Collection', '2023-03-20 09:15:00'),
+       (4, 'Mecha Masterpieces', '2023-04-15 14:20:00'),
+       (5, 'Action Anime', '2023-05-18 18:30:00'),
+       (6, 'Naruto Universe', '2023-05-20 21:30:00'),
+       (7, 'Psychological Thrillers', '2023-06-12 10:30:00'),
+       (8, 'Ghibli Gems', '2023-06-22 16:00:00'),
+       (9, 'Top Shonen', '2023-07-08 11:30:00'),
+       (10, 'Hidden Gems', '2023-07-25 09:45:00'),
+       (11, 'Beautiful Animation', '2023-08-08 15:00:00'),
+       (12, 'Comedy Gold', '2023-08-20 22:30:00'),
+       (13, 'Winter 2024 Watchlist', '2024-01-05 10:00:00');
 
-
--- Insert list_anime
-INSERT INTO list_anime (list_id, anime_id, position, notes, added_at)
-VALUES (1, 1, 1, 'Perfect starter anime', '2023-01-25 12:05:00'),
-       (1, 3, 2, 'Amazing story', '2023-01-25 12:10:00'),
-       (1, 5, 3, 'Great for action fans', '2023-01-25 12:15:00'),
-       (2, 2, 1, 'Heard good things about this', '2023-01-26 13:35:00'),
-       (2, 4, 2, 'Need to check this out', '2023-01-26 13:40:00'),
-       (3, 1, 1, 'Masterpiece!', '2023-02-28 16:50:00'),
-       (3, 3, 2, 'Revolutionary for its genre', '2023-02-28 16:55:00'),
-       (3, 5, 3, 'Classic that never gets old', '2023-02-28 17:00:00'),
-       (4, 2, 1, 'So relaxing to watch', '2023-03-20 09:20:00'),
-       (5, 9, 1, 'Best mecha designs ever', '2023-04-15 14:25:00'),
-       (6, 1, 1, 'Action-packed and thrilling!', '2023-05-18 18:35:00'),
-       (6, 4, 2, 'Visually stunning fights.', '2023-05-18 18:40:00'),
-       (7, 43, 1, 'Original Naruto series, always a classic.', '2023-05-20 21:35:00'),
-       (7, 44, 2, 'Shippuden continues the epic story.', '2023-05-20 21:40:00'),
-       (8, 5, 1, 'Death Note is a true mind game.', '2023-06-12 10:35:00'),
-       (8, 12, 2, 'Steins;Gate makes you think.', '2023-06-12 10:40:00'),
-       (9, 3, 1, 'My neighbor Totoro is my favorite Ghibli film.', '2023-06-22 16:05:00'),
-       (9, 23, 2, 'Your Name is so beautiful.', '2023-06-22 16:10:00'),
-       (10, 46, 1, 'One Piece is an undeniable epic.', '2023-07-08 11:35:00'),
-       (10, 13, 2, 'Hunter x Hunter has amazing power system.', '2023-07-08 11:40:00'),
-       (11, 25, 1, 'Monster is a truly underrated gem.', '2023-07-25 09:50:00'),
-       (11, 27, 2, 'Mushishi is calm and unique.', '2023-07-25 09:55:00'),
-       (12, 14, 1, 'Violet Evergarden''s animation is breathtaking.', '2023-08-08 15:05:00'),
-       (12, 23, 2, 'Your Name has stunning visuals and story.', '2023-08-08 15:10:00'),
-       (13, 10, 1, 'One Punch Man always makes me laugh.', '2023-08-20 22:35:00'),
-       (13, 67, 2, 'Saiki K is pure comedy gold.', '2023-08-20 22:40:00');
-
+-- Insert into updated 'list_items' table (only list_id and anime_id retained)
+INSERT INTO list_items (list_id, anime_id)
+VALUES (1, 1),
+       (1, 3),
+       (1, 5),
+       (2, 2),
+       (2, 4),
+       (3, 1),
+       (3, 3),
+       (3, 5),
+       (4, 2),
+       (5, 9),
+       (6, 1),
+       (6, 4),
+       (7, 43),
+       (7, 44),
+       (8, 5),
+       (8, 12),
+       (9, 3),
+       (9, 23),
+       (10, 46),
+       (10, 13),
+       (11, 25),
+       (11, 27),
+       (12, 14),
+       (12, 23),
+       (13, 10),
+       (13, 67);
 
 -- Insert user_favorite
 INSERT INTO user_favorite (user_id, entity_type, entity_id, added_at, note)
@@ -1119,23 +1117,22 @@ VALUES (1, 1, 'COMPLETED', 3, '2023-01-20 14:30:00'),
        (15, 12, 'COMPLETED', 24, '2023-09-25 19:00:00');
 
 
--- Insert friendship
+-- Change all status values to lowercase
 INSERT INTO friendship (requester_id, addressee_id, status, created_at)
-VALUES (1, 2, 'ACCEPTED', '2023-02-01 10:00:00'),
-       (1, 3, 'ACCEPTED', '2023-02-02 11:30:00'),
-       (1, 4, 'PENDING', '2023-02-03 14:15:00'),
-       (2, 5, 'ACCEPTED', '2023-03-05 16:40:00'),
-       (3, 5, 'ACCEPTED', '2023-03-25 18:20:00'),
-       (4, 5, 'PENDING', '2023-04-20 19:45:00'),
-       (6, 1, 'ACCEPTED', '2023-05-22 12:30:00'),
-       (3, 6, 'REJECTED', '2023-05-23 13:45:00'),
-       (7, 8, 'ACCEPTED', '2023-06-15 09:00:00'),
-       (9, 10, 'PENDING', '2023-07-03 16:00:00'),
-       (11, 12, 'ACCEPTED', '2023-08-05 10:00:00'),
-       (13, 1, 'ACCEPTED', '2023-09-02 10:30:00'),
-       (14, 2, 'PENDING', '2023-09-11 14:00:00'),
-       (15, 3, 'ACCEPTED', '2023-09-21 18:00:00');
-
+VALUES (1, 2, 'accepted', '2023-02-01 10:00:00'),
+       (1, 3, 'accepted', '2023-02-02 11:30:00'),
+       (1, 4, 'pending', '2023-02-03 14:15:00'),
+       (2, 5, 'accepted', '2023-03-05 16:40:00'),
+       (3, 5, 'accepted', '2023-03-25 18:20:00'),
+       (4, 5, 'pending', '2023-04-20 19:45:00'),
+       (6, 1, 'accepted', '2023-05-22 12:30:00'),
+       (3, 6, 'rejected', '2023-05-23 13:45:00'),
+       (7, 8, 'accepted', '2023-06-15 09:00:00'),
+       (9, 10, 'pending', '2023-07-03 16:00:00'),
+       (11, 12, 'accepted', '2023-08-05 10:00:00'),
+       (13, 1, 'accepted', '2023-09-02 10:30:00'),
+       (14, 2, 'pending', '2023-09-11 14:00:00'),
+       (15, 3, 'accepted', '2023-09-21 18:00:00');
 
 -- Insert watch_history
 INSERT INTO watch_history (user_id, episode_id, watched_date, timestamp_position, completed, watched_percentage)

@@ -3,13 +3,13 @@ DROP TABLE IF EXISTS continue_watching CASCADE;
 DROP TABLE IF EXISTS watch_history CASCADE;
 DROP TABLE IF EXISTS episode CASCADE;
 DROP TABLE IF EXISTS transaction_history CASCADE;
-DROP TABLE IF EXISTS list_anime CASCADE;
+DROP TABLE IF EXISTS list_items CASCADE;
 DROP TABLE IF EXISTS anime_genre CASCADE;
 DROP TABLE IF EXISTS anime_character CASCADE;
 DROP TABLE IF EXISTS friendship CASCADE;
 DROP TABLE IF EXISTS user_anime_status CASCADE;
 DROP TABLE IF EXISTS user_favorite CASCADE;
-DROP TABLE IF EXISTS list CASCADE;
+DROP TABLE IF EXISTS lists CASCADE;
 DROP TABLE IF EXISTS review CASCADE;
 DROP TABLE IF EXISTS media CASCADE;
 DROP TABLE IF EXISTS characters CASCADE;
@@ -31,7 +31,7 @@ DROP INDEX IF EXISTS idx_character_va;
 DROP INDEX IF EXISts idx_anime_rating;
 
 -- visibility_level type
-DROP TYPE IF EXISTS visibility_type;
+DROP TYPE IF EXISTS visibility_type CASCADE;
 CREATE TYPE visibility_type AS ENUM ('private', 'public', 'friends_only');
 
 -- Create tables
@@ -118,15 +118,21 @@ CREATE TABLE review
     CONSTRAINT fk_review_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE
 );
 
-CREATE TABLE list
+-- Replace the original lists table creation with this:
+CREATE TABLE lists
 (
-    list_id          SERIAL PRIMARY KEY,
-    user_id          INTEGER      NOT NULL,
-    name             VARCHAR(255) NOT NULL,
-    description      TEXT,
-    visibility_level visibility_type DEFAULT 'private',
-    created_at       TIMESTAMPTZ     DEFAULT NOW(),
-    updated_at       TIMESTAMPTZ     DEFAULT NOW()
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER REFERENCES users (user_id) ON DELETE CASCADE,
+    title      VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Then create the list_items table
+CREATE TABLE list_items
+(
+    list_id  INTEGER REFERENCES lists (id) ON DELETE CASCADE,
+    anime_id INTEGER REFERENCES anime (anime_id) ON DELETE CASCADE,
+    PRIMARY KEY (list_id, anime_id)
 );
 
 CREATE TABLE user_favorite
@@ -173,15 +179,7 @@ CREATE TABLE anime_genre
     PRIMARY KEY (anime_id, genre_id)
 );
 
-CREATE TABLE list_anime
-(
-    list_id  INTEGER NOT NULL,
-    anime_id INTEGER NOT NULL,
-    position INTEGER,
-    notes    TEXT,
-    added_at TIMESTAMPTZ DEFAULT NOW(),
-    PRIMARY KEY (list_id, anime_id)
-);
+
 
 CREATE TABLE transaction_history
 (
@@ -261,9 +259,6 @@ ALTER TABLE review
 ALTER TABLE review
     ADD CONSTRAINT unique_user_anime_review UNIQUE (user_id, anime_id);
 
-ALTER TABLE list
-    ADD CONSTRAINT fk_list_user FOREIGN KEY (user_id) REFERENCES users (user_id);
-
 ALTER TABLE user_favorite
     ADD CONSTRAINT fk_user_favorite_user FOREIGN KEY (user_id) REFERENCES users (user_id);
 
@@ -279,6 +274,9 @@ ALTER TABLE friendship
 ALTER TABLE friendship
     ADD CONSTRAINT fk_friendship_addressee FOREIGN KEY (addressee_id) REFERENCES users (user_id);
 
+ALTER TABLE friendship
+    ADD CONSTRAINT chk_status CHECK (status IN ('pending', 'accepted', 'rejected'));
+
 ALTER TABLE anime_character
     ADD CONSTRAINT fk_anime_character_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id);
 
@@ -291,11 +289,6 @@ ALTER TABLE anime_genre
 ALTER TABLE anime_genre
     ADD CONSTRAINT fk_anime_genre_genre FOREIGN KEY (genre_id) REFERENCES genre (genre_id);
 
-ALTER TABLE list_anime
-    ADD CONSTRAINT fk_list_anime_list FOREIGN KEY (list_id) REFERENCES list (list_id);
-
-ALTER TABLE list_anime
-    ADD CONSTRAINT fk_list_anime_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id);
 
 ALTER TABLE transaction_history
     ADD CONSTRAINT fk_transaction_user FOREIGN KEY (user_id) REFERENCES users (user_id);
@@ -338,9 +331,7 @@ FROM continue_watching
 WHERE user_id = NEW.user_id
   AND episode_id IN (SELECT e.episode_id
                      FROM episode e
-                     WHERE e.anime_id = (SELECT anime_id FROM new_anime)
-                       AND e.episode_id
-    != NEW.episode_id );
+                     WHERE e.anime_id = (SELECT anime_id FROM new_anime) AND e.episode_id != NEW.episode_id );
 
 -- Delete oldest entries if count exceeds 5 (counting unique animes)
 DELETE

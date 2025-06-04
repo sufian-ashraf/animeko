@@ -1,0 +1,41 @@
+/* src/styles/ListDetail.css */
+.list-detail-container {
+    padding: 20px;
+}
+.anime-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.anime-card {
+    width: 120px;
+    text-align: center;
+}
+.anime-card img {
+    width: 100%;
+    border-radius: 4px;
+}
+.list-detail-container form {
+    margin-top: 12px;
+}
+.list-detail-container input {
+    padding: 8px;
+    margin-right: 8px;
+}
+.search-add-section {
+    margin-top: 2rem;
+}
+
+.search-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.search-card {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    width: 200px;
+}

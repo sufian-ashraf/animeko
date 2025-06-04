@@ -14,6 +14,7 @@ import companyRoutes from './routes/companyRoutes.js';
 import friendRoutes from './routes/friendRoutes.js';
 import favoriteRoutes from './routes/favoriteRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
+import listRoutes from './routes/listRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -36,6 +37,7 @@ app.use('/api', companyRoutes);
 app.use('/api', friendRoutes);
 app.use('/api', favoriteRoutes);
 app.use('/api', reviewRoutes);
+app.use('/lists', listRoutes);
 
 // Test database connection
 pool.connect()

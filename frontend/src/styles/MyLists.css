@@ -1,0 +1,25 @@
+.create-list-form {
+    margin: 1rem 0;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.create-list-form input {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.create-list-form button {
+    padding: 0.5rem 1rem;
+    background-color: #1e90ff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.create-list-form button:hover {
+    background-color: #1c86ee;
+}
