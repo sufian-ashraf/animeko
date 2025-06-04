@@ -2,94 +2,115 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import pool from '../db.js';
+import db from '../db.js';
 
 const router = express.Router();
 
 // Register new user
 router.post('/register', async (req, res) => {
     try {
-        const {username, email, password, display_name} = req.body;
+        const { username, email, password, display_name, adminCode } = req.body;
 
-        // Validate input
+        // 1) Validate required fields
         if (!username || !email || !password) {
-            return res.status(400).json({message: 'Username, email and password are required'});
+            return res.status(400).json({ message: 'Username, email, and password are required.' });
         }
 
-        // Check if user already exists
-        const userCheck = await pool.query('SELECT * FROM users WHERE username = $1 OR email = $2', [username, email]);
-
-        if (userCheck.rows.length > 0) {
-            return res.status(409).json({message: 'Username or email already exists'});
+        // 2) Check if username/email already exist
+        const existing = await db.query(
+            'SELECT user_id FROM users WHERE username = $1 OR email = $2',
+            [username, email]
+        );
+        if (existing.rows.length > 0) {
+            return res.status(409).json({ message: 'Username or email already in use.' });
         }
 
-        // Hash password
+        // 3) Hash password
         const saltRounds = 10;
-        const passwordHash = await bcrypt.hash(password, saltRounds);
+        const password_hash = await bcrypt.hash(password, saltRounds);
 
-        // Insert user
-        const result = await pool.query('INSERT INTO users (username, email, password_hash, display_name, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING user_id, username, email, display_name', [username, email, passwordHash, display_name || username]);
+        // 4) Decide is_admin based on provided adminCode
+        //    Store your “secret admin code” in an environment variable, e.g. process.env.ADMIN_SECRET
+        let is_admin = false;
+        if (adminCode && adminCode === process.env.ADMIN_SECRET) {
+            is_admin = true;
+        }
+
+        // 5) Insert new user
+        const insert = await db.query(
+            `INSERT INTO users (username, email, password_hash, display_name, is_admin)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING user_id, username, email, display_name, is_admin`,
+            [username, email, password_hash, display_name || username, is_admin]
+        );
+        const newUser = insert.rows[0];
+
+        // 6) Optionally auto‐login: sign a JWT including "is_admin" and "user_id"
+        const tokenPayload = {
+            id: newUser.user_id,
+            username: newUser.username,
+            is_admin: newUser.is_admin
+        };
+        const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
+            expiresIn: '7d'
+        });
+        // console.log('>>> Signing JWT payload:', tokenPayload);
 
         res.status(201).json({
-            message: 'User registered successfully', user: result.rows[0]
+            user: {
+                user_id: newUser.user_id,
+                username: newUser.username,
+                display_name: newUser.display_name,
+                is_admin: newUser.is_admin
+            },
+            token
         });
-
-    } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({message: 'Server error during registration'});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Registration failed.' });
     }
 });
 
-// User login
+// POST /api/auth/login
 router.post('/login', async (req, res) => {
+    const {username, password} = req.body;
     try {
-        const {username, password} = req.body;
-
-        // Validate input
-        if (!username || !password) {
-            return res.status(400).json({message: 'Username and password are required'});
-        }
-
-        // Find user by username
-        const result = await pool.query('SELECT user_id, username, email, display_name, password_hash FROM users WHERE username = $1', [username]);
-
-        if (result.rows.length === 0) {
+        const result = await db.query('SELECT user_id, username, password_hash, is_admin FROM users WHERE username = $1', [username]);
+        if (!result.rows.length) {
             return res.status(401).json({message: 'Invalid credentials'});
         }
-
         const user = result.rows[0];
-
-        // Check password
-        const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-
-        if (!isPasswordValid) {
+        const match = await bcrypt.compare(password, user.password_hash);
+        if (!match) {
             return res.status(401).json({message: 'Invalid credentials'});
         }
 
-        // Update last login
-        await pool.query('UPDATE users SET last_login = NOW() WHERE user_id = $1', [user.user_id]);
+        // Create JWT payload including is_admin
+        const payload = {
+            id: user.user_id, username: user.username, is_admin: user.is_admin
+        };
 
-        // Generate JWT token
-        const token = jwt.sign({
-            id: user.user_id, username: user.username
-        }, process.env.JWT_SECRET, {expiresIn: '24h'});
+        const token = jwt.sign(payload, process.env.JWT_SECRET, {
+            expiresIn: '7d'
+        });
 
+        // Return token + basic user info
         res.json({
-            message: 'Login successful', token, user: {
-                id: user.user_id, username: user.username, email: user.email, display_name: user.display_name
+            token, user: {
+                user_id: user.user_id, username: user.username, is_admin: user.is_admin
             }
         });
-
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({message: 'Server error during login'});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({message: 'Server error'});
     }
 });
+
 
 // Get user profile
 router.get('/profile', authenticateToken, async (req, res) => {
     try {
-        const result = await pool.query('SELECT user_id, username, email, display_name, profile_bio, created_at, subscription_status FROM users WHERE user_id = $1', [req.user.id]);
+        const result = await db.query('SELECT user_id, username, email, display_name, profile_bio, created_at, subscription_status FROM users WHERE user_id = $1', [req.user.id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({message: 'User not found'});
@@ -108,7 +129,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
     try {
         const {display_name, profile_bio} = req.body;
 
-        const result = await pool.query('UPDATE users SET display_name = $1, profile_bio = $2 WHERE user_id = $3 RETURNING user_id, username, email, display_name, profile_bio', [display_name, profile_bio, req.user.id]);
+        const result = await db.query('UPDATE users SET display_name = $1, profile_bio = $2 WHERE user_id = $3 RETURNING user_id, username, email, display_name, profile_bio', [display_name, profile_bio, req.user.id]);
 
         res.json({
             message: 'Profile updated successfully', user: result.rows[0]

@@ -15,6 +15,9 @@ function Navigation() {
 
     return (<nav className="top-nav">
         <Link to="/" className="nav-link">Home</Link>
+        {user && user.is_admin && (
+            <Link to="/admin-dashboard">Admin Dashboard</Link>
+        )}
         {user ? (<>
             <Link to="/profile" className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}>
                 Profile

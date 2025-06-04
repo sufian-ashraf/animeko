@@ -1,5 +1,7 @@
 import express from 'express';
 import pool from '../db.js';
+import authenticate from '../middlewares/authenticate.js';
+ import authorizeAdmin from '../middlewares/authorizeAdmin.js';
 
 const router = express.Router();
 
@@ -31,5 +33,50 @@ router.get('/genre/:genreId', async (req, res) => {
         res.status(500).json({message: 'Server error'});
     }
 });
+
+// ─── ADMIN‐ONLY ───────────────────────────────────
+// POST /api/genre
+router.post('/genre', authenticate, authorizeAdmin, async (req, res) => {
+    const { name, description } = req.body;
+    try {
+        const result = await pool.query(
+            `INSERT INTO genre (name, description) VALUES ($1, $2) RETURNING genre_id AS id, name`,
+            [name, description]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to create genre' });
+    }
+});
+
+// PUT /api/genre/:genreId
+router.put('/genre/:genreId', authenticate, authorizeAdmin, async (req, res) => {
+    const { genreId } = req.params;
+    const { name, description } = req.body;
+    try {
+        await pool.query(
+            `UPDATE genre SET name = $1, description = $2 WHERE genre_id = $3`,
+            [name, description, genreId]
+        );
+        res.json({ message: 'Genre updated' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to update genre' });
+    }
+});
+
+// DELETE /api/genre/:genreId
+router.delete('/genre/:genreId', authenticate, authorizeAdmin, async (req, res) => {
+    const { genreId } = req.params;
+    try {
+        await pool.query(`DELETE FROM genre WHERE genre_id = $1`, [genreId]);
+        res.json({ message: 'Genre deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to delete genre' });
+    }
+});
+
 
 export default router;

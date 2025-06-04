@@ -6,7 +6,7 @@ import '../styles/Auth.css';
 
 const Register = () => {
     const [formData, setFormData] = useState({
-        username: '', email: '', password: '', confirmPassword: '', display_name: ''
+        username: '', email: '', password: '', confirmPassword: '', display_name: '', adminCode: ''
     });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +59,8 @@ const Register = () => {
                 username: formData.username,
                 email: formData.email,
                 password: formData.password,
-                display_name: formData.display_name || formData.username
+                display_name: formData.display_name || formData.username,
+                adminCode: formData.adminCode
             });
 
             // Automatically log them in
@@ -144,6 +145,20 @@ const Register = () => {
                         onChange={handleChange}
                         disabled={isLoading}
                         required
+                    />
+                </div>
+
+                {/* Optional “Admin Code” field */}
+                <div className="form-group">
+                    <label htmlFor="adminCode">Admin Code (optional)</label>
+                    <input
+                        id="adminCode"
+                        name="adminCode"
+                        type="password"
+                        value={formData.adminCode}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        placeholder="Leave blank for normal user"
                     />
                 </div>
 

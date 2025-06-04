@@ -3,6 +3,7 @@
 import express from 'express';
 import pool from '../db.js';
 import authenticate from '../middlewares/authenticate.js';
+import authorizeAdmin from '../middlewares/authorizeAdmin.js';
 
 const router = express.Router();
 
@@ -128,6 +129,19 @@ router.get('/anime/:animeId/rating', async (req, res) => {
     } catch (err) {
         console.error('Error in GET /api/anime/:animeId/rating:', err);
         return res.status(500).json({message: 'Server error.'});
+    }
+});
+
+// ─── ADMIN‐ONLY ───────────────────────────────────────────────
+// DELETE /api/review/:reviewId  (admin can delete any review)
+router.delete('/review/:reviewId', authenticate, authorizeAdmin, async (req, res) => {
+    const { reviewId } = req.params;
+    try {
+        await db.query(`DELETE FROM review WHERE review_id = $1`, [reviewId]);
+        res.json({ message: 'Review deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to delete review' });
     }
 });
 

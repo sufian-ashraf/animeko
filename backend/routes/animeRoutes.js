@@ -1,7 +1,10 @@
 // backend/routes/animeRoutes.js
 import express from 'express';
+import authenticate from '../middlewares/authenticate.js';
+import authorizeAdmin from '../middlewares/authorizeAdmin.js';
 import pool from '../db.js'; // your shared pg Pool
 const router = express.Router();
+
 
 /**
  * GET /api/animes
@@ -136,88 +139,60 @@ router.get('/anime/:animeId', async (req, res) => {
     }
 });
 
-
-/**
- * GET /api/character/:charId
- * Returns character info + who voices them + which anime they appear in
- */
-router.get('/character/:charId', async (req, res) => {
-    const {charId} = req.params;
+// ─── ADMIN‐ONLY ───────────────────────────────────────────────
+// POST /api/anime        (create new anime)
+router.post('/anime', authenticate, authorizeAdmin, async (req, res) => {
+    const { title, synopsis, release_date, company_id } = req.body;
     try {
-        // 1) Basic character info
-        const charResult = await pool.query(`SELECT character_id   AS id,
-                                                    name,
-                                                    description,
-                                                    voice_actor_id AS "vaId"
-                                             FROM characters
-                                             WHERE character_id = $1`, [charId]);
-        if (charResult.rows.length === 0) {
-            return res.status(404).json({message: 'Character not found'});
-        }
-        const character = charResult.rows[0];
-
-        // 2) Voice actor info (if any)
-        if (character.vaId) {
-            const vaRes = await pool.query(`SELECT voice_actor_id AS id, name
-                                            FROM voice_actor
-                                            WHERE voice_actor_id = $1`, [character.vaId]);
-            if (vaRes.rows.length) {
-                character.vaName = vaRes.rows[0].name;
-            }
-        }
-
-        // 3) Anime list via anime_character join
-        const animeListRes = await pool.query(`SELECT a.anime_id AS "animeId",
-                                                      a.title    AS "animeTitle"
-                                               FROM anime_character ac
-                                                        JOIN anime a ON a.anime_id = ac.anime_id
-                                               WHERE ac.character_id = $1`, [charId]);
-        character.animeList = animeListRes.rows;  // always an array
-
-        return res.json(character);
+        const result = await pool.query(
+            `INSERT INTO anime (title, synopsis, release_date, company_id)
+       VALUES ($1, $2, $3, $4)
+       RETURNING anime_id AS id, title, synopsis`,
+            [title, synopsis, release_date, company_id]
+        );
+        res.status(201).json(result.rows[0]);
     } catch (err) {
-        console.error('Error fetching character detail:', err);
-        return res.status(500).json({message: 'Server error'});
+        console.error(err);
+        res.status(500).json({ message: 'Failed to create anime' });
     }
 });
 
-/**
- * GET /api/va/:vaId
- * Returns VA info + all their roles (anime ↔ character)
- */
-router.get('/va/:vaId', async (req, res) => {
-    const {vaId} = req.params;
-
+// PUT /api/anime/:animeId  (update existing anime)
+router.put('/anime/:animeId', authenticate, authorizeAdmin, async (req, res) => {
+    const { animeId } = req.params;
+    const { title, synopsis, release_date, company_id } = req.body;
     try {
-        // 1) Fetch basic VA info
-        const vaResult = await pool.query(`SELECT voice_actor_id AS id,
-                                                  name
-                                           FROM voice_actor
-                                           WHERE voice_actor_id = $1`, [vaId]);
-        if (vaResult.rows.length === 0) {
-            return res.status(404).json({message: 'Voice actor not found'});
-        }
-        const va = vaResult.rows[0];
-
-        // 2) Fetch all roles: for each character this VA voices, list the anime + character
-        const rolesResult = await pool.query(`SELECT ac.anime_id    AS "animeId",
-                                                     a.title        AS "animeTitle",
-                                                     c.character_id AS "characterId",
-                                                     c.name         AS "characterName"
-                                              FROM characters c
-                                                       JOIN anime_character ac ON ac.character_id = c.character_id
-                                                       JOIN anime a ON a.anime_id = ac.anime_id
-                                              WHERE c.voice_actor_id = $1`, [vaId]);
-
-        // Always attach a roles array, even if empty
-        va.roles = rolesResult.rows;
-
-        return res.json(va);
-
+        await pool.query(
+            `UPDATE anime
+       SET title = $1,
+           synopsis = $2,
+           release_date = $3,
+           company_id = $4
+       WHERE anime_id = $5`,
+            [title, synopsis, release_date, company_id, animeId]
+        );
+        res.json({ message: 'Anime updated' });
     } catch (err) {
-        console.error('Error fetching VA detail:', err);
-        return res.status(500).json({message: 'Server error'});
+        console.error(err);
+        res.status(500).json({ message: 'Failed to update anime' });
     }
 });
+
+// DELETE /api/anime/:animeId  (delete anime)
+router.delete('/anime/:animeId', authenticate, authorizeAdmin, async (req, res) => {
+    const { animeId } = req.params;
+    try {
+        await pool.query(`DELETE FROM anime WHERE anime_id = $1`, [animeId]);
+        res.json({ message: 'Anime deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to delete anime' });
+    }
+});
+
+
+
+
+
 
 export default router;

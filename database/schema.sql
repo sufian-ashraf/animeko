@@ -43,11 +43,12 @@ CREATE TABLE users
     password_hash         VARCHAR(255)        NOT NULL,
     display_name          VARCHAR(100),
     profile_bio           TEXT,
-    visible               BOOLEAN     DEFAULT TRUE,
-    created_at            TIMESTAMPTZ DEFAULT NOW(),
+    visible               BOOLEAN                      DEFAULT TRUE,
+    created_at            TIMESTAMPTZ                  DEFAULT NOW(),
     last_login            TIMESTAMPTZ,
-    subscription_status   BOOLEAN     DEFAULT FALSE,
-    active_transaction_id INTEGER
+    subscription_status   BOOLEAN                      DEFAULT FALSE,
+    active_transaction_id INTEGER,
+    is_admin              BOOLEAN             NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE company
@@ -132,8 +133,8 @@ CREATE TABLE list_items
 (
     list_id  INTEGER REFERENCES lists (id) ON DELETE CASCADE,
     anime_id INTEGER REFERENCES anime (anime_id) ON DELETE CASCADE,
-    rank INTEGER,
-    note TEXT,
+    rank     INTEGER,
+    note     TEXT,
     PRIMARY KEY (list_id, anime_id)
 );
 
