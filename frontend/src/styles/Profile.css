@@ -1,5 +1,8 @@
 /* frontend/src/styles/Profile.css */
 
+/* ================================
+   Color Variables
+   ================================ */
 :root {
     --primary-color: #2196f3;
     --primary-hover: #1976d2;
@@ -15,7 +18,9 @@
     --row-hover-bg: #e9ecef;
 }
 
-/* Layout */
+/* ================================
+   Layout
+   ================================ */
 .profile-page {
     max-width: 800px;
     margin: 2rem auto;
@@ -42,7 +47,9 @@
     float: right;
 }
 
-/* Headings & Text */
+/* ================================
+   Headings & Text
+   ================================ */
 .profile-card h2 {
     color: #333;
     margin-bottom: 25px;
@@ -64,7 +71,9 @@
     color: #333;
 }
 
-/* Forms & Buttons */
+/* ================================
+   Forms & Buttons
+   ================================ */
 .profile-form .form-group {
     margin-bottom: 20px;
 }
@@ -139,7 +148,9 @@
     cursor: not-allowed;
 }
 
-/* Alerts */
+/* ================================
+   Alerts
+   ================================ */
 .profile-error,
 .profile-success {
     padding: 10px;
@@ -157,7 +168,9 @@
     color: var(--success-color);
 }
 
-/* Scrollable Boxes */
+/* ================================
+   Scrollable Boxes
+   ================================ */
 .scroll-box {
     max-height: 180px;
     overflow-y: auto;
@@ -168,12 +181,15 @@
     white-space: nowrap;
 }
 
-/* Card & Grid for Favorites */
+/* ================================
+   Card & Grid for Favorites
+   ================================ */
+
 .fav-grid {
     display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
     gap: 0.75rem;
     padding: 10px;
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
 }
 
 .fav-card {
@@ -188,14 +204,12 @@
     color: inherit;
     position: relative;
     text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.fav-card.readonly button {
-    display: none;
-}
-
-.fav-card button {
-    margin-top: 0.5rem;
+.fav-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .fav-image {
@@ -211,13 +225,9 @@
     font-weight: 500;
     color: #222;
     line-height: 1.2;
-    max-height: 2.4em;
+    max-height: 2.4em;       /* allow up to two lines */
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.fav-card:hover .hover-preview {
-    display: block;
 }
 
 .hover-preview {
@@ -235,10 +245,8 @@
     z-index: 10;
 }
 
-.preview-img,
-.preview-name {
+.fav-card:hover .hover-preview {
     display: block;
-    text-align: center;
 }
 
 .preview-img {
@@ -254,7 +262,9 @@
     font-weight: bold;
 }
 
-/* List Rows (Friends, Generic Rows) */
+/* ================================
+   List Rows (Friends, Generic Rows)
+   ================================ */
 .row,
 .friend-row {
     display: flex;
@@ -277,7 +287,9 @@
     margin-bottom: 0;
 }
 
-/* Friends List & Avatars */
+/* ================================
+   Friends List & Avatars
+   ================================ */
 .friends-list {
     padding: 10px;
 }
@@ -314,7 +326,9 @@
     text-decoration: underline;
 }
 
-/* Status Badges & Small Buttons */
+/* ================================
+   Status Badges & Small Buttons
+   ================================ */
 .status-badge {
     padding: 2px 8px;
     border-radius: 12px;
@@ -374,7 +388,9 @@
     background: #c0392b;
 }
 
-/* Favorites Section Wrapper */
+/* ================================
+   Favorites Section Wrapper
+   ================================ */
 .favorites-section {
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -394,7 +410,9 @@
     border-bottom: none;
 }
 
-/* Navigation Back Button */
+/* ================================
+   Navigation Back Button
+   ================================ */
 .profile-nav .back-btn {
     background-color: #6c757d;
     color: #fff;
