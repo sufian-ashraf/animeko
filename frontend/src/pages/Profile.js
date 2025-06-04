@@ -25,6 +25,7 @@ export default function Profile() {
     const [friends, setFriends] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
+    const [sendMessage, setSendMessage] = useState(''); // inline confirmation
     const [favorites, setFavorites] = useState([]);
 
     // Fetch social & favs on mount
@@ -40,8 +41,7 @@ export default function Profile() {
             .then(r => r.json())
             .then(setFriends);
 
-        // ←— here: assume the API returns an array like:
-        // [{ entityType:'anime', entityId:12, name:'Naruto', image_url:'https://…' }, …]
+        // Favorites
         fetch('/api/favorites', {headers})
             .then(r => r.json())
             .then(setFavorites);
@@ -65,7 +65,7 @@ export default function Profile() {
             });
     }, [searchQuery, token]);
 
-    // Profile handlers (unchanged) …
+    // Profile handlers
     const handleChange = e => {
         const {name, value} = e.target;
         setFormData(f => ({...f, [name]: value}));
@@ -96,7 +96,7 @@ export default function Profile() {
         setIsEditing(false);
     };
 
-    // Social handlers (unchanged) …
+    // Social handlers
     const respondRequest = (requesterId, action) => {
         fetch(`/api/friends/requests/${requesterId}/${action}`, {
             method: 'POST', headers: {Authorization: `Bearer ${token}`},
@@ -118,18 +118,20 @@ export default function Profile() {
                 }, body: JSON.stringify({addresseeId: toUserId}),
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-                alert(data.message || 'Failed to send friend request');
+                const data = await response.json();
+                console.error('Failed to send friend request:', data.message || response.status);
                 return;
             }
 
+            // Clear the search field so the “Request Sent” badge appears
             setSearchQuery('');
-            alert('Friend request sent!');
+            // Show a 1-second inline confirmation
+            setSendMessage('Friend request sent!');
+            setTimeout(() => setSendMessage(''), 1000);
         } catch (err) {
             console.error('Error sending friend request:', err);
-            alert('Failed to send friend request');
+            // we do NOT show an alert popup
         }
     };
 
@@ -192,7 +194,7 @@ export default function Profile() {
     };
 
     if (!user) {
-        return (<div className="loading">Please log in to view your profile…</div>);
+        return <div className="loading">Please log in to view your profile…</div>;
     }
 
     return (<div className="profile-page">
@@ -206,7 +208,7 @@ export default function Profile() {
             />
 
             {editError && <div className="profile-error">{editError}</div>}
-            {editMessage && (<div className="profile-success">{editMessage}</div>)}
+            {editMessage && <div className="profile-success">{editMessage}</div>}
 
             {isEditing ? (<form onSubmit={handleSubmit} className="profile-form">
                 <div className="form-group">
@@ -232,11 +234,7 @@ export default function Profile() {
                     <button type="submit" disabled={loadingEdit}>
                         {loadingEdit ? 'Saving…' : 'Save Changes'}
                     </button>
-                    <button
-                        type="button"
-                        onClick={handleCancel}
-                        disabled={loadingEdit}
-                    >
+                    <button type="button" onClick={handleCancel} disabled={loadingEdit}>
                         Cancel
                     </button>
                 </div>
@@ -245,14 +243,9 @@ export default function Profile() {
                 <p>Email: {user.email}</p>
                 <p>Display Name: {user.display_name || 'Not set'}</p>
                 <p>Bio: {user.profile_bio || 'No bio provided'}</p>
-                <p>
-                    Member Since:{' '}
-                    {new Date(user.created_at).toLocaleDateString()}
-                </p>
+                <p>Member Since: {new Date(user.created_at).toLocaleDateString()}</p>
                 <div className="profile-buttons">
-                    <button onClick={() => setIsEditing(true)}>
-                        Edit Profile
-                    </button>
+                    <button onClick={() => setIsEditing(true)}>Edit Profile</button>
                     <button onClick={logout}>Logout</button>
                 </div>
             </div>)}
@@ -262,23 +255,19 @@ export default function Profile() {
         <section>
             <h3>Incoming Friend Requests</h3>
             <div className="scroll-box">
-                {incoming.length ? incoming.map(r => (<div key={r.user_id} className="row">
-                  <span>
-                    {r.display_name} (@{r.username})
-                  </span>
+                {incoming.length ? (incoming.map(r => (<div key={r.user_id} className="row">
+                <span>
+                  {r.display_name} (@{r.username})
+                </span>
                     <div>
-                        <button
-                            onClick={() => respondRequest(r.user_id, 'accept')}
-                        >
+                        <button onClick={() => respondRequest(r.user_id, 'accept')}>
                             Accept
                         </button>
-                        <button
-                            onClick={() => respondRequest(r.user_id, 'reject')}
-                        >
+                        <button onClick={() => respondRequest(r.user_id, 'reject')}>
                             Reject
                         </button>
                     </div>
-                </div>)) : <p>No pending requests</p>}
+                </div>))) : (<p>No pending requests</p>)}
             </div>
         </section>
 
@@ -286,7 +275,7 @@ export default function Profile() {
         <section>
             <h3>Your Friends</h3>
             <div className="scroll-box friends-list">
-                {friends.length ? friends.map(f => (<div key={f.user_id} className="friend-row">
+                {friends.length ? (friends.map(f => (<div key={f.user_id} className="friend-row">
                     <img
                         src={f.profile_picture_url || placeholderImg}
                         alt={f.display_name}
@@ -296,15 +285,15 @@ export default function Profile() {
                         className="friend-name clickable"
                         onClick={() => navigate(`/profile/${f.user_id}`)}
                     >
-                    {f.display_name} (@{f.username})
-                  </span>
+                  {f.display_name} (@{f.username})
+                </span>
                     <button
                         className="btn-small unfriend"
                         onClick={() => removeFriend(f.user_id)}
                     >
                         Unfriend
                     </button>
-                </div>)) : <p>You have no friends yet</p>}
+                </div>))) : (<p>You have no friends yet</p>)}
             </div>
         </section>
 
@@ -317,59 +306,50 @@ export default function Profile() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
             />
-            <div className="scroll-box">
-                {searchResults.length ? searchResults.map(u => (<div key={u.user_id} className="row">
-                  <span>
+            {/* Inline confirmation message */}
+            {sendMessage && <div className="inline-message">{sendMessage}</div>}
+
+            {searchResults.length > 0 && (<div className="scroll-box">
+                {searchResults.map(u => (<div key={u.user_id} className="row">
+                <span>
                     {u.display_name} (@{u.username})
-                      {u.friendship_status === 'friend' && (<span
-                          className="view-profile-link"
-                          onClick={() => navigate(`/profile/${u.user_id}`)}
-                          title="View Profile"
-                      >
-                        {' '}
-                          👁️
-                      </span>)}
-                  </span>
+                    {u.friendship_status === 'friend' && (<span
+                        className="view-profile-link"
+                        onClick={() => navigate(`/profile/${u.user_id}`)}
+                        title="View Profile"
+                    >
+                            {' '}👁️
+                        </span>)}
+                </span>
                     {getButtonForUser(u)}
-                </div>)) : <p>Type at least 2 characters to search</p>}
-            </div>
+                </div>))}
+            </div>)}
+
         </section>
 
         {/* Favorites Section */}
         <section className="favorites-section">
-            <h3>Your Favorites</h3>
 
             {['anime', 'character', 'va'].map(type => (<div key={type} className="favorite-type-container">
-                    <h4>{type.charAt(0).toUpperCase() + type.slice(1)} Favorites</h4>
-                    <div className="scroll-box fav-grid">
-                        {favorites.filter(f => f.entityType === type).length ? (favorites
-                                .filter(f => f.entityType === type)
-                                .map(f => {
-                                    const path = `/${type}/${f.entityId}`;
-                                    return (<div key={`${type}-${f.entityId}`} className="fav-item">
-                                            <Link to={path} className="fav-card">
-                                                <img
-                                                    src={f.imageUrl || placeholderImg}
-                                                    alt={f.name}
-                                                    className="fav-image"
-                                                />
-                                                <span className="fav-name">{f.name}</span>
-
-                                                {/* If you want a hover‐preview, you can do something like:
-                    <div className="hover-preview">
-                      <img
-                        src={f.imageUrl || placeholderImg}
-                        alt={f.name}
-                        className="preview-img"
-                      />
-                      <span className="preview-name">{f.name}</span>
-                    </div>
-                    */}
-                                            </Link>
-                                        </div>);
-                                })) : (<p>No {type} favorites</p>)}
-                    </div>
-                </div>))}
+                <h4>Favorite {type.charAt(0).toUpperCase() + type.slice(1)}s</h4>
+                <div className="scroll-box fav-grid">
+                    {favorites.filter(f => f.entityType === type).length ? (favorites
+                        .filter(f => f.entityType === type)
+                        .map(f => {
+                            const path = `/${type}/${f.entityId}`;
+                            return (<div key={`${type}-${f.entityId}`} className="fav-item">
+                                <Link to={path} className="fav-card">
+                                    <img
+                                        src={f.imageUrl || placeholderImg}
+                                        alt={f.name}
+                                        className="fav-image"
+                                    />
+                                    <span className="fav-name">{f.name}</span>
+                                </Link>
+                            </div>);
+                        })) : (<p>No favorite {type}</p>)}
+                </div>
+            </div>))}
         </section>
     </div>);
 }

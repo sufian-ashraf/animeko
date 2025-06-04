@@ -115,7 +115,8 @@ CREATE TABLE review
     rating     INTEGER CHECK (rating BETWEEN 1 AND 10),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT fk_review_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_review_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE);
+    CONSTRAINT fk_review_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE
+);
 
 CREATE TABLE list
 (
@@ -337,7 +338,9 @@ FROM continue_watching
 WHERE user_id = NEW.user_id
   AND episode_id IN (SELECT e.episode_id
                      FROM episode e
-                     WHERE e.anime_id = (SELECT anime_id FROM new_anime) AND e.episode_id != NEW.episode_id );
+                     WHERE e.anime_id = (SELECT anime_id FROM new_anime)
+                       AND e.episode_id
+    != NEW.episode_id );
 
 -- Delete oldest entries if count exceeds 5 (counting unique animes)
 DELETE

@@ -141,12 +141,12 @@ export const AuthProvider = ({children}) => {
     };
 
     return (<AuthContext.Provider
-            value={{
-                user, token, loading, error, login, register, logout, updateProfile
-            }}
-        >
-            {children}
-        </AuthContext.Provider>);
+        value={{
+            user, token, loading, error, login, register, logout, updateProfile
+        }}
+    >
+        {children}
+    </AuthContext.Provider>);
 };
 
 export const useAuth = () => {
