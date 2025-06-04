@@ -27,6 +27,7 @@ function Navigation() {
             <Link to="/register" className={`nav-link ${location.pathname === '/register' ? 'active' : ''}`}>
                 Register
             </Link>
+            <Link to="/search-lists" className="nav-link">Search Lists</Link>
         </>)}
     </nav>);
 }

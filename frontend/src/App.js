@@ -17,6 +17,7 @@ import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 import MyLists from './pages/MyLists';
 import ListDetail from './pages/ListDetail';
+import ListSearch from './pages/ListSearch';
 
 // Import CSS
 import './styles/App.css';
@@ -73,6 +74,15 @@ function App() {
                             element={<ProtectedRoute>
                                 <Profile/>
                             </ProtectedRoute>}
+                        />
+
+                        <Route
+                            path="/search-lists"
+                            element={
+                                <ProtectedRoute>
+                                    <ListSearch />
+                                </ProtectedRoute>
+                            }
                         />
 
                         {/* 404 Route */}
