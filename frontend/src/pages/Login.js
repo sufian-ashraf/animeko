@@ -1,6 +1,6 @@
 // frontend/src/pages/Login.js
-import React, {useState} from 'react';
-import {Link, useLocation, useNavigate} from 'react-router-dom';
+import React, {useState, useEffect} from 'react';
+import {Link, useLocation, useNavigate, useSearchParams} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
 import '../styles/Auth.css';
 
@@ -10,12 +10,21 @@ const Login = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const {login} = useAuth();
+    const {login, isAuthenticated} = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
 
-    // Get the page the user was trying to access before being redirected to login
-    const from = location.state?.from?.pathname || '/';
+    // Get the redirect URL from query parameters or location state
+    const redirectUrl = searchParams.get('redirect') || location.state?.from?.pathname || '/';
+
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (isAuthenticated) {
+            console.log('User is already authenticated, redirecting to:', redirectUrl);
+            navigate(redirectUrl, { replace: true });
+        }
+    }, [isAuthenticated, navigate, redirectUrl]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -29,8 +38,10 @@ const Login = () => {
         try {
             setIsLoading(true);
             await login(username, password);
-            navigate(from, {replace: true});
+            console.log('Login successful, redirecting to:', redirectUrl);
+            navigate(redirectUrl, { replace: true });
         } catch (err) {
+            console.error('Login error:', err);
             setError(err.message || 'Login failed. Please check your credentials.');
         } finally {
             setIsLoading(false);

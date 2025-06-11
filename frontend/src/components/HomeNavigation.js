@@ -3,7 +3,7 @@ import {Link, useLocation} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
 
 function Navigation() {
-    const {user, logout, loading} = useAuth();
+    const {user, logout, loading, isAdmin} = useAuth();
     const location = useLocation();
 
     // ✅ Hide navbar until auth loading finishes
@@ -15,13 +15,19 @@ function Navigation() {
 
     return (<nav className="top-nav">
         <Link to="/" className="nav-link">Home</Link>
-        {user && user.is_admin && (
-            <Link to="/admin-dashboard">Admin Dashboard</Link>
-        )}
+
         {user ? (<>
             <Link to="/profile" className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}>
                 Profile
             </Link>
+
+            {/* Admin-only link */}
+            {isAdmin && (
+                <Link to="/admin" className="nav-link admin-link">
+                    Admin Dashboard
+                </Link>
+            )}
+
             <button onClick={handleLogout} className="nav-link">Logout</button>
         </>) : (<>
             <Link to="/login" className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`}>

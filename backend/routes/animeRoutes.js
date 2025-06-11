@@ -140,58 +140,134 @@ router.get('/anime/:animeId', async (req, res) => {
 });
 
 // ─── ADMIN‐ONLY ───────────────────────────────────────────────
-// POST /api/anime        (create new anime)
-router.post('/anime', authenticate, authorizeAdmin, async (req, res) => {
+// POST /api/animes
+router.post('/animes', authenticate, authorizeAdmin, async (req, res) => {
     const { title, synopsis, release_date, company_id } = req.body;
+
     try {
+        // Convert empty strings to null for optional fields
+        const releaseDate = !release_date || release_date === '' ? null : release_date;
+        const companyId = !company_id || company_id === '' ? null : company_id;
+
         const result = await pool.query(
             `INSERT INTO anime (title, synopsis, release_date, company_id)
-       VALUES ($1, $2, $3, $4)
-       RETURNING anime_id AS id, title, synopsis`,
-            [title, synopsis, release_date, company_id]
+             VALUES ($1, $2, $3, $4)
+             RETURNING 
+                anime_id AS id, 
+                title, 
+                synopsis,
+                release_date as "releaseDate",
+                company_id as "companyId"`,
+            [title, synopsis, releaseDate, companyId]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Failed to create anime' });
+        console.error('Error creating anime:', err);
+        res.status(500).json({
+            message: 'Failed to create anime',
+            error: err.message
+        });
     }
 });
 
-// PUT /api/anime/:animeId  (update existing anime)
-router.put('/anime/:animeId', authenticate, authorizeAdmin, async (req, res) => {
+// PUT /api/animes/:animeId
+router.put('/animes/:animeId', authenticate, authorizeAdmin, async (req, res) => {
     const { animeId } = req.params;
     const { title, synopsis, release_date, company_id } = req.body;
+
     try {
-        await pool.query(
+        // Convert empty strings to null for optional fields
+        const releaseDate = !release_date || release_date === '' ? null : release_date;
+        const companyId = !company_id || company_id === '' ? null : company_id;
+
+        const result = await pool.query(
             `UPDATE anime
-       SET title = $1,
-           synopsis = $2,
-           release_date = $3,
-           company_id = $4
-       WHERE anime_id = $5`,
-            [title, synopsis, release_date, company_id, animeId]
+             SET 
+                title = COALESCE($1, title),
+                synopsis = COALESCE($2, synopsis),
+                release_date = COALESCE($3, release_date),
+                company_id = COALESCE($4, company_id)
+             WHERE anime_id = $5
+             RETURNING 
+                anime_id AS id, 
+                title, 
+                synopsis,
+                release_date as "releaseDate",
+                company_id as "companyId"`,
+            [title, synopsis, releaseDate, companyId, animeId]
         );
-        res.json({ message: 'Anime updated' });
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Anime not found' });
+        }
+
+        res.json(result.rows[0]);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Failed to update anime' });
+        console.error('Error updating anime:', err);
+        res.status(500).json({
+            message: 'Failed to update anime',
+            error: err.message
+        });
     }
 });
+
+
 
 // DELETE /api/anime/:animeId  (delete anime)
-router.delete('/anime/:animeId', authenticate, authorizeAdmin, async (req, res) => {
+router.delete('/animes/:animeId', authenticate, authorizeAdmin, async (req, res) => {
     const { animeId } = req.params;
+
+    // Validate animeId is a valid number
+    const id = parseInt(animeId, 10);
+    if (isNaN(id)) {
+        return res.status(400).json({
+            message: 'Invalid anime ID',
+            details: 'Anime ID must be a number'
+        });
+    }
+
+    const client = await pool.connect();
+
     try {
-        await pool.query(`DELETE FROM anime WHERE anime_id = $1`, [animeId]);
-        res.json({ message: 'Anime deleted' });
+        await client.query('BEGIN');
+
+        // First delete related records to avoid foreign key constraint violations
+        await client.query(
+            'DELETE FROM anime_character WHERE anime_id = $1',
+            [id]
+        );
+
+        // Then delete the anime
+        const result = await client.query(
+            'DELETE FROM anime WHERE anime_id = $1 RETURNING anime_id',
+            [id]
+        );
+
+        if (result.rowCount === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({
+                message: 'Anime not found',
+                id: id
+            });
+        }
+
+        await client.query('COMMIT');
+        res.json({
+            message: 'Anime deleted successfully',
+            id: id
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Failed to delete anime' });
+        await client.query('ROLLBACK');
+        console.error('Error deleting anime:', err);
+        res.status(500).json({
+            message: 'Failed to delete anime',
+            error: err.message,
+            details: err.detail
+        });
+    } finally {
+        client.release();
     }
 });
-
-
-
 
 
 

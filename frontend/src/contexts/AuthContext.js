@@ -16,31 +16,92 @@ export const AuthProvider = ({children}) => {
     };
 
     const fetchUserProfile = useCallback(async () => {
+        if (!token) {
+            setLoading(false);
+            return;
+        }
+
         try {
             setError(null);
+            // console.log('Fetching user profile with token:', token);
+            
             const response = await fetch('http://localhost:5000/api/auth/profile', {
                 headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
             });
 
+            // console.log('Profile response status:', response.status);
+            
             if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Profile fetch error:', errorData);
+                
                 if (response.status === 401 || response.status === 403) {
                     logout();
-                    throw new Error('Session expired. Please login again.');
+                    throw new Error(errorData.message || 'Session expired. Please login again.');
                 }
-                throw new Error('Failed to fetch user profile');
+                throw new Error(errorData.message || 'Failed to fetch user profile');
             }
 
             const userData = await response.json();
-            setUser(userData);
+            // console.log('Fetched user profile:', userData);
+            
+            // If is_admin is missing, try to fetch it directly from the database
+            if (userData.is_admin === undefined) {
+                console.warn('is_admin is missing from user profile, checking database...');
+                try {
+                    const adminCheck = await fetch('http://localhost:5000/api/auth/check-admin', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const adminData = await adminCheck.json();
+                    if (adminData.is_admin !== undefined) {
+                        userData.is_admin = adminData.is_admin;
+                        // console.log('Updated is_admin from direct check:', userData.is_admin);
+                    }
+                } catch (err) {
+                    console.error('Error checking admin status:', err);
+                }
+            }
+            
+            // Ensure we have all required user fields with proper types
+            const isAdmin = userData.is_admin === true || 
+                          userData.is_admin === 't' || 
+                          userData.is_admin === 1 ||
+                          userData.is_admin === 'true' ||
+                          userData.is_admin === '1';
+            
+            const userWithAdmin = {
+                id: userData.user_id || userData.id,
+                user_id: userData.user_id || userData.id,
+                username: userData.username,
+                email: userData.email || '',
+                display_name: userData.display_name || userData.username,
+                is_admin: isAdmin
+            };
+            
+            // console.log('Setting user with admin status:', {
+            //     ...userWithAdmin,
+            //     is_admin_raw: userData.is_admin,
+            //     is_admin_type: typeof userData.is_admin
+            // });
+            
+            setUser(userWithAdmin);
+            return userWithAdmin;
         } catch (error) {
+            console.error('Error in fetchUserProfile:', error);
             setError(error.message);
             setUser(null);
+            throw error;
         } finally {
             setLoading(false);
         }
-    }, [token]); // ✅ Proper memoization
+    }, [token, logout]);
 
     useEffect(() => {
         if (token) {
@@ -77,8 +138,20 @@ export const AuthProvider = ({children}) => {
             }
 
             setToken(data.token);
-            setUser(data.user);
-            return data;
+            
+            // Ensure we have all required user fields with proper types
+            const userWithAdmin = {
+                id: data.user.user_id,  // Make sure we're using the correct field name
+                user_id: data.user.user_id,  // Keep both for compatibility
+                username: data.user.username,
+                email: data.user.email || '',
+                display_name: data.user.display_name || data.user.username,
+                is_admin: Boolean(data.user.is_admin)
+            };
+            
+            console.log('Login successful, user set:', userWithAdmin);
+            setUser(userWithAdmin);
+            return userWithAdmin;
         } catch (error) {
             setError(error.message);
             throw error;
@@ -140,18 +213,30 @@ export const AuthProvider = ({children}) => {
         }
     };
 
-    return (<AuthContext.Provider
-        value={{
-            user, token, loading, error, login, register, logout, updateProfile
-        }}
-    >
-        {children}
-    </AuthContext.Provider>);
+    // Check if user is authenticated (has a token and user data)
+    const isAuthenticated = !!token && !!user;
+
+    return (
+        <AuthContext.Provider value={{
+            user,
+            token,
+            loading,
+            error,
+            isAuthenticated,
+            login,
+            logout,
+            register,
+            updateProfile,
+            isAdmin: user?.is_admin || false
+        }}>
+            {!loading && children}
+        </AuthContext.Provider>
+    );
 };
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (!context) {
+    if (context === null) {
         throw new Error('useAuth must be used within an AuthProvider');
     }
     return context;

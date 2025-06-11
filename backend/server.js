@@ -17,6 +17,7 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import listRoutes from './routes/listRoutes.js';
 import characterRoutes from "./routes/characterRoutes.js";
 import VARoutes from "./routes/VARoutes.js";
+import voiceActorRoutes from "./routes/voiceActorRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,10 +27,19 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 // Enable CORS for requests from your frontend
-app.use(cors({
-    origin: 'http://localhost:3000', // or whatever your frontend runs on
-    credentials: true // if you're using cookies or auth headers
-}));
+const corsOptions = {
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+};
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
+// Parse JSON bodies
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
@@ -42,6 +52,7 @@ app.use('/api', reviewRoutes);
 app.use('/lists', listRoutes);
 app.use('/api', characterRoutes);
 app.use('/api', VARoutes);
+app.use('/api', voiceActorRoutes);
 
 // Test database connection
 pool.connect()
@@ -73,18 +84,40 @@ const errorHandler = (err, req, res, next) => {
 
 
 app.get('/api/auth/profile', authenticate, (req, res) => {
-    if (!req.user) {
-        return res.status(401).json({message: "Unauthorized"});
-    }
+    // The authenticate middleware has already set req.user with all the necessary fields
+    // Just return the user object as is
+    console.log('Profile endpoint - returning user:', req.user);
+    return res.status(200).json(req.user);
+});
 
-    // ✅ Send full profile object
-    return res.status(200).json({
-        username: req.user.username,
-        email: req.user.email,
-        display_name: req.user.display_name,
-        profile_bio: req.user.profile_bio,
-        created_at: req.user.created_at
-    });
+// Direct admin check endpoint
+app.get('/api/auth/check-admin', authenticate, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT is_admin FROM users WHERE user_id = $1', 
+            [req.user.id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        const isAdmin = result.rows[0].is_admin === true || 
+                       result.rows[0].is_admin === 't' || 
+                       result.rows[0].is_admin === 1;
+        
+        // console.log('Direct admin check for user:', {
+        //     userId: req.user.id,
+        //     username: req.user.username,
+        //     is_admin: isAdmin,
+        //     raw_value: result.rows[0].is_admin
+        // });
+        
+        return res.status(200).json({ is_admin: isAdmin });
+    } catch (err) {
+        console.error('Error in admin check:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 

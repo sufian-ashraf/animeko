@@ -1,7 +1,8 @@
 import React from 'react';
 import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import {AuthProvider} from './contexts/AuthContext';
-import {ProtectedRoute} from './components/ProtectedRoute';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import AdminRoute from './components/admin/AdminRoute';
 import Navigation from './components/HomeNavigation';
 
 // Import pages
@@ -18,6 +19,7 @@ import NotFound from './pages/NotFound';
 import MyLists from './pages/MyLists';
 import ListDetail from './pages/ListDetail';
 import ListSearch from './pages/ListSearch';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Import CSS
 import './styles/App.css';
@@ -44,6 +46,14 @@ function App() {
                         <Route path="/" element={<Home/>}/>
                         <Route path="/login" element={<Login/>}/>
                         <Route path="/register" element={<Register/>}/>
+                        <Route 
+                            path="/admin" 
+                            element={
+                                <AdminRoute>
+                                    <AdminDashboard />
+                                </AdminRoute>
+                            } 
+                        />
                         <Route path="/anime/:animeId" element={<AnimePage/>}/>
                         <Route path="/character/:charId" element={<CharacterPage/>}/>
                         <Route path="/va/:vaId" element={<VAPage/>}/>
