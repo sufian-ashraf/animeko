@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import React, {useEffect, useState} from 'react';
+import {useAuth} from '../../contexts/AuthContext';
 
-const AnimeTab = ({ searchQuery }) => {
-    const { token } = useAuth();
+const AnimeTab = ({searchQuery}) => {
+    const {token} = useAuth();
     const [animeList, setAnimeList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -28,7 +28,7 @@ const AnimeTab = ({ searchQuery }) => {
             }
             const data = await response.json();
             // Ensure consistent ID field names
-            const formattedData = Array.isArray(data) 
+            const formattedData = Array.isArray(data)
                 ? data.map(anime => ({
                     ...anime,
                     anime_id: anime.anime_id || anime.id, // Use anime_id if available, fallback to id
@@ -56,11 +56,18 @@ const AnimeTab = ({ searchQuery }) => {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
+    };
+
+    const showError = (message) => {
+        setError(message);
+        setTimeout(() => {
+            setError('');
+        }, 5000);
     };
 
     const handleSubmit = async (e) => {
@@ -68,7 +75,21 @@ const AnimeTab = ({ searchQuery }) => {
         setLoading(true);
         setError('');
 
-        const url = editingId 
+        if (!formData.title.trim()) {
+            showError('Anime title is required');
+            setLoading(false);
+            return;
+        }
+
+        // Check for duplicate title
+        const existingAnime = animeList.find(anime => anime.title.toLowerCase() === formData.title.trim().toLowerCase());
+        if (existingAnime && existingAnime.anime_id !== editingId) {
+            showError('Anime with this title already exists');
+            setLoading(false);
+            return;
+        }
+
+        const url = editingId
             ? `http://localhost:5000/api/animes/${editingId}`
             : 'http://localhost:5000/api/animes';
         const method = editingId ? 'PUT' : 'POST';
@@ -80,18 +101,25 @@ const AnimeTab = ({ searchQuery }) => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({
+                    title: formData.title.trim(),
+                    synopsis: formData.synopsis || null,
+                    release_date: formData.release_date || null,
+                    company_id: formData.company_id ? Number(formData.company_id) : null
+                })
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || (editingId ? 'Failed to update anime' : 'Failed to add anime'));
+                showError(errorData.message || (editingId ? 'Failed to update anime' : 'Failed to add anime'));
+                setLoading(false);
+                return;
             }
 
             await fetchAnime();
             resetForm();
         } catch (err) {
-            setError(err.message);
+            showError(err.message);
         } finally {
             setLoading(false);
         }
@@ -99,38 +127,38 @@ const AnimeTab = ({ searchQuery }) => {
 
     const handleEdit = (anime) => {
         if (!anime) return;
-        
+
         // Use either anime_id or id, whichever is available
         const animeId = anime.anime_id || anime.id;
         if (!animeId) {
-            setError('Invalid anime data: missing ID');
+            showError('Invalid anime data: missing ID');
             return;
         }
-        
+
         setFormData({
             title: anime.title || '',
             synopsis: anime.synopsis || '',
             release_date: anime.release_date ? anime.release_date.split('T')[0] : '',
-            company_id: anime.company_id || ''
+            company_id: anime.company_id ? String(anime.company_id) : ''
         });
         setEditingId(animeId);
     };
 
     const handleDelete = async (id) => {
         if (!id) {
-            setError('Invalid anime ID');
+            showError('Invalid anime ID');
             return;
         }
-        
+
         if (!window.confirm('Are you sure you want to delete this anime?')) return;
-        
+
         try {
             // Convert to number in case it's a string
             const animeId = Number(id);
             if (isNaN(animeId)) {
                 throw new Error('Invalid anime ID format');
             }
-            
+
             const response = await fetch(`http://localhost:5000/api/animes/${animeId}`, {
                 method: 'DELETE',
                 headers: {
@@ -141,17 +169,18 @@ const AnimeTab = ({ searchQuery }) => {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Failed to delete anime');
+                showError(errorData.message || 'Failed to delete anime');
+                return;
             }
 
             // Refresh the list after successful deletion
             await fetchAnime();
-            
+
             // Show success message
             setError('');
         } catch (err) {
             console.error('Delete error:', err);
-            setError(err.message || 'Failed to delete anime');
+            showError(err.message || 'Failed to delete anime');
         }
     };
 
@@ -163,6 +192,7 @@ const AnimeTab = ({ searchQuery }) => {
             company_id: ''
         });
         setEditingId(null);
+        setError('');
     };
 
     const filteredAnime = animeList.filter(anime =>
@@ -170,12 +200,12 @@ const AnimeTab = ({ searchQuery }) => {
     );
 
     if (loading) return <div className="loading">Loading...</div>;
-    if (error) return <div className="error">{error}</div>;
 
     return (
         <div className="admin-tab-content">
             <div className="admin-form-section">
                 <h2>{editingId ? 'Edit Anime' : 'Add New Anime'}</h2>
+                {error && <div className="alert alert-danger mt-2">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Title *</label>

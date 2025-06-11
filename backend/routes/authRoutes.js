@@ -9,11 +9,11 @@ const router = express.Router();
 // Register new user
 router.post('/register', async (req, res) => {
     try {
-        const { username, email, password, display_name, adminCode } = req.body;
+        const {username, email, password, display_name, adminCode} = req.body;
 
         // 1) Validate required fields
         if (!username || !email || !password) {
-            return res.status(400).json({ message: 'Username, email, and password are required.' });
+            return res.status(400).json({message: 'Username, email, and password are required.'});
         }
 
         // 2) Check if username/email already exist
@@ -22,7 +22,7 @@ router.post('/register', async (req, res) => {
             [username, email]
         );
         if (existing.rows.length > 0) {
-            return res.status(409).json({ message: 'Username or email already in use.' });
+            return res.status(409).json({message: 'Username or email already in use.'});
         }
 
         // 3) Hash password
@@ -39,8 +39,7 @@ router.post('/register', async (req, res) => {
         // 5) Insert new user
         const insert = await db.query(
             `INSERT INTO users (username, email, password_hash, display_name, is_admin)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING user_id, username, email, display_name, is_admin`,
+             VALUES ($1, $2, $3, $4, $5) RETURNING user_id, username, email, display_name, is_admin`,
             [username, email, password_hash, display_name || username, is_admin]
         );
         const newUser = insert.rows[0];
@@ -67,7 +66,7 @@ router.post('/register', async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Registration failed.' });
+        res.status(500).json({message: 'Registration failed.'});
     }
 });
 

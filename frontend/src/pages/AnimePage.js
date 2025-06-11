@@ -224,166 +224,166 @@ export default function AnimePage() {
     const {title, synopsis, company, genres = [], cast = []} = anime;
 
     return (<div className="anime-page">
-            {/* ───── Header Card ──────────────── */}
-            <div className="anime-header-card">
-                <img
-                    src={placeholder}
-                    alt={`${title} placeholder`}
-                    className="anime-photo"
-                />
-                <div className="anime-meta">
-                    <div className="anime-meta-header">
-                        <h2 className="anime-name">{title}</h2>
-                        <button
-                            className={`favorite-btn ${isFavorite ? 'favorited' : ''}`}
-                            onClick={handleToggleFavorite}
-                            disabled={favLoading}
-                        >
-                            {favLoading ? '…' : isFavorite ? '★ Unfavorite' : '☆ Favorite'}
-                        </button>
-                    </div>
+        {/* ───── Header Card ──────────────── */}
+        <div className="anime-header-card">
+            <img
+                src={placeholder}
+                alt={`${title} placeholder`}
+                className="anime-photo"
+            />
+            <div className="anime-meta">
+                <div className="anime-meta-header">
+                    <h2 className="anime-name">{title}</h2>
+                    <button
+                        className={`favorite-btn ${isFavorite ? 'favorited' : ''}`}
+                        onClick={handleToggleFavorite}
+                        disabled={favLoading}
+                    >
+                        {favLoading ? '…' : isFavorite ? '★ Unfavorite' : '☆ Favorite'}
+                    </button>
+                </div>
 
-                    {/* ───── Average Rating & Rank ──────────── */}
-                    <div className="anime-average-rating">
-                        {averageRating === null ? (<span className="no-rating">No ratings yet.</span>) : (
-                            <div className="stars-and-rank">
-                                {(() => {
-                                    const rounded = roundToHalf(averageRating);
-                                    const fullStars = Math.floor(rounded);
-                                    const halfStar = rounded - fullStars === 0.5;
+                {/* ───── Average Rating & Rank ──────────── */}
+                <div className="anime-average-rating">
+                    {averageRating === null ? (<span className="no-rating">No ratings yet.</span>) : (
+                        <div className="stars-and-rank">
+                            {(() => {
+                                const rounded = roundToHalf(averageRating);
+                                const fullStars = Math.floor(rounded);
+                                const halfStar = rounded - fullStars === 0.5;
 
-                                    return (<span className="star-row">
+                                return (<span className="star-row">
                       {[1, 2, 3, 4, 5].map((i) => {
                           if (i <= fullStars) return <span key={i}>★</span>;
                           if (i === fullStars + 1 && halfStar) return <span key={i}>☆</span>;
                           return <span key={i}>☆</span>;
                       })}
-                                            <span className="avg-number">({rounded.toFixed(1)})</span>
+                                    <span className="avg-number">({rounded.toFixed(1)})</span>
                     </span>);
-                                })()}
-                                {rank !== null && <span className="anime-rank"># {rank}</span>}
-                            </div>)}
-                    </div>
-                    {/* ─────────────────────────────────────────── */}
+                            })()}
+                            {rank !== null && <span className="anime-rank"># {rank}</span>}
+                        </div>)}
+                </div>
+                {/* ─────────────────────────────────────────── */}
 
-                    {synopsis && <p className="anime-desc">{synopsis}</p>}
+                {synopsis && <p className="anime-desc">{synopsis}</p>}
 
-                    {company && (<p className="anime-company">
-                            <strong>Company:</strong>{' '}
-                            <Link to={`/company/${company.companyId}`} className="link">
-                                {company.name}
-                            </Link>
-                        </p>)}
+                {company && (<p className="anime-company">
+                    <strong>Company:</strong>{' '}
+                    <Link to={`/company/${company.companyId}`} className="link">
+                        {company.name}
+                    </Link>
+                </p>)}
 
-                    {genres.length > 0 && (<p className="anime-genres">
-                            <strong>Genres:</strong>{' '}
-                            {genres.map((g, i) => (<span key={g.genreId}>
+                {genres.length > 0 && (<p className="anime-genres">
+                    <strong>Genres:</strong>{' '}
+                    {genres.map((g, i) => (<span key={g.genreId}>
                   <Link to={`/genre/${g.genreId}`} className="link">
                     {g.name}
                   </Link>
-                                    {i < genres.length - 1 && ', '}
+                        {i < genres.length - 1 && ', '}
                 </span>))}
-                        </p>)}
-                </div>
+                </p>)}
             </div>
+        </div>
 
-            {/* ───────── Cast Grid ─────────── (unchanged) */}
-            <h3 className="cast-heading">Cast &amp; Voice Actors</h3>
-            {cast.length > 0 ? (<div className="cast-grid">
-                    {cast.map(({characterId, characterName, vaId, vaName}) => (
-                        <div key={characterId} className="cast-card">
-                            <img
-                                src={placeholder}
-                                alt={`${characterName} placeholder`}
-                                className="character-thumb"
-                            />
-                            <div className="cast-info">
-                                <Link to={`/character/${characterId}`} className="link">
-                                    <strong>{characterName}</strong>
-                                </Link>
-                                <p>
-                                    voiced by{' '}
-                                    <Link to={`/va/${vaId}`} className="link">
-                                        {vaName}
-                                    </Link>
-                                </p>
-                            </div>
-                        </div>))}
-                </div>) : (<p className="no-cast">No cast information available.</p>)}
+        {/* ───────── Cast Grid ─────────── (unchanged) */}
+        <h3 className="cast-heading">Cast &amp; Voice Actors</h3>
+        {cast.length > 0 ? (<div className="cast-grid">
+            {cast.map(({characterId, characterName, vaId, vaName}) => (
+                <div key={characterId} className="cast-card">
+                    <img
+                        src={placeholder}
+                        alt={`${characterName} placeholder`}
+                        className="character-thumb"
+                    />
+                    <div className="cast-info">
+                        <Link to={`/character/${characterId}`} className="link">
+                            <strong>{characterName}</strong>
+                        </Link>
+                        <p>
+                            voiced by{' '}
+                            <Link to={`/va/${vaId}`} className="link">
+                                {vaName}
+                            </Link>
+                        </p>
+                    </div>
+                </div>))}
+        </div>) : (<p className="no-cast">No cast information available.</p>)}
 
-            {/* ───────────── Reviews Section ───────────────── */}
-            <section className="reviews-section">
-                <h3>Reviews</h3>
+        {/* ───────────── Reviews Section ───────────────── */}
+        <section className="reviews-section">
+            <h3>Reviews</h3>
 
-                {/* Your Review Form */}
-                <div className="your-review-form">
-                    <h4>Your Review</h4>
-                    <form onSubmit={handleSubmitReview}>
-                        <div className="star-selection">
-                            {[1, 2, 3, 4, 5].map((i) => (<span
-                                    key={i}
-                                    className={i <= reviewForm.rating ? 'star selected' : 'star'}
-                                    onClick={() => handleStarClick(i)}
-                                >
+            {/* Your Review Form */}
+            <div className="your-review-form">
+                <h4>Your Review</h4>
+                <form onSubmit={handleSubmitReview}>
+                    <div className="star-selection">
+                        {[1, 2, 3, 4, 5].map((i) => (<span
+                            key={i}
+                            className={i <= reviewForm.rating ? 'star selected' : 'star'}
+                            onClick={() => handleStarClick(i)}
+                        >
                   ★
                 </span>))}
-                        </div>
-                        <label>
-                            Comment:
-                            <textarea
-                                name="content"
-                                rows="4"
-                                value={reviewForm.content}
-                                onChange={handleReviewChange}
-                                disabled={reviewLoading}
-                            />
-                        </label>
-                        {reviewError && <div className="review-error">{reviewError}</div>}
-                        <button type="submit" disabled={reviewLoading}>
-                            {userReview ? 'Update Review' : 'Submit Review'}
-                        </button>
-                    </form>
-                </div>
+                    </div>
+                    <label>
+                        Comment:
+                        <textarea
+                            name="content"
+                            rows="4"
+                            value={reviewForm.content}
+                            onChange={handleReviewChange}
+                            disabled={reviewLoading}
+                        />
+                    </label>
+                    {reviewError && <div className="review-error">{reviewError}</div>}
+                    <button type="submit" disabled={reviewLoading}>
+                        {userReview ? 'Update Review' : 'Submit Review'}
+                    </button>
+                </form>
+            </div>
 
-                {/* All Reviews List */}
-                <div className="all-reviews-list">
-                    <h4>All Reviews</h4>
-                    {reviews.length === 0 ? (
-                        <p className="no-reviews">No reviews yet. Be the first!</p>) : (reviews.map((r) => (
-                            <div key={r.review_id} className="review-card">
-                                <div className="reviewer-info">
-                                    <img
-                                        src={r.avatarUrl || placeholder}
-                                        alt={`${r.username} avatar`}
-                                        className="reviewer-avatar"
-                                    />
-                                    <span className="reviewer-name">{r.username}</span>
-                                    <span className="review-timestamp">
+            {/* All Reviews List */}
+            <div className="all-reviews-list">
+                <h4>All Reviews</h4>
+                {reviews.length === 0 ? (
+                    <p className="no-reviews">No reviews yet. Be the first!</p>) : (reviews.map((r) => (
+                    <div key={r.review_id} className="review-card">
+                        <div className="reviewer-info">
+                            <img
+                                src={r.avatarUrl || placeholder}
+                                alt={`${r.username} avatar`}
+                                className="reviewer-avatar"
+                            />
+                            <span className="reviewer-name">{r.username}</span>
+                            <span className="review-timestamp">
                     {new Date(r.created_at).toLocaleString()}
                   </span>
-                                </div>
-                                <div className="review-body">
+                        </div>
+                        <div className="review-body">
                   <span className="review-rating">
                     {Array.from({length: r.rating}, (_, idx) => (<span key={idx}>★</span>))}
                       {Array.from({length: 5 - r.rating}, (_, idx) => (<span key={idx}>☆</span>))}
                   </span>
-                                    <p className="review-content">{r.content}</p>
-                                </div>
-                            </div>)))}
-                </div>
-            </section>
+                            <p className="review-content">{r.content}</p>
+                        </div>
+                    </div>)))}
+            </div>
+        </section>
 
-            {/* ─────────────── NEW: Lists that contain this Anime ─────────────── */}
-            {user && (<section className="anime-lists-section">
-                    <h3>Included in These Lists</h3>
-                    {containingLists.length === 0 ? (<p className="no-lists">No lists include this anime yet.</p>) : (
-                        <ul className="lists-ul">
-                            {containingLists.map((lst) => (<li key={lst.id}>
-                                    <Link to={`/my-lists/${lst.id}`}>{lst.title}</Link>
-                                    <span className="owner-text"> (by user #{lst.user_id})</span>
-                                </li>))}
-                        </ul>)}
-                </section>)}
-            {/* ────────────────────────────────────────────────────────────────── */}
-        </div>);
+        {/* ─────────────── NEW: Lists that contain this Anime ─────────────── */}
+        {user && (<section className="anime-lists-section">
+            <h3>Included in These Lists</h3>
+            {containingLists.length === 0 ? (<p className="no-lists">No lists include this anime yet.</p>) : (
+                <ul className="lists-ul">
+                    {containingLists.map((lst) => (<li key={lst.id}>
+                        <Link to={`/my-lists/${lst.id}`}>{lst.title}</Link>
+                        <span className="owner-text"> (by user #{lst.user_id})</span>
+                    </li>))}
+                </ul>)}
+        </section>)}
+        {/* ────────────────────────────────────────────────────────────────── */}
+    </div>);
 }

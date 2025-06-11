@@ -334,7 +334,9 @@ FROM continue_watching
 WHERE user_id = NEW.user_id
   AND episode_id IN (SELECT e.episode_id
                      FROM episode e
-                     WHERE e.anime_id = (SELECT anime_id FROM new_anime) AND e.episode_id != NEW.episode_id );
+                     WHERE e.anime_id = (SELECT anime_id FROM new_anime)
+                       AND e.episode_id
+    != NEW.episode_id );
 
 -- Delete oldest entries if count exceeds 5 (counting unique animes)
 DELETE

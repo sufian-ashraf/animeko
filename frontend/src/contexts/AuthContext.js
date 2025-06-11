@@ -1,19 +1,44 @@
 // frontend/src/contexts/AuthContext.js
 import React, {createContext, useCallback, useContext, useEffect, useState} from 'react';
+import {jwtDecode} from 'jwt-decode';
 
-export const AuthContext = createContext(null);
+const AuthContext = createContext(null);
 
-export const AuthProvider = ({children}) => {
+const AuthProvider = ({children}) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const logout = () => {
+    // Function to decode token and set user info including isAdmin
+    const setUserFromToken = useCallback((jwtToken) => {
+        try {
+            const decoded = jwtDecode(jwtToken);
+            console.log('Decoded token:', decoded);
+            // Use is_admin directly from decoded token
+            const userData = {
+                id: decoded.id,
+                user_id: decoded.id,
+                username: decoded.username,
+                email: decoded.email || '',
+                display_name: decoded.username,
+                is_admin: decoded.is_admin === true || decoded.is_admin === 't' || decoded.is_admin === 1 || decoded.is_admin === 'true' || decoded.is_admin === '1'
+            };
+            console.log('Setting user from token:', userData);
+            setUser(userData);
+            return userData;
+        } catch (error) {
+            console.error('Failed to decode token:', error);
+            setUser(null);
+            return null;
+        }
+    }, []);
+
+    const logout = useCallback(() => {
         setToken(null);
         setUser(null);
         localStorage.removeItem('token');
-    };
+    }, []);
 
     const fetchUserProfile = useCallback(async () => {
         if (!token) {
@@ -23,8 +48,6 @@ export const AuthProvider = ({children}) => {
 
         try {
             setError(null);
-            // console.log('Fetching user profile with token:', token);
-            
             const response = await fetch('http://localhost:5000/api/auth/profile', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -33,12 +56,10 @@ export const AuthProvider = ({children}) => {
                 credentials: 'include'
             });
 
-            // console.log('Profile response status:', response.status);
-            
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 console.error('Profile fetch error:', errorData);
-                
+
                 if (response.status === 401 || response.status === 403) {
                     logout();
                     throw new Error(errorData.message || 'Session expired. Please login again.');
@@ -47,56 +68,27 @@ export const AuthProvider = ({children}) => {
             }
 
             const userData = await response.json();
-            // console.log('Fetched user profile:', userData);
-            
-            // If is_admin is missing, try to fetch it directly from the database
-            if (userData.is_admin === undefined) {
-                console.warn('is_admin is missing from user profile, checking database...');
-                try {
-                    const adminCheck = await fetch('http://localhost:5000/api/auth/check-admin', {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    const adminData = await adminCheck.json();
-                    if (adminData.is_admin !== undefined) {
-                        userData.is_admin = adminData.is_admin;
-                        // console.log('Updated is_admin from direct check:', userData.is_admin);
-                    }
-                } catch (err) {
-                    console.error('Error checking admin status:', err);
-                }
-            }
-            
-            // Ensure we have all required user fields with proper types
-            const isAdmin = userData.is_admin === true || 
-                          userData.is_admin === 't' || 
-                          userData.is_admin === 1 ||
-                          userData.is_admin === 'true' ||
-                          userData.is_admin === '1';
-            
+
+            // CRITICAL: Preserve is_admin from JWT token, don't trust API response
+            const decoded = jwtDecode(token);
+            const tokenIsAdmin = decoded.is_admin === true || decoded.is_admin === 't' || decoded.is_admin === 1 || decoded.is_admin === 'true' || decoded.is_admin === '1';
+
             const userWithAdmin = {
                 id: userData.user_id || userData.id,
                 user_id: userData.user_id || userData.id,
                 username: userData.username,
                 email: userData.email || '',
                 display_name: userData.display_name || userData.username,
-                is_admin: isAdmin
+                is_admin: tokenIsAdmin // Always use token value, never API response
             };
-            
-            // console.log('Setting user with admin status:', {
-            //     ...userWithAdmin,
-            //     is_admin_raw: userData.is_admin,
-            //     is_admin_type: typeof userData.is_admin
-            // });
-            
+
+            console.log('Updated user from profile fetch:', userWithAdmin);
             setUser(userWithAdmin);
             return userWithAdmin;
         } catch (error) {
             console.error('Error in fetchUserProfile:', error);
             setError(error.message);
-            setUser(null);
+            // Don't clear user on fetch error, keep the token-based user
             throw error;
         } finally {
             setLoading(false);
@@ -105,13 +97,21 @@ export const AuthProvider = ({children}) => {
 
     useEffect(() => {
         if (token) {
-            fetchUserProfile();
+            const tokenUser = setUserFromToken(token);
+            if (tokenUser) {
+                // Only fetch profile if token decode was successful
+                fetchUserProfile().catch(err => {
+                    console.error('Profile fetch failed, but keeping token user:', err);
+                    setLoading(false);
+                });
+            } else {
+                setLoading(false);
+            }
         } else {
             setLoading(false);
         }
-    }, [token, fetchUserProfile]); // ✅ No more warning
+    }, [token, setUserFromToken, fetchUserProfile]);
 
-    // Store token in localStorage when it changes
     useEffect(() => {
         if (token) {
             localStorage.setItem('token', token);
@@ -120,7 +120,7 @@ export const AuthProvider = ({children}) => {
         }
     }, [token]);
 
-    const login = async (username, password) => {
+    const login = useCallback(async (username, password) => {
         try {
             setLoading(true);
             setError(null);
@@ -138,29 +138,21 @@ export const AuthProvider = ({children}) => {
             }
 
             setToken(data.token);
-            
-            // Ensure we have all required user fields with proper types
-            const userWithAdmin = {
-                id: data.user.user_id,  // Make sure we're using the correct field name
-                user_id: data.user.user_id,  // Keep both for compatibility
-                username: data.user.username,
-                email: data.user.email || '',
-                display_name: data.user.display_name || data.user.username,
-                is_admin: Boolean(data.user.is_admin)
-            };
-            
-            console.log('Login successful, user set:', userWithAdmin);
-            setUser(userWithAdmin);
-            return userWithAdmin;
+
+            // Set user from token (this is the source of truth for is_admin)
+            const tokenUser = setUserFromToken(data.token);
+            console.log('Login successful, user set from token:', tokenUser);
+
+            return tokenUser;
         } catch (error) {
             setError(error.message);
             throw error;
         } finally {
             setLoading(false);
         }
-    };
+    }, [setUserFromToken]);
 
-    const register = async (userData) => {
+    const register = useCallback(async (userData) => {
         try {
             setLoading(true);
             setError(null);
@@ -184,9 +176,9 @@ export const AuthProvider = ({children}) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const updateProfile = async (profileData) => {
+    const updateProfile = useCallback(async (profileData) => {
         try {
             setLoading(true);
             setError(null);
@@ -203,7 +195,15 @@ export const AuthProvider = ({children}) => {
                 throw new Error(data.message || 'Profile update failed');
             }
 
-            setUser(prev => ({...prev, ...data.user}));
+            // Preserve is_admin from token when updating
+            const decoded = jwtDecode(token);
+            const tokenIsAdmin = decoded.is_admin === true || decoded.is_admin === 't' || decoded.is_admin === 1 || decoded.is_admin === 'true' || decoded.is_admin === '1';
+
+            setUser(prev => ({
+                ...prev,
+                ...data.user,
+                is_admin: tokenIsAdmin // Always preserve token value
+            }));
             return data;
         } catch (error) {
             setError(error.message);
@@ -211,7 +211,7 @@ export const AuthProvider = ({children}) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]);
 
     // Check if user is authenticated (has a token and user data)
     const isAuthenticated = !!token && !!user;
@@ -234,6 +234,8 @@ export const AuthProvider = ({children}) => {
     );
 };
 
+export {AuthProvider, AuthContext};
+
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (context === null) {
@@ -241,5 +243,3 @@ export const useAuth = () => {
     }
     return context;
 };
-
-export default AuthContext;

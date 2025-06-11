@@ -1,7 +1,7 @@
 // src/pages/AdminDashboard.js
 
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, {useState} from 'react';
+import {useAuth} from '../contexts/AuthContext';
 import '../styles/AdminDashboard.css';
 
 // Tab components
@@ -11,7 +11,7 @@ import CompanyTab from '../components/admin/CompanyTab';
 import VATab from '../components/admin/VATab';
 
 export default function AdminDashboard() {
-    const { user } = useAuth();
+    const {user} = useAuth();
     const [activeTab, setActiveTab] = useState('anime');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
@@ -25,13 +25,13 @@ export default function AdminDashboard() {
     const renderTabContent = () => {
         switch (activeTab) {
             case 'anime':
-                return <AnimeTab searchQuery={searchQuery} />;
+                return <AnimeTab searchQuery={searchQuery}/>;
             case 'genre':
-                return <GenreTab searchQuery={searchQuery} />;
+                return <GenreTab searchQuery={searchQuery}/>;
             case 'company':
-                return <CompanyTab searchQuery={searchQuery} />;
+                return <CompanyTab searchQuery={searchQuery}/>;
             case 'va':
-                return <VATab searchQuery={searchQuery} />;
+                return <VATab searchQuery={searchQuery}/>;
             default:
                 return <div>Select a tab to begin</div>;
         }
@@ -40,28 +40,28 @@ export default function AdminDashboard() {
     return (
         <div className="admin-container">
             <h1>Admin Dashboard</h1>
-            
+
             {/* Navigation Tabs */}
             <div className="admin-tabs">
-                <button 
+                <button
                     className={`tab-btn ${activeTab === 'anime' ? 'active' : ''}`}
                     onClick={() => setActiveTab('anime')}
                 >
                     Anime
                 </button>
-                <button 
+                <button
                     className={`tab-btn ${activeTab === 'genre' ? 'active' : ''}`}
                     onClick={() => setActiveTab('genre')}
                 >
                     Genres
                 </button>
-                <button 
+                <button
                     className={`tab-btn ${activeTab === 'company' ? 'active' : ''}`}
                     onClick={() => setActiveTab('company')}
                 >
                     Companies
                 </button>
-                <button 
+                <button
                     className={`tab-btn ${activeTab === 'va' ? 'active' : ''}`}
                     onClick={() => setActiveTab('va')}
                 >

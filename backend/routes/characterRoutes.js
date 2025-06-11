@@ -1,6 +1,4 @@
 import express from 'express';
-import authenticate from '../middlewares/authenticate.js';
-import authorizeAdmin from '../middlewares/authorizeAdmin.js';
 import pool from '../db.js'; // your shared pg Pool
 const router = express.Router();
 

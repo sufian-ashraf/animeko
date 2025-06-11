@@ -1,7 +1,7 @@
 import React from 'react';
 import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import {AuthProvider} from './contexts/AuthContext';
-import { ProtectedRoute } from './components/ProtectedRoute';
+import {ProtectedRoute} from './components/ProtectedRoute';
 import AdminRoute from './components/admin/AdminRoute';
 import Navigation from './components/HomeNavigation';
 
@@ -46,13 +46,13 @@ function App() {
                         <Route path="/" element={<Home/>}/>
                         <Route path="/login" element={<Login/>}/>
                         <Route path="/register" element={<Register/>}/>
-                        <Route 
-                            path="/admin" 
+                        <Route
+                            path="/admin"
                             element={
                                 <AdminRoute>
-                                    <AdminDashboard />
+                                    <AdminDashboard/>
                                 </AdminRoute>
-                            } 
+                            }
                         />
                         <Route path="/anime/:animeId" element={<AnimePage/>}/>
                         <Route path="/character/:charId" element={<CharacterPage/>}/>
@@ -90,7 +90,7 @@ function App() {
                             path="/search-lists"
                             element={
                                 <ProtectedRoute>
-                                    <ListSearch />
+                                    <ListSearch/>
                                 </ProtectedRoute>
                             }
                         />

@@ -227,39 +227,39 @@ export default function Profile() {
                 return <span className="status-badge pending">Request Sent</span>;
             case 'request_received':
                 return (<div>
-                        <button
-                            className="btn-small accept"
-                            onClick={() => respondRequest(searchUser.user_id, 'accept')}
-                        >
-                            Accept
-                        </button>
-                        <button
-                            className="btn-small reject"
-                            onClick={() => respondRequest(searchUser.user_id, 'reject')}
-                        >
-                            Reject
-                        </button>
-                    </div>);
+                    <button
+                        className="btn-small accept"
+                        onClick={() => respondRequest(searchUser.user_id, 'accept')}
+                    >
+                        Accept
+                    </button>
+                    <button
+                        className="btn-small reject"
+                        onClick={() => respondRequest(searchUser.user_id, 'reject')}
+                    >
+                        Reject
+                    </button>
+                </div>);
             default:
                 return (<button onClick={() => sendFriendRequest(searchUser.user_id)}>
-                        Add Friend
-                    </button>);
+                    Add Friend
+                </button>);
         }
     };
 
     // Loading/Error states
     if (loading) return <div className="loading">Loading profile…</div>;
     if (error) return (<div className="profile-page">
-            <div className="profile-card">
-                <div className="profile-error">{error}</div>
-                <button onClick={() => navigate('/profile')}>
-                    {isOwnProfile ? 'Please log in' : 'Back to My Profile'}
-                </button>
-            </div>
-        </div>);
+        <div className="profile-card">
+            <div className="profile-error">{error}</div>
+            <button onClick={() => navigate('/profile')}>
+                {isOwnProfile ? 'Please log in' : 'Back to My Profile'}
+            </button>
+        </div>
+    </div>);
     if (!profileUser) return (<div className="loading">
-            {isOwnProfile ? 'Please log in to view your profile…' : 'No profile data found'}
-        </div>);
+        {isOwnProfile ? 'Please log in to view your profile…' : 'No profile data found'}
+    </div>);
 
     const profileTitle = isOwnProfile ? 'My Profile' : `${profileUser.display_name || profileUser.username}'s Profile`;
     const friendsTitle = isOwnProfile ? 'Your Friends' : 'Their Friends';
@@ -267,184 +267,184 @@ export default function Profile() {
     const favoritesPrefix = isOwnProfile ? 'Favorite' : 'Their Favorite';
 
     return (<div className="profile-page">
-            {/* Back button if viewing someone else’s profile */}
-            {!isOwnProfile && (<div className="profile-nav">
-                    <button onClick={() => navigate('/profile')} className="back-btn">
-                        ← Back to My Profile
+        {/* Back button if viewing someone else’s profile */}
+        {!isOwnProfile && (<div className="profile-nav">
+            <button onClick={() => navigate('/profile')} className="back-btn">
+                ← Back to My Profile
+            </button>
+        </div>)}
+
+        {/* Profile Card */}
+        <div className="profile-card">
+            <h2>{profileTitle}</h2>
+            <img
+                src={profileUser.profile_picture_url || placeholderImg}
+                alt="Profile"
+                className="user-profile-pic"
+            />
+
+            {editError && <div className="profile-error">{editError}</div>}
+            {editMessage && <div className="profile-success">{editMessage}</div>}
+
+            {isOwnProfile && isEditing ? (<form onSubmit={handleSubmit} className="profile-form">
+                <div className="form-group">
+                    <label>Display Name</label>
+                    <input
+                        name="display_name"
+                        value={formData.display_name}
+                        onChange={handleChange}
+                        disabled={loadingEdit}
+                    />
+                </div>
+                <div className="form-group">
+                    <label>Bio</label>
+                    <textarea
+                        name="profile_bio"
+                        value={formData.profile_bio}
+                        onChange={handleChange}
+                        rows="3"
+                        disabled={loadingEdit}
+                    />
+                </div>
+                <div className="profile-buttons">
+                    <button type="submit" disabled={loadingEdit}>
+                        {loadingEdit ? 'Saving…' : 'Save Changes'}
                     </button>
-                </div>)}
+                    <button type="button" onClick={handleCancel} disabled={loadingEdit}>
+                        Cancel
+                    </button>
+                </div>
+            </form>) : (<div className="profile-info">
+                <p>Username: {profileUser.username}</p>
+                {!isOwnProfile || <p>Email: {profileUser.email}</p>}
+                <p>
+                    Display Name: {profileUser.display_name || 'Not set'}
+                </p>
+                <p>Bio: {profileUser.profile_bio || 'No bio provided'}</p>
+                <p>
+                    Member Since:{' '}
+                    {new Date(profileUser.created_at).toLocaleDateString()}
+                </p>
+                <div className="profile-buttons">
+                    {isOwnProfile ? (<>
+                        <button onClick={() => setIsEditing(true)}>
+                            Edit Profile
+                        </button>
+                        <button onClick={logout}>Logout</button>
+                    </>) : (<button onClick={() => navigate('/profile')}>
+                        Back to My Profile
+                    </button>)}
+                </div>
+            </div>)}
+        </div>
 
-            {/* Profile Card */}
-            <div className="profile-card">
-                <h2>{profileTitle}</h2>
-                <img
-                    src={profileUser.profile_picture_url || placeholderImg}
-                    alt="Profile"
-                    className="user-profile-pic"
-                />
-
-                {editError && <div className="profile-error">{editError}</div>}
-                {editMessage && <div className="profile-success">{editMessage}</div>}
-
-                {isOwnProfile && isEditing ? (<form onSubmit={handleSubmit} className="profile-form">
-                        <div className="form-group">
-                            <label>Display Name</label>
-                            <input
-                                name="display_name"
-                                value={formData.display_name}
-                                onChange={handleChange}
-                                disabled={loadingEdit}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Bio</label>
-                            <textarea
-                                name="profile_bio"
-                                value={formData.profile_bio}
-                                onChange={handleChange}
-                                rows="3"
-                                disabled={loadingEdit}
-                            />
-                        </div>
-                        <div className="profile-buttons">
-                            <button type="submit" disabled={loadingEdit}>
-                                {loadingEdit ? 'Saving…' : 'Save Changes'}
-                            </button>
-                            <button type="button" onClick={handleCancel} disabled={loadingEdit}>
-                                Cancel
-                            </button>
-                        </div>
-                    </form>) : (<div className="profile-info">
-                        <p>Username: {profileUser.username}</p>
-                        {!isOwnProfile || <p>Email: {profileUser.email}</p>}
-                        <p>
-                            Display Name: {profileUser.display_name || 'Not set'}
-                        </p>
-                        <p>Bio: {profileUser.profile_bio || 'No bio provided'}</p>
-                        <p>
-                            Member Since:{' '}
-                            {new Date(profileUser.created_at).toLocaleDateString()}
-                        </p>
-                        <div className="profile-buttons">
-                            {isOwnProfile ? (<>
-                                    <button onClick={() => setIsEditing(true)}>
-                                        Edit Profile
-                                    </button>
-                                    <button onClick={logout}>Logout</button>
-                                </>) : (<button onClick={() => navigate('/profile')}>
-                                    Back to My Profile
-                                </button>)}
-                        </div>
-                    </div>)}
-            </div>
-
-            {/* Incoming Friend Requests (own profile) */}
-            {isOwnProfile && (<section>
-                    <h3>Incoming Friend Requests</h3>
-                    <div className="scroll-box">
-                        {incoming.length ? (incoming.map((r) => (<div key={r.user_id} className="row">
+        {/* Incoming Friend Requests (own profile) */}
+        {isOwnProfile && (<section>
+            <h3>Incoming Friend Requests</h3>
+            <div className="scroll-box">
+                {incoming.length ? (incoming.map((r) => (<div key={r.user_id} className="row">
                   <span>
                     {r.display_name} (@{r.username})
                   </span>
-                                    <div>
-                                        <button onClick={() => respondRequest(r.user_id, 'accept')}>
-                                            Accept
-                                        </button>
-                                        <button
-                                            onClick={() => respondRequest(r.user_id, 'reject')}
-                                        >
-                                            Reject
-                                        </button>
-                                    </div>
-                                </div>))) : (<p>No pending requests</p>)}
+                    <div>
+                        <button onClick={() => respondRequest(r.user_id, 'accept')}>
+                            Accept
+                        </button>
+                        <button
+                            onClick={() => respondRequest(r.user_id, 'reject')}
+                        >
+                            Reject
+                        </button>
                     </div>
-                </section>)}
+                </div>))) : (<p>No pending requests</p>)}
+            </div>
+        </section>)}
 
-            {/* Friends List */}
-            <section>
-                <h3>{friendsTitle}</h3>
-                <div className="scroll-box friends-list">
-                    {friends.length ? (friends.map((f) => (<div key={f.user_id} className="friend-row">
-                                <img
-                                    src={f.profile_picture_url || placeholderImg}
-                                    alt={f.display_name}
-                                    className="friend-avatar"
-                                />
-                                <span
-                                    className="friend-name clickable"
-                                    onClick={() => navigate(`/profile/${f.user_id}`)}
-                                >
+        {/* Friends List */}
+        <section>
+            <h3>{friendsTitle}</h3>
+            <div className="scroll-box friends-list">
+                {friends.length ? (friends.map((f) => (<div key={f.user_id} className="friend-row">
+                    <img
+                        src={f.profile_picture_url || placeholderImg}
+                        alt={f.display_name}
+                        className="friend-avatar"
+                    />
+                    <span
+                        className="friend-name clickable"
+                        onClick={() => navigate(`/profile/${f.user_id}`)}
+                    >
                   {f.display_name} (@{f.username})
                 </span>
-                                {isOwnProfile && (<button
-                                        className="btn-small unfriend"
-                                        onClick={() => removeFriend(f.user_id)}
-                                    >
-                                        Unfriend
-                                    </button>)}
-                            </div>))) : (<p>{noFriendsText}</p>)}
-                </div>
-            </section>
+                    {isOwnProfile && (<button
+                        className="btn-small unfriend"
+                        onClick={() => removeFriend(f.user_id)}
+                    >
+                        Unfriend
+                    </button>)}
+                </div>))) : (<p>{noFriendsText}</p>)}
+            </div>
+        </section>
 
-            {/* Search Users (own profile) */}
-            {isOwnProfile && (<section>
-                    <h3>Find & Add Friends</h3>
-                    <input
-                        type="text"
-                        placeholder="Search users..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    {sendMessage && <div className="inline-message">{sendMessage}</div>}
+        {/* Search Users (own profile) */}
+        {isOwnProfile && (<section>
+            <h3>Find & Add Friends</h3>
+            <input
+                type="text"
+                placeholder="Search users..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {sendMessage && <div className="inline-message">{sendMessage}</div>}
 
-                    {searchResults.length > 0 && (<div className="scroll-box">
-                            {searchResults.map((u) => (<div key={u.user_id} className="row">
+            {searchResults.length > 0 && (<div className="scroll-box">
+                {searchResults.map((u) => (<div key={u.user_id} className="row">
                   <span>
                     {u.display_name} (@{u.username})
                       {u.friendship_status === 'friend' && (<span
-                              className="view-profile-link"
-                              onClick={() => navigate(`/profile/${u.user_id}`)}
-                              title="View Profile"
-                          >
+                          className="view-profile-link"
+                          onClick={() => navigate(`/profile/${u.user_id}`)}
+                          title="View Profile"
+                      >
                         {' '}
-                              👁️
+                          👁️
                       </span>)}
                   </span>
-                                    {getButtonForUser(u)}
-                                </div>))}
-                        </div>)}
-                </section>)}
+                    {getButtonForUser(u)}
+                </div>))}
+            </div>)}
+        </section>)}
 
-            {/* Favorites Section */}
-            <section className="favorites-section">
-                {['anime', 'character', 'va'].map((type) => (<div key={type} className="favorite-type-container">
-                        <h4>
-                            {favoritesPrefix}{' '}
-                            {type.charAt(0).toUpperCase() + type.slice(1)}s
-                        </h4>
-                        <div className="scroll-box fav-grid">
-                            {favorites.filter((f) => f.entityType === type).length ? (favorites
-                                    .filter((f) => f.entityType === type)
-                                    .map((f) => {
-                                        const path = `/${type}/${f.entityId}`;
-                                        return (<div key={`${type}-${f.entityId}`} className="fav-item">
-                                                <Link to={path} className="fav-card">
-                                                    <img
-                                                        src={f.imageUrl || placeholderImg}
-                                                        alt={f.name}
-                                                        className="fav-image"
-                                                    />
-                                                    <span className="fav-name">{f.name}</span>
-                                                </Link>
-                                            </div>);
-                                    })) : (<p>No favorite {type}</p>)}
-                        </div>
-                    </div>))}
-            </section>
+        {/* Favorites Section */}
+        <section className="favorites-section">
+            {['anime', 'character', 'va'].map((type) => (<div key={type} className="favorite-type-container">
+                <h4>
+                    {favoritesPrefix}{' '}
+                    {type.charAt(0).toUpperCase() + type.slice(1)}s
+                </h4>
+                <div className="scroll-box fav-grid">
+                    {favorites.filter((f) => f.entityType === type).length ? (favorites
+                        .filter((f) => f.entityType === type)
+                        .map((f) => {
+                            const path = `/${type}/${f.entityId}`;
+                            return (<div key={`${type}-${f.entityId}`} className="fav-item">
+                                <Link to={path} className="fav-card">
+                                    <img
+                                        src={f.imageUrl || placeholderImg}
+                                        alt={f.name}
+                                        className="fav-image"
+                                    />
+                                    <span className="fav-name">{f.name}</span>
+                                </Link>
+                            </div>);
+                        })) : (<p>No favorite {type}</p>)}
+                </div>
+            </div>))}
+        </section>
 
-            {/* ───────────── Integrate “My Anime Lists” Here ───────────── */}
-            {isOwnProfile && (<section className="my-lists-section">
-                    <MyLists/>
-                </section>)}
-        </div>);
+        {/* ───────────── Integrate “My Anime Lists” Here ───────────── */}
+        {isOwnProfile && (<section className="my-lists-section">
+            <MyLists/>
+        </section>)}
+    </div>);
 }

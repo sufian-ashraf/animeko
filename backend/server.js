@@ -94,29 +94,29 @@ app.get('/api/auth/profile', authenticate, (req, res) => {
 app.get('/api/auth/check-admin', authenticate, async (req, res) => {
     try {
         const result = await pool.query(
-            'SELECT is_admin FROM users WHERE user_id = $1', 
+            'SELECT is_admin FROM users WHERE user_id = $1',
             [req.user.id]
         );
-        
+
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({error: 'User not found'});
         }
-        
-        const isAdmin = result.rows[0].is_admin === true || 
-                       result.rows[0].is_admin === 't' || 
-                       result.rows[0].is_admin === 1;
-        
+
+        const isAdmin = result.rows[0].is_admin === true ||
+            result.rows[0].is_admin === 't' ||
+            result.rows[0].is_admin === 1;
+
         // console.log('Direct admin check for user:', {
         //     userId: req.user.id,
         //     username: req.user.username,
         //     is_admin: isAdmin,
         //     raw_value: result.rows[0].is_admin
         // });
-        
-        return res.status(200).json({ is_admin: isAdmin });
+
+        return res.status(200).json({is_admin: isAdmin});
     } catch (err) {
         console.error('Error in admin check:', err);
-        return res.status(500).json({ error: 'Internal server error' });
+        return res.status(500).json({error: 'Internal server error'});
     }
 });
 

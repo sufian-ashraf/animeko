@@ -1,13 +1,13 @@
 // src/pages/ListDetail.js
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React, {useEffect, useState} from 'react';
+import {Link, useParams} from 'react-router-dom';
+import {useAuth} from '../contexts/AuthContext';
 import placeholderImg from '../images/image_not_available.jpg';
 import '../styles/ListDetail.css'; // Make sure this file exists
 
 export default function ListDetail() {
-    const { id } = useParams();
-    const { token, user } = useAuth();
+    const {id} = useParams();
+    const {token, user} = useAuth();
 
     // We expect the backend to return { id, title, created_at, user_id, items: [...] }
     const [list, setList] = useState({
@@ -28,7 +28,7 @@ export default function ListDetail() {
         if (!token) return;
 
         fetch(`/lists/${id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: {'Authorization': `Bearer ${token}`}
         })
             .then(async (res) => {
                 if (!res.ok) {
@@ -83,7 +83,7 @@ export default function ListDetail() {
 
         // Determine a new rank = (max existing rank + 1) or 1 if none exist
         const maxRank = list.items.reduce((max, i) => Math.max(max, i.rank || 0), 0);
-        const newEntry = { anime_id: animeId, rank: maxRank + 1, note: '' };
+        const newEntry = {anime_id: animeId, rank: maxRank + 1, note: ''};
 
         const updatedEntries = [...list.items, newEntry];
 
@@ -93,12 +93,12 @@ export default function ListDetail() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ animeEntries: updatedEntries })
+            body: JSON.stringify({animeEntries: updatedEntries})
         });
 
         // Refresh list
         const res = await fetch(`/lists/${id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: {'Authorization': `Bearer ${token}`}
         });
         const updatedList = await res.json();
         setList(updatedList);
@@ -116,11 +116,11 @@ export default function ListDetail() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ animeEntries: updatedEntries })
+            body: JSON.stringify({animeEntries: updatedEntries})
         });
 
         const res = await fetch(`/lists/${id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: {'Authorization': `Bearer ${token}`}
         });
         const updatedList = await res.json();
         setList(updatedList);
@@ -160,11 +160,11 @@ export default function ListDetail() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ animeEntries: sortedEntries })
+            body: JSON.stringify({animeEntries: sortedEntries})
         });
 
         const res = await fetch(`/lists/${id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: {'Authorization': `Bearer ${token}`}
         });
         const updatedList = await res.json();
         setList(updatedList);
@@ -274,7 +274,7 @@ export default function ListDetail() {
                     />
                     <datalist id="anime-suggestions">
                         {searchResults.map((anime) => (
-                            <option key={anime.id} value={anime.title} />
+                            <option key={anime.id} value={anime.title}/>
                         ))}
                     </datalist>
 

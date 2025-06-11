@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import React, {useEffect, useState} from 'react';
+import {useAuth} from '../../contexts/AuthContext';
 
-const GenreTab = ({ searchQuery }) => {
-    const { token } = useAuth();
+const GenreTab = ({searchQuery}) => {
+    const {token} = useAuth();
     const [genres, setGenres] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -23,12 +23,11 @@ const GenreTab = ({ searchQuery }) => {
                 throw new Error('Failed to fetch genres');
             }
             const data = await response.json();
-            // Ensure consistent ID field names
-            const formattedData = Array.isArray(data) 
+            const formattedData = Array.isArray(data)
                 ? data.map(genre => ({
                     ...genre,
-                    genre_id: genre.genre_id || genre.id, // Use genre_id if available, fallback to id
-                    id: genre.genre_id || genre.id         // Ensure id is always present
+                    genre_id: genre.genre_id || genre.id,
+                    id: genre.genre_id || genre.id
                 }))
                 : [];
             setGenres(formattedData);
@@ -41,11 +40,18 @@ const GenreTab = ({ searchQuery }) => {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
+    };
+
+    const showError = (message) => {
+        setError(message);
+        setTimeout(() => {
+            setError('');
+        }, 5000);
     };
 
     const handleSubmit = async (e) => {
@@ -53,7 +59,20 @@ const GenreTab = ({ searchQuery }) => {
         setLoading(true);
         setError('');
 
-        const url = editingId 
+        if (!formData.name.trim()) {
+            showError('Genre name is required');
+            setLoading(false);
+            return;
+        }
+
+        const existingGenre = genres.find(genre => genre.name.toLowerCase() === formData.name.trim().toLowerCase());
+        if (existingGenre && existingGenre.genre_id !== editingId) {
+            showError('Genre with this name already exists');
+            setLoading(false);
+            return;
+        }
+
+        const url = editingId
             ? `http://localhost:5000/api/genre/${editingId}`
             : 'http://localhost:5000/api/genre';
         const method = editingId ? 'PUT' : 'POST';
@@ -70,13 +89,15 @@ const GenreTab = ({ searchQuery }) => {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || (editingId ? 'Failed to update genre' : 'Failed to add genre'));
+                showError(errorData.message || (editingId ? 'Failed to update genre' : 'Failed to add genre'));
+                setLoading(false);
+                return;
             }
 
             await fetchGenres();
             resetForm();
         } catch (err) {
-            setError(err.message);
+            showError(err.message);
         } finally {
             setLoading(false);
         }
@@ -84,14 +105,11 @@ const GenreTab = ({ searchQuery }) => {
 
     const handleEdit = (genre) => {
         if (!genre) return;
-        
-        // Use either genre_id or id, whichever is available
         const genreId = genre.genre_id || genre.id;
         if (!genreId) {
-            setError('Invalid genre data: missing ID');
+            showError('Invalid genre data: missing ID');
             return;
         }
-        
         setFormData({
             name: genre.name || '',
             description: genre.description || ''
@@ -101,19 +119,15 @@ const GenreTab = ({ searchQuery }) => {
 
     const handleDelete = async (id) => {
         if (!id) {
-            setError('Invalid genre ID');
+            showError('Invalid genre ID');
             return;
         }
-        
         if (!window.confirm('Are you sure you want to delete this genre? This action cannot be undone.')) return;
-        
         try {
-            // Convert to number in case it's a string
             const genreId = Number(id);
             if (isNaN(genreId)) {
                 throw new Error('Invalid genre ID format');
             }
-            
             const response = await fetch(`http://localhost:5000/api/genre/${genreId}`, {
                 method: 'DELETE',
                 headers: {
@@ -124,17 +138,18 @@ const GenreTab = ({ searchQuery }) => {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Failed to delete genre');
+                showError(errorData.message || 'Failed to delete genre');
+                return;
             }
 
             // Refresh the list after successful deletion
             await fetchGenres();
-            
+
             // Clear any previous errors
             setError('');
         } catch (err) {
             console.error('Delete error:', err);
-            setError(err.message || 'Failed to delete genre');
+            showError(err.message || 'Failed to delete genre');
         }
     };
 
@@ -144,6 +159,7 @@ const GenreTab = ({ searchQuery }) => {
             description: ''
         });
         setEditingId(null);
+        setError('');
     };
 
     const filteredGenres = genres.filter(genre =>
@@ -151,12 +167,12 @@ const GenreTab = ({ searchQuery }) => {
     );
 
     if (loading) return <div className="loading">Loading...</div>;
-    if (error) return <div className="alert alert-danger">{error}</div>;
 
     return (
         <div className="admin-tab-content">
             <div className="admin-form-section">
                 <h2>{editingId ? 'Edit Genre' : 'Add New Genre'}</h2>
+                {error && <div className="alert alert-danger mt-2">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Name *</label>

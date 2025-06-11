@@ -20,13 +20,13 @@ router.get('/voice-actors', async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         console.error('Error fetching voice actors:', err);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({message: 'Server error'});
     }
 });
 
 // GET /api/voice-actors/:vaId - Get single voice actor
 router.get('/voice-actors/:vaId', async (req, res) => {
-    const { vaId } = req.params;
+    const {vaId} = req.params;
     try {
         const result = await pool.query(
             `SELECT 
@@ -40,7 +40,7 @@ router.get('/voice-actors/:vaId', async (req, res) => {
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Voice actor not found' });
+            return res.status(404).json({message: 'Voice actor not found'});
         }
 
         // Get roles (anime & characters)
@@ -63,16 +63,16 @@ router.get('/voice-actors/:vaId', async (req, res) => {
         res.json(va);
     } catch (err) {
         console.error('Error fetching voice actor:', err);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({message: 'Server error'});
     }
 });
 
 // POST /api/voice-actors - Create new voice actor (Admin only)
 router.post('/voice-actors', authenticate, authorizeAdmin, async (req, res) => {
-    const { name, birthDate, nationality } = req.body;
+    const {name, birthDate, nationality} = req.body;
 
     if (!name) {
-        return res.status(400).json({ message: 'Name is required' });
+        return res.status(400).json({message: 'Name is required'});
     }
 
     try {
@@ -91,14 +91,14 @@ router.post('/voice-actors', authenticate, authorizeAdmin, async (req, res) => {
         res.status(201).json(result.rows[0]);
     } catch (err) {
         console.error('Error creating voice actor:', err);
-        res.status(500).json({ message: 'Failed to create voice actor' });
+        res.status(500).json({message: 'Failed to create voice actor'});
     }
 });
 
 // PUT /api/voice-actors/:vaId - Update voice actor (Admin only)
 router.put('/voice-actors/:vaId', authenticate, authorizeAdmin, async (req, res) => {
-    const { vaId } = req.params;
-    const { name, birthDate, nationality } = req.body;
+    const {vaId} = req.params;
+    const {name, birthDate, nationality} = req.body;
 
     try {
         const result = await pool.query(
@@ -117,19 +117,19 @@ router.put('/voice-actors/:vaId', authenticate, authorizeAdmin, async (req, res)
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Voice actor not found' });
+            return res.status(404).json({message: 'Voice actor not found'});
         }
 
         res.json(result.rows[0]);
     } catch (err) {
         console.error('Error updating voice actor:', err);
-        res.status(500).json({ message: 'Failed to update voice actor' });
+        res.status(500).json({message: 'Failed to update voice actor'});
     }
 });
 
 // DELETE /api/voice-actors/:vaId - Delete voice actor (Admin only)
 router.delete('/voice-actors/:vaId', authenticate, authorizeAdmin, async (req, res) => {
-    const { vaId } = req.params;
+    const {vaId} = req.params;
 
     try {
         // First, check if VA exists
@@ -139,7 +139,7 @@ router.delete('/voice-actors/:vaId', authenticate, authorizeAdmin, async (req, r
         );
 
         if (check.rows.length === 0) {
-            return res.status(404).json({ message: 'Voice actor not found' });
+            return res.status(404).json({message: 'Voice actor not found'});
         }
 
         // Delete the VA (assuming ON DELETE CASCADE is set for related tables)
@@ -148,7 +148,7 @@ router.delete('/voice-actors/:vaId', authenticate, authorizeAdmin, async (req, r
             [vaId]
         );
 
-        res.json({ message: 'Voice actor deleted successfully' });
+        res.json({message: 'Voice actor deleted successfully'});
     } catch (err) {
         console.error('Error deleting voice actor:', err);
 
@@ -159,7 +159,7 @@ router.delete('/voice-actors/:vaId', authenticate, authorizeAdmin, async (req, r
             });
         }
 
-        res.status(500).json({ message: 'Failed to delete voice actor' });
+        res.status(500).json({message: 'Failed to delete voice actor'});
     }
 });
 

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import React, {useEffect, useState} from 'react';
+import {useAuth} from '../../contexts/AuthContext';
 
-const CompanyTab = ({ searchQuery }) => {
-    const { token } = useAuth();
+const CompanyTab = ({searchQuery}) => {
+    const {token} = useAuth();
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -24,8 +24,8 @@ const CompanyTab = ({ searchQuery }) => {
                 throw new Error('Failed to fetch companies');
             }
             const data = await response.json();
-            // Ensure consistent ID field names
-            const formattedData = Array.isArray(data) 
+            // Normalize IDs
+            const formattedData = Array.isArray(data)
                 ? data.map(company => ({
                     ...company,
                     company_id: company.company_id || company.id,
@@ -42,11 +42,18 @@ const CompanyTab = ({ searchQuery }) => {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
+    };
+
+    const showError = (message) => {
+        setError(message);
+        setTimeout(() => {
+            setError('');
+        }, 5000);
     };
 
     const handleSubmit = async (e) => {
@@ -54,14 +61,13 @@ const CompanyTab = ({ searchQuery }) => {
         setLoading(true);
         setError('');
 
-        // Validate required fields
-        if (!formData.name) {
-            setError('Company name is required');
+        if (!formData.name.trim()) {
+            showError('Company name is required');
             setLoading(false);
             return;
         }
 
-        const url = editingId 
+        const url = editingId
             ? `http://localhost:5000/api/company/${editingId}`
             : 'http://localhost:5000/api/company';
         const method = editingId ? 'PUT' : 'POST';
@@ -74,22 +80,23 @@ const CompanyTab = ({ searchQuery }) => {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    name: formData.name,
-                    country: formData.country || null,
+                    name: formData.name.trim(),
+                    country: formData.country.trim() || null,
                     founded: formData.founded || null
                 })
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || (editingId ? 'Failed to update company' : 'Failed to add company'));
+                showError(errorData.message || (editingId ? 'Failed to update company' : 'Failed to add company'));
+                setLoading(false);
+                return;
             }
 
             await fetchCompanies();
             resetForm();
         } catch (err) {
-            console.error('Submit error:', err);
-            setError(err.message);
+            showError(err.message);
         } finally {
             setLoading(false);
         }
@@ -97,13 +104,11 @@ const CompanyTab = ({ searchQuery }) => {
 
     const handleEdit = (company) => {
         if (!company) return;
-        
         const companyId = company.company_id || company.id;
         if (!companyId) {
-            setError('Invalid company data: missing ID');
+            showError('Invalid company data: missing ID');
             return;
         }
-        
         setFormData({
             name: company.name || '',
             country: company.country || '',
@@ -114,36 +119,31 @@ const CompanyTab = ({ searchQuery }) => {
 
     const handleDelete = async (id) => {
         if (!id) {
-            setError('Invalid company ID');
+            showError('Invalid company ID');
             return;
         }
-        
         if (!window.confirm('Are you sure you want to delete this company? This will remove the company record.')) return;
-        
         try {
             const companyId = Number(id);
             if (isNaN(companyId)) {
-                throw new Error('Invalid company ID format');
+                showError('Invalid company ID format');
+                return;
             }
-            
             const response = await fetch(`http://localhost:5000/api/company/${companyId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    'Authorization': `Bearer ${token}`
                 }
             });
-
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Failed to delete company');
+                showError(errorData.message || 'Failed to delete company');
+                return;
             }
-
             await fetchCompanies();
             setError('');
         } catch (err) {
-            console.error('Delete error:', err);
-            setError(err.message || 'Failed to delete company');
+            showError(err.message || 'Failed to delete company');
         }
     };
 
@@ -162,10 +162,10 @@ const CompanyTab = ({ searchQuery }) => {
     );
 
     if (loading) return <div className="loading">Loading...</div>;
-    if (error) return <div className="alert alert-danger">{error}</div>;
 
     return (
         <div className="admin-tab-content">
+            {error && <div className="alert alert-danger">{error}</div>}
             <div className="admin-form-section">
                 <h2>{editingId ? 'Edit Company' : 'Add New Company'}</h2>
                 <form onSubmit={handleSubmit}>
@@ -221,20 +221,16 @@ const CompanyTab = ({ searchQuery }) => {
                     <div className="admin-table">
                         <div className="table-header">
                             <div className="col-name">Name</div>
+                            <div className="col-country">Country</div>
                             <div className="col-founded">Founded</div>
-                            <div className="col-headquarters">Headquarters</div>
                             <div className="col-actions">Actions</div>
                         </div>
                         {filteredCompanies.map(company => (
                             <div key={company.company_id} className="table-row">
                                 <div className="col-name">{company.name}</div>
-                                <div className="col-country">
-                                    {company.country || 'N/A'}
-                                </div>
+                                <div className="col-country">{company.country || 'N/A'}</div>
                                 <div className="col-founded">
-                                    {company.founded 
-                                        ? new Date(company.founded).getFullYear() 
-                                        : 'N/A'}
+                                    {company.founded ? new Date(company.founded).getFullYear() : 'N/A'}
                                 </div>
                                 <div className="col-actions">
                                     <button

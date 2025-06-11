@@ -2,6 +2,7 @@ import express from 'express';
 import pool from '../db.js';
 import authenticate from '../middlewares/authenticate.js';
 import authorizeAdmin from '../middlewares/authorizeAdmin.js';
+
 const router = express.Router();
 
 /**
@@ -258,7 +259,7 @@ router.delete('/friends/:friendId', authenticate, async (req, res) => {
 
 // ─── ADMIN‐ONLY: delete friendship (any pair) ─────────────
 router.delete('/friendship/:reqId/:addId', authenticate, authorizeAdmin, async (req, res) => {
-    const { reqId, addId } = req.params;
+    const {reqId, addId} = req.params;
     try {
         await db.query(
             `DELETE FROM friendship 
@@ -266,10 +267,10 @@ router.delete('/friendship/:reqId/:addId', authenticate, authorizeAdmin, async (
           OR (requester_id = $2 AND addressee_id = $1)`,
             [reqId, addId]
         );
-        res.json({ message: 'Friendship removed' });
+        res.json({message: 'Friendship removed'});
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Failed to delete friendship' });
+        res.status(500).json({message: 'Failed to delete friendship'});
     }
 });
 

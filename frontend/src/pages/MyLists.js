@@ -4,7 +4,7 @@ import {AuthContext} from '../contexts/AuthContext';
 function MyLists() {
     const [lists, setLists] = useState([]);
     const [newTitle, setNewTitle] = useState('');
-    const { token } = useContext(AuthContext);
+    const {token} = useContext(AuthContext);
 
 
     // Fetch user's lists on component mount
@@ -53,27 +53,27 @@ function MyLists() {
     };
 
     return (<div className="my-lists-container">
-            <h2>My Anime Lists</h2>
+        <h2>My Anime Lists</h2>
 
-            {/* Create List Form */}
-            <form className="create-list-form" onSubmit={handleCreate}>
-                <input
-                    type="text"
-                    placeholder="New list title"
-                    value={newTitle}
-                    onChange={e => setNewTitle(e.target.value)}
-                    required
-                />
-                <button type="submit">Create List</button>
-            </form>
+        {/* Create List Form */}
+        <form className="create-list-form" onSubmit={handleCreate}>
+            <input
+                type="text"
+                placeholder="New list title"
+                value={newTitle}
+                onChange={e => setNewTitle(e.target.value)}
+                required
+            />
+            <button type="submit">Create List</button>
+        </form>
 
-            {/* User's Lists */}
-            <div className="lists-grid">
-                {lists.map(list => (<div key={list.id} className="list-card">
-                        <a href={`/my-lists/${list.id}`}>{list.title}</a>
-                    </div>))}
-            </div>
-        </div>);
+        {/* User's Lists */}
+        <div className="lists-grid">
+            {lists.map(list => (<div key={list.id} className="list-card">
+                <a href={`/my-lists/${list.id}`}>{list.title}</a>
+            </div>))}
+        </div>
+    </div>);
 }
 
 export default MyLists;

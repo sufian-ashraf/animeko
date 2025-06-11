@@ -30,25 +30,25 @@ export default function ListSearch() {
     };
 
     return (<div className="list-search-container">
-            <h2>Search Custom Lists</h2>
-            <form onSubmit={handleSearch} className="list-search-form">
-                <input
-                    type="text"
-                    placeholder="Search list titles..."
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    className="list-search-input"
-                />
-                <button type="submit" disabled={searching}>
-                    {searching ? 'Searching…' : 'Search'}
-                </button>
-            </form>
+        <h2>Search Custom Lists</h2>
+        <form onSubmit={handleSearch} className="list-search-form">
+            <input
+                type="text"
+                placeholder="Search list titles..."
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className="list-search-input"
+            />
+            <button type="submit" disabled={searching}>
+                {searching ? 'Searching…' : 'Search'}
+            </button>
+        </form>
 
-            {results.length > 0 ? (<ul className="search-results-ul">
-                    {results.map((lst) => (<li key={lst.id}>
-                            <Link to={`/my-lists/${lst.id}`}>{lst.title}</Link>
-                            <span className="owner-text"> by user #{lst.user_id}</span>
-                        </li>))}
-                </ul>) : q.trim() && !searching ? (<p>No lists found matching “{q}.”</p>) : null}
-        </div>);
+        {results.length > 0 ? (<ul className="search-results-ul">
+            {results.map((lst) => (<li key={lst.id}>
+                <Link to={`/my-lists/${lst.id}`}>{lst.title}</Link>
+                <span className="owner-text"> by user #{lst.user_id}</span>
+            </li>))}
+        </ul>) : q.trim() && !searching ? (<p>No lists found matching “{q}.”</p>) : null}
+    </div>);
 }

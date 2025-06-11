@@ -142,7 +142,7 @@ router.get('/anime/:animeId', async (req, res) => {
 // ─── ADMIN‐ONLY ───────────────────────────────────────────────
 // POST /api/animes
 router.post('/animes', authenticate, authorizeAdmin, async (req, res) => {
-    const { title, synopsis, release_date, company_id } = req.body;
+    const {title, synopsis, release_date, company_id} = req.body;
 
     try {
         // Convert empty strings to null for optional fields
@@ -151,8 +151,7 @@ router.post('/animes', authenticate, authorizeAdmin, async (req, res) => {
 
         const result = await pool.query(
             `INSERT INTO anime (title, synopsis, release_date, company_id)
-             VALUES ($1, $2, $3, $4)
-             RETURNING 
+             VALUES ($1, $2, $3, $4) RETURNING 
                 anime_id AS id, 
                 title, 
                 synopsis,
@@ -172,8 +171,8 @@ router.post('/animes', authenticate, authorizeAdmin, async (req, res) => {
 
 // PUT /api/animes/:animeId
 router.put('/animes/:animeId', authenticate, authorizeAdmin, async (req, res) => {
-    const { animeId } = req.params;
-    const { title, synopsis, release_date, company_id } = req.body;
+    const {animeId} = req.params;
+    const {title, synopsis, release_date, company_id} = req.body;
 
     try {
         // Convert empty strings to null for optional fields
@@ -182,13 +181,11 @@ router.put('/animes/:animeId', authenticate, authorizeAdmin, async (req, res) =>
 
         const result = await pool.query(
             `UPDATE anime
-             SET 
-                title = COALESCE($1, title),
-                synopsis = COALESCE($2, synopsis),
-                release_date = COALESCE($3, release_date),
-                company_id = COALESCE($4, company_id)
-             WHERE anime_id = $5
-             RETURNING 
+             SET title        = COALESCE($1, title),
+                 synopsis     = COALESCE($2, synopsis),
+                 release_date = COALESCE($3, release_date),
+                 company_id   = COALESCE($4, company_id)
+             WHERE anime_id = $5 RETURNING 
                 anime_id AS id, 
                 title, 
                 synopsis,
@@ -198,7 +195,7 @@ router.put('/animes/:animeId', authenticate, authorizeAdmin, async (req, res) =>
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Anime not found' });
+            return res.status(404).json({message: 'Anime not found'});
         }
 
         res.json(result.rows[0]);
@@ -212,10 +209,9 @@ router.put('/animes/:animeId', authenticate, authorizeAdmin, async (req, res) =>
 });
 
 
-
 // DELETE /api/anime/:animeId  (delete anime)
 router.delete('/animes/:animeId', authenticate, authorizeAdmin, async (req, res) => {
-    const { animeId } = req.params;
+    const {animeId} = req.params;
 
     // Validate animeId is a valid number
     const id = parseInt(animeId, 10);
@@ -268,7 +264,6 @@ router.delete('/animes/:animeId', authenticate, authorizeAdmin, async (req, res)
         client.release();
     }
 });
-
 
 
 export default router;

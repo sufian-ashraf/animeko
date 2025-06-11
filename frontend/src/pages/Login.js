@@ -1,5 +1,5 @@
 // frontend/src/pages/Login.js
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Link, useLocation, useNavigate, useSearchParams} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
 import '../styles/Auth.css';
@@ -22,7 +22,7 @@ const Login = () => {
     useEffect(() => {
         if (isAuthenticated) {
             console.log('User is already authenticated, redirecting to:', redirectUrl);
-            navigate(redirectUrl, { replace: true });
+            navigate(redirectUrl, {replace: true});
         }
     }, [isAuthenticated, navigate, redirectUrl]);
 
@@ -39,7 +39,7 @@ const Login = () => {
             setIsLoading(true);
             await login(username, password);
             console.log('Login successful, redirecting to:', redirectUrl);
-            navigate(redirectUrl, { replace: true });
+            navigate(redirectUrl, {replace: true});
         } catch (err) {
             console.error('Login error:', err);
             setError(err.message || 'Login failed. Please check your credentials.');

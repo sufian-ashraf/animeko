@@ -22,7 +22,7 @@ router.get('/', authenticate, async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Failed to fetch lists' });
+        res.status(500).json({error: 'Failed to fetch lists'});
     }
 });
 
@@ -32,13 +32,12 @@ router.get('/', authenticate, async (req, res) => {
 router.post('/', authenticate, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { title, animeEntries } = req.body;
+        const {title, animeEntries} = req.body;
 
         // Insert new list
         const insertList = await db.query(
             `INSERT INTO lists (user_id, title)
-             VALUES ($1, $2)
-                 RETURNING id, title, created_at`,
+             VALUES ($1, $2) RETURNING id, title, created_at`,
             [userId, title]
         );
         const list = insertList.rows[0];
@@ -47,11 +46,10 @@ router.post('/', authenticate, async (req, res) => {
         if (Array.isArray(animeEntries)) {
             const validEntries = animeEntries.filter(e => typeof e.anime_id === 'number' && !isNaN(e.anime_id));
             for (const entry of validEntries) {
-                const { anime_id, rank = null, note = null } = entry;
+                const {anime_id, rank = null, note = null} = entry;
                 await db.query(
                     `INSERT INTO list_items (list_id, anime_id, rank, note)
-                     VALUES ($1, $2, $3, $4)
-                         ON CONFLICT (list_id, anime_id) DO NOTHING`,
+                     VALUES ($1, $2, $3, $4) ON CONFLICT (list_id, anime_id) DO NOTHING`,
                     [list.id, anime_id, rank, note]
                 );
             }
@@ -60,7 +58,7 @@ router.post('/', authenticate, async (req, res) => {
         res.status(201).json(list);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Failed to create list' });
+        res.status(500).json({error: 'Failed to create list'});
     }
 });
 
@@ -80,7 +78,7 @@ router.get('/:id', authenticate, async (req, res) => {
             [listId]
         );
         if (listRes.rows.length === 0) {
-            return res.status(404).json({ error: 'List not found' });
+            return res.status(404).json({error: 'List not found'});
         }
 
         const list = listRes.rows[0];
@@ -107,7 +105,7 @@ router.get('/:id', authenticate, async (req, res) => {
         return res.json(list);
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ error: 'Failed to fetch list' });
+        return res.status(500).json({error: 'Failed to fetch list'});
     }
 });
 
@@ -118,20 +116,22 @@ router.put('/:id', authenticate, async (req, res) => {
     try {
         const userId = req.user.id;
         const listId = parseInt(req.params.id, 10);
-        const { title, animeEntries } = req.body;
+        const {title, animeEntries} = req.body;
 
         // 4.0 Check ownership first
         const ownerCheck = await db.query(
-            `SELECT user_id FROM lists WHERE id = $1`,
+            `SELECT user_id
+             FROM lists
+             WHERE id = $1`,
             [listId]
         );
         if (ownerCheck.rows.length === 0) {
-            return res.status(404).json({ error: 'List not found' });
+            return res.status(404).json({error: 'List not found'});
         }
         const ownerId = ownerCheck.rows[0].user_id;
         // Only the owner or an admin may modify
         if (ownerId !== userId && req.user.is_admin !== true) {
-            return res.status(403).json({ error: 'You are not allowed to modify this list' });
+            return res.status(403).json({error: 'You are not allowed to modify this list'});
         }
 
         // 4.1 Update title if provided
@@ -149,13 +149,15 @@ router.put('/:id', authenticate, async (req, res) => {
         if (Array.isArray(animeEntries)) {
             // Delete existing items
             await db.query(
-                `DELETE FROM list_items WHERE list_id = $1`,
+                `DELETE
+                 FROM list_items
+                 WHERE list_id = $1`,
                 [listId]
             );
 
             // Re‐insert each valid entry
             for (const entry of animeEntries) {
-                const { anime_id, rank = null, note = null } = entry;
+                const {anime_id, rank = null, note = null} = entry;
                 if (typeof anime_id !== 'number' || isNaN(anime_id)) continue;
                 await db.query(
                     `INSERT INTO list_items (list_id, anime_id, rank, note)
@@ -165,10 +167,10 @@ router.put('/:id', authenticate, async (req, res) => {
             }
         }
 
-        return res.json({ message: 'List updated' });
+        return res.json({message: 'List updated'});
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ error: 'Failed to update list' });
+        return res.status(500).json({error: 'Failed to update list'});
     }
 });
 
@@ -182,26 +184,30 @@ router.delete('/:id', authenticate, async (req, res) => {
 
         // Only the owner or an admin may delete
         const ownerCheck = await db.query(
-            `SELECT user_id FROM lists WHERE id = $1`,
+            `SELECT user_id
+             FROM lists
+             WHERE id = $1`,
             [listId]
         );
         if (ownerCheck.rows.length === 0) {
-            return res.status(404).json({ error: 'List not found' });
+            return res.status(404).json({error: 'List not found'});
         }
         const ownerId = ownerCheck.rows[0].user_id;
         if (ownerId !== userId && req.user.is_admin !== true) {
-            return res.status(403).json({ error: 'You are not allowed to delete this list' });
+            return res.status(403).json({error: 'You are not allowed to delete this list'});
         }
 
         // Perform delete (owner or admin can delete)
         await db.query(
-            `DELETE FROM lists WHERE id = $1`,
+            `DELETE
+             FROM lists
+             WHERE id = $1`,
             [listId]
         );
-        return res.json({ message: 'List deleted' });
+        return res.json({message: 'List deleted'});
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ error: 'Failed to delete list' });
+        return res.status(500).json({error: 'Failed to delete list'});
     }
 });
 
@@ -211,7 +217,7 @@ router.delete('/:id', authenticate, async (req, res) => {
 //    Returns lists whose title ILIKE %q%. We do not filter by owner here.
 router.get('/search', authenticate, async (req, res) => {
     try {
-        const { q } = req.query;
+        const {q} = req.query;
         if (!q) {
             return res.json([]); // no query → empty array
         }
@@ -227,7 +233,7 @@ router.get('/search', authenticate, async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Failed to search lists' });
+        res.status(500).json({error: 'Failed to search lists'});
     }
 });
 
@@ -249,7 +255,7 @@ router.get('/anime/:animeId', authenticate, async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Failed to fetch lists containing that anime' });
+        res.status(500).json({error: 'Failed to fetch lists containing that anime'});
     }
 });
 
