@@ -265,5 +265,4 @@ router.delete('/animes/:animeId', authenticate, authorizeAdmin, async (req, res)
     }
 });
 
-
 export default router;

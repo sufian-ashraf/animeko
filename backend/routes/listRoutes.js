@@ -452,7 +452,81 @@ router.put('/:id', authenticate, async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────
-// 7) DELETE /api/lists/:id        (delete a list)
+// 8) GET /api/lists/anime/:animeId   (get lists containing an anime)
+// ──────────────────────────────────────────────────
+router.get('/anime/:animeId', async (req, res) => {
+    // Log request details
+    console.log('Request headers:', req.headers);
+    console.log('Request params:', req.params);
+    console.log('Request query:', req.query);
+    
+    // Set CORS headers
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    const { animeId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    try {
+        // Log the anime ID being queried
+        console.log('Fetching lists for anime ID:', animeId);
+        
+        // Get total count of lists containing this anime
+        const countQuery = `
+            SELECT COUNT(DISTINCT l.id) as total
+            FROM lists l
+            JOIN list_items li ON l.id = li.list_id
+            WHERE li.anime_id = $1
+        `;
+        
+        const countResult = await db.query(countQuery, [animeId]);
+        const total = parseInt(countResult.rows[0].total);
+        const totalPages = Math.ceil(total / limit);
+
+        // Get paginated lists
+        const listsQuery = `
+            SELECT 
+                l.id,
+                l.title,
+                l.created_at,
+                u.username as owner_username,
+                u.user_id as owner_id,
+                (SELECT COUNT(*) FROM list_items WHERE list_id = l.id) as item_count
+            FROM lists l
+            JOIN list_items li ON l.id = li.list_id
+            JOIN users u ON l.user_id = u.user_id
+            WHERE li.anime_id = $1
+            ORDER BY l.created_at DESC
+            LIMIT $2 OFFSET $3
+        `;
+
+        const listsResult = await db.query(listsQuery, [animeId, limit, offset]);
+
+        res.json({
+            data: listsResult.rows,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems: total,
+                itemsPerPage: limit
+            }
+        });
+    } catch (err) {
+        console.error('Error fetching anime lists:', err);
+        res.status(500).json({ error: 'Failed to fetch lists containing this anime' });
+    }
+});
+
+// ──────────────────────────────────────────────────
+// 9) DELETE /api/lists/:id        (delete a list)
 // ──────────────────────────────────────────────────
 router.delete('/:id', authenticate, async (req, res) => {
     const client = await db.connect();
