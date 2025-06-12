@@ -49,7 +49,7 @@ app.use('/api', companyRoutes);
 app.use('/api', friendRoutes);
 app.use('/api', favoriteRoutes);
 app.use('/api', reviewRoutes);
-app.use('/lists', listRoutes);
+app.use('/api/lists', listRoutes);
 app.use('/api', characterRoutes);
 app.use('/api', VARoutes);
 app.use('/api', voiceActorRoutes);
