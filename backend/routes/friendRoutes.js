@@ -180,34 +180,103 @@ router.get('/users/profile/:userId', authenticate, async (req, res) => {
  * GET /api/users/search?q=...
  */
 router.get('/users/search', authenticate, async (req, res) => {
-    const me = req.user.user_id;
-    const searchTerm = req.query.q || '';
+    // Log the full user object for debugging
+    console.log('Authenticated user in search route:', req.user);
+    
+    // Try to get user ID from either id or user_id property
+    const me = req.user.id || req.user.user_id;
+    
+    if (!me) {
+        console.error('No user ID found in request. User object:', req.user);
+        return res.status(401).json({ 
+            message: 'User not authenticated',
+            userObject: req.user // For debugging
+        });
+    }
+    
+    console.log('Using user ID for search:', me);
+    const searchTerm = (req.query.q || '').trim();
+    
+    if (!searchTerm) {
+        return res.json([]);
+    }
+    
     const q = `%${searchTerm}%`;
+    
+    console.log('Searching for users:', { searchTerm, me });
 
     try {
+        // First, try exact username match
+        const exactMatch = await pool.query(
+            `SELECT user_id, username, display_name
+             FROM users 
+             WHERE username = $1 AND user_id != $2
+             LIMIT 1`,
+            [searchTerm, me]
+        );
+
+        // If we have an exact username match, return just that
+        if (exactMatch.rows.length > 0) {
+            console.log('Found exact username match:', exactMatch.rows[0]);
+            // Get friendship status for the exact match
+            const friendStatus = await pool.query(
+                `SELECT status, 
+                        CASE WHEN requester_id = $1 THEN 'requester' ELSE 'addressee' END as role
+                 FROM friendship 
+                 WHERE (requester_id = $1 AND addressee_id = $2)
+                    OR (requester_id = $2 AND addressee_id = $1)`,
+                [me, exactMatch.rows[0].user_id]
+            );
+
+            const status = friendStatus.rows[0]?.status === 'accepted' 
+                ? 'friend' 
+                : friendStatus.rows[0]?.status === 'pending'
+                    ? (friendStatus.rows[0]?.role === 'requester' ? 'request_sent' : 'request_received')
+                    : 'none';
+
+            return res.json([{
+                ...exactMatch.rows[0],
+                friendship_status: status
+            }]);
+        }
+
+        // If no exact match, do a broader search
         const result = await pool.query(`
-            SELECT u.user_id,
-                   u.username,
-                   u.display_name,
-                   CASE
-                       WHEN f.status = 'accepted' THEN 'friend'
-                       WHEN f.status = 'pending' AND f.requester_id = $2 THEN 'request_sent'
-                       WHEN f.status = 'pending' AND f.addressee_id = $2 THEN 'request_received'
-                       ELSE 'none'
-                       END as friendship_status
+            SELECT 
+                u.user_id,
+                u.username,
+                u.display_name,
+                CASE
+                    WHEN f.status = 'accepted' THEN 'friend'
+                    WHEN f.status = 'pending' AND f.requester_id = $2 THEN 'request_sent'
+                    WHEN f.status = 'pending' AND f.addressee_id = $2 THEN 'request_received'
+                    ELSE 'none'
+                END as friendship_status
             FROM users u
-                     LEFT JOIN friendship f ON (
+            LEFT JOIN friendship f ON (
                 (f.requester_id = u.user_id AND f.addressee_id = $2) OR
                 (f.addressee_id = u.user_id AND f.requester_id = $2)
-                )
+            )
             WHERE (u.username ILIKE $1 OR u.display_name ILIKE $1)
               AND u.user_id != $2
+            ORDER BY 
+                -- Exact matches first
+                CASE 
+                    WHEN u.username ILIKE $1 AND u.display_name ILIKE $1 THEN 0
+                    WHEN u.username ILIKE $1 THEN 1
+                    WHEN u.display_name ILIKE $1 THEN 2
+                    ELSE 3
+                END,
+                -- Then by username length (shorter usernames first)
+                LENGTH(u.username)
+            LIMIT 20
         `, [q, me]);
 
+        console.log('Search results count:', result.rows.length);
         res.json(result.rows);
     } catch (err) {
         console.error('Search error:', err);
-        res.status(500).json({message: 'Server error'});
+        res.status(500).json({message: 'Server error during search'});
     }
 });
 

@@ -45,7 +45,8 @@ async function authenticate(req, res, next) {
 
         // Set the full user object on the request
         req.user = {
-            id: user.user_id,
+            id: user.user_id, // For compatibility with JWT which uses 'id'
+            user_id: user.user_id, // For routes that expect user_id
             username: user.username,
             email: user.email,
             display_name: user.display_name,
@@ -53,6 +54,8 @@ async function authenticate(req, res, next) {
             created_at: user.created_at,
             is_admin: isAdmin
         };
+        
+        console.log('Authenticated user set on req.user:', req.user);
 
         // console.log('[AUTH] Authenticated user:', {
         //     id: req.user.id,

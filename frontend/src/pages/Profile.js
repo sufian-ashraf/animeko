@@ -133,17 +133,100 @@ export default function Profile() {
 
     // Search users (own profile only)
     useEffect(() => {
-        if (!isOwnProfile || searchQuery === '') {
-            setSearchResults([]);
-            return;
-        }
+        let isMounted = true;
+        
+        const searchUsers = async () => {
+            if (!isOwnProfile) {
+                console.log('Not own profile, skipping search');
+                return;
+            }
+            
+            const query = searchQuery.trim();
+            if (!query) {
+                console.log('Empty search query, clearing results');
+                setSearchResults([]);
+                return;
+            }
 
-        fetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}`, {
-            headers: {Authorization: `Bearer ${token}`},
-        })
-            .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-            .then(setSearchResults)
-            .catch(() => setSearchResults([]));
+            console.log('Searching for users with query:', query);
+            setError('');
+            
+            try {
+                console.log('Sending search request with token:', token ? 'Token exists' : 'No token');
+                
+                const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include',
+                    mode: 'cors',
+                    redirect: 'follow'
+                });
+                
+                console.log('Search response status:', response.status);
+                console.log('Search response headers:', Object.fromEntries([...response.headers.entries()]));
+                
+                if (response.redirected) {
+                    console.warn('Request was redirected to:', response.url);
+                }
+                
+                if (!isMounted) return;
+                
+                if (!response.ok) {
+                    let errorMessage = 'Failed to search users';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                        console.error('Search API error:', errorData);
+                    } catch (e) {
+                        console.error('Failed to parse error response:', e);
+                    }
+                    
+                    setError(errorMessage);
+                    setSearchResults([]);
+                    return;
+                }
+
+
+                const data = await response.json();
+                console.log('Search results received:', data);
+                
+                if (!isMounted) return;
+                
+                if (!Array.isArray(data)) {
+                    console.error('Invalid search results format:', data);
+                    setError('Invalid response format from server');
+                    setSearchResults([]);
+                    return;
+                }
+                
+                if (data.length === 0) {
+                    console.log('No users found for query:', query);
+                }
+                
+                setSearchResults(data);
+            } catch (error) {
+                if (!isMounted) return;
+                console.error('Search error:', error);
+                setError('Failed to connect to server');
+                setSearchResults([]);
+            }
+        };
+
+        // Add debounce to prevent too many requests
+        const debounceTimer = setTimeout(() => {
+            searchUsers();
+        }, 300);
+
+        // Cleanup function
+        return () => {
+            isMounted = false;
+            clearTimeout(debounceTimer);
+        };
     }, [searchQuery, token, isOwnProfile]);
 
     // Profile edit handlers
@@ -179,67 +262,151 @@ export default function Profile() {
     };
 
     // Social handlers (own profile)
-    const respondRequest = (requesterId, action) => {
-        fetch(`/api/friends/requests/${requesterId}/${action}`, {
-            method: 'POST', headers: {Authorization: `Bearer ${token}`},
-        }).then(() => {
-            setIncoming((inc) => inc.filter((r) => r.user_id !== requesterId));
-            if (action === 'accept') {
-                fetch('/api/friends', {headers: {Authorization: `Bearer ${token}`}})
-                    .then((r) => r.json())
-                    .then(setFriends);
+    const respondRequest = async (requesterId, action) => {
+        try {
+            console.log(`Responding to friend request from ${requesterId} with action: ${action}`);
+            const response = await fetch(`/api/friends/requests/${requesterId}/${action}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            const responseData = await response.json().catch(() => ({}));
+            console.log('Response data:', responseData);
+            
+            if (!response.ok) {
+                throw new Error(responseData.message || 'Failed to respond to friend request');
             }
-        });
+
+            // Update UI to remove the request
+            setIncoming(prev => {
+                const updated = prev.filter((r) => r.user_id !== requesterId);
+                console.log('Updated incoming requests:', updated);
+                return updated;
+            });
+
+            // If request was accepted, update friends list
+            if (action === 'accept') {
+                try {
+                    const friendsResponse = await fetch('/api/friends', {
+                        headers: { 
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include'
+                    });
+                    
+                    if (friendsResponse.ok) {
+                        const friendsData = await friendsResponse.json();
+                        console.log('Updated friends list:', friendsData);
+                        setFriends(friendsData);
+                    } else {
+                        console.error('Failed to fetch updated friends list:', friendsResponse.status);
+                    }
+                } catch (err) {
+                    console.error('Error updating friends list:', err);
+                }
+            }
+        } catch (error) {
+            console.error('Error responding to friend request:', error);
+            setError(error.message || 'Failed to respond to friend request');
+        }
     };
 
     const sendFriendRequest = async (toUserId) => {
         try {
+            console.log('Sending friend request to user ID:', toUserId);
             const response = await fetch('/api/friends/requests', {
-                method: 'POST', headers: {
-                    'Content-Type': 'application/json', Authorization: `Bearer ${token}`,
-                }, body: JSON.stringify({addresseeId: toUserId}),
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    addresseeId: toUserId
+                }),
             });
 
+            const responseData = await response.json().catch(() => ({}));
+            console.log('Send friend request response:', responseData);
+
             if (!response.ok) {
-                const data = await response.json();
-                console.error('Failed to send friend request:', data.message || response.status);
-                return;
+                throw new Error(responseData.message || 'Failed to send friend request');
             }
+
+            // Update UI to show request sent
+            setSearchResults(prev => {
+                const updated = prev.map(user => 
+                    user.user_id === toUserId 
+                        ? { ...user, friendship_status: 'request_sent' } 
+                        : user
+                );
+                console.log('Updated search results:', updated);
+                return updated;
+            });
 
             setSearchQuery('');
             setSendMessage('Friend request sent!');
-            setTimeout(() => setSendMessage(''), 1000);
-        } catch (err) {
-            console.error('Error sending friend request:', err);
+            setTimeout(() => setSendMessage(''), 3000);
+        } catch (error) {
+            console.error('Error sending friend request:', error);
+            setError(error.message || 'Failed to send friend request');
         }
     };
 
     const removeFriend = async (friendId) => {
+        if (!window.confirm('Are you sure you want to remove this friend?')) {
+            return;
+        }
+
         try {
-            const resp = await fetch(`/api/friends/${friendId}`, {
-                method: 'DELETE', headers: {Authorization: `Bearer ${token}`},
+            console.log('Removing friend with ID:', friendId);
+            const response = await fetch(`/api/friends/${friendId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
             });
 
-            if (!resp.ok) {
-                let message;
-                const ct = resp.headers.get('content-type') || '';
-                if (ct.includes('application/json')) {
-                    const body = await resp.json();
-                    message = body.message;
-                } else {
-                    message = await resp.text();
-                }
-                throw new Error(message || `Server responded ${resp.status}`);
+            const responseData = await response.json().catch(() => ({}));
+            console.log('Remove friend response:', responseData);
+
+            if (!response.ok) {
+                throw new Error(responseData.message || `Server responded with ${response.status}`);
             }
 
-            const friendsRes = await fetch('/api/friends', {
-                headers: {Authorization: `Bearer ${token}`},
-            });
-            const friendsData = await friendsRes.json();
-            setFriends(friendsData);
-        } catch (err) {
-            console.error('Unfriend failed:', err);
-            alert(err.message);
+            // Update friends list
+            try {
+                const friendsResponse = await fetch('/api/friends', {
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (friendsResponse.ok) {
+                    const friendsData = await friendsResponse.json();
+                    console.log('Updated friends list after removal:', friendsData);
+                    setFriends(friendsData);
+                    setSendMessage('Friend removed successfully');
+                    setTimeout(() => setSendMessage(''), 3000);
+                } else {
+                    throw new Error('Failed to fetch updated friends list');
+                }
+            } catch (err) {
+                console.error('Error updating friends list after removal:', err);
+                setError('Friend removed, but failed to update list');
+            }
+        } catch (error) {
+            console.error('Remove friend failed:', error);
+            setError(error.message || 'Failed to remove friend');
         }
     };
 
