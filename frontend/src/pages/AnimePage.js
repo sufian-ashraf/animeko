@@ -53,6 +53,88 @@ export default function AnimePage() {
         console.log('User auth status:', { user, hasToken: !!token });
     }, [user, token]);
 
+    /**
+     * Fetches lists containing the current anime
+     * @param {number} page - Page number to fetch
+     * @param {AbortSignal} [signal] - Optional AbortSignal to cancel the request
+     * @returns {Promise<{data: Array, pagination: Object}>} The lists data and pagination info
+     */
+    const fetchAnimeLists = async (page = 1, signal = null) => {
+        if (!animeId) {
+            console.error('No animeId provided');
+            return { data: [], pagination: {} };
+        }
+
+        let baseUrl = process.env.REACT_APP_API_URL || '';
+        // Ensure baseUrl ends with a single slash
+        if (baseUrl && !baseUrl.endsWith('/')) {
+            baseUrl += '/';
+        }
+        
+        // Construct the URL properly based on whether we have a baseUrl or not
+        const apiPath = `api/lists/anime/${animeId}?page=${page}&limit=6`;
+        const url = baseUrl ? `${baseUrl}${apiPath}` : `/${apiPath}`;
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers,
+                credentials: 'include',
+                mode: 'cors',
+                signal
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({
+                    message: `HTTP ${response.status} ${response.statusText}`
+                }));
+                throw new Error(error.message || 'Failed to fetch lists');
+            }
+
+            const result = await response.json();
+            
+            // Normalize response format
+            if (Array.isArray(result)) {
+                return {
+                    data: result,
+                    pagination: {
+                        currentPage: 1,
+                        totalPages: 1,
+                        totalItems: result.length,
+                        itemsPerPage: result.length
+                    }
+                };
+            }
+            
+            if (result?.data && Array.isArray(result.data)) {
+                return {
+                    data: result.data,
+                    pagination: result.pagination || {
+                        currentPage: page,
+                        totalPages: 1,
+                        totalItems: result.data.length,
+                        itemsPerPage: 6
+                    }
+                };
+            }
+
+
+            throw new Error('Unexpected API response format');
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Error fetching anime lists:', error);
+                throw error;
+            }
+            return { data: [], pagination: {} };
+        }
+    };
+
     // Fetch lists containing this anime
     const fetchContainingLists = async (page = 1) => {
         if (!animeId) return;
@@ -64,69 +146,7 @@ export default function AnimePage() {
                 error: null
             }));
 
-            // Using the lists endpoint to get lists containing this anime
-            const baseUrl = process.env.REACT_APP_API_URL || '';
-            const url = `${baseUrl}/api/lists/anime/${animeId}?page=${page}&limit=6`;
-            console.log('Fetching from URL:', url);
-            
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    // Add auth token if needed
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                },
-                credentials: 'include',
-                mode: 'cors'
-            });
-            
-            console.log('Response status:', response.status);
-            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-            
-            if (!response.ok) {
-                let errorText;
-                try {
-                    // Try to parse error as JSON first
-                    const errorData = await response.json();
-                    errorText = errorData.message || JSON.stringify(errorData);
-                } catch (e) {
-                    // If not JSON, get as text
-                    errorText = await response.text();
-                }
-                
-                console.error('Failed to fetch lists:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    errorText,
-                    url: response.url
-                });
-                
-                throw new Error(errorText || `Failed to fetch lists: ${response.status} ${response.statusText}`);
-            }
-            
-            const result = await response.json();
-            console.log('API Response:', result);
-            
-            // Handle different response formats
-            let data, pagination;
-            
-            if (Array.isArray(result)) {
-                // If the API returns just an array, wrap it in the expected format
-                data = result;
-                pagination = {
-                    currentPage: 1,
-                    totalPages: 1,
-                    totalItems: result.length,
-                    itemsPerPage: result.length
-                };
-            } else if (result && Array.isArray(result.data)) {
-                // Standard format with data and pagination
-                ({ data, pagination } = result);
-            } else {
-                console.error('Unexpected API response format:', result);
-                throw new Error('Unexpected API response format');
-            }
+            const { data, pagination } = await fetchAnimeLists(page);
             
             setContainingLists(prev => ({
                 ...prev,
@@ -137,25 +157,36 @@ export default function AnimePage() {
                     ...pagination
                 }
             }));
-        } catch (err) {
-            console.error('Error fetching lists:', err);
+        } catch (error) {
+            console.error('Failed to load anime lists:', error);
             setContainingLists(prev => ({
                 ...prev,
                 loading: false,
-                error: 'Failed to load lists containing this anime'
+                error: 'Failed to load lists containing this anime',
+                data: page === 1 ? [] : prev.data // Clear data only on first page error
             }));
         }
     };
 
     // Initial fetch when animeId changes
     useEffect(() => {
-        console.log('Anime ID changed:', animeId);
-        if (animeId) {
+        const controller = new AbortController();
+        
+        const loadLists = async () => {
+            if (!animeId) {
+                console.error('No animeId available');
+                return;
+            }
+            
             console.log('Fetching lists for anime ID:', animeId);
-            fetchContainingLists(1);
-        } else {
-            console.error('No animeId available');
-        }
+            await fetchContainingLists(1);
+        };
+        
+        loadLists();
+        
+        return () => {
+            controller.abort();
+        };
     }, [animeId]);
 
     // Handle load more
@@ -325,30 +356,6 @@ export default function AnimePage() {
             setReviewLoading(false);
         }
     };
-
-    // ───────────────────────────────────────────────────
-    // 5) NEW: Fetch “Which lists contain this anime?”
-    // ───────────────────────────────────────────────────
-    useEffect(() => {
-        if (!token) return;
-        fetch(`/lists/anime/${animeId}`, {
-            headers: {Authorization: `Bearer ${token}`},
-        })
-            .then((r) => {
-                if (!r.ok) {
-                    if (r.status === 401) return [];
-                    throw new Error(`Status ${r.status}`);
-                }
-                return r.json();
-            })
-            .then((lists) => {
-                setContainingLists(Array.isArray(lists) ? lists : []);
-            })
-            .catch((err) => {
-                console.error('[AnimePage] Error fetching containing lists:', err);
-                setContainingLists([]);
-            });
-    }, [animeId, token]);
 
     if (error) return <div className="anime-error">{error}</div>;
     if (!anime) return <div className="anime-loading">Loading anime…</div>;
