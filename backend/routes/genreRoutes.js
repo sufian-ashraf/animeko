@@ -10,7 +10,8 @@ router.get('/genre', async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT genre_id as id,
-                   name
+                   name,
+                   description
             FROM genre
             ORDER BY name
         `);
@@ -35,7 +36,8 @@ router.get('/genre/:genreId', async (req, res) => {
     try {
         const genreRes = await client.query(
             `SELECT genre_id as id,
-                    name
+                    name,
+                    description
              FROM genre
              WHERE genre_id = $1`,
             [id]
@@ -57,10 +59,12 @@ router.get('/genre/:genreId', async (req, res) => {
 
 // POST /api/genre - Create new genre
 router.post('/genre', authenticate, authorizeAdmin, async (req, res) => {
-    const {name} = req.body;
+    const {name, description} = req.body;
     if (!name || typeof name !== 'string' || name.trim() === '') {
         return res.status(400).json({message: 'Genre name is required'});
     }
+    
+    const descriptionText = (typeof description === 'string') ? description.trim() : null;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -75,11 +79,12 @@ router.post('/genre', authenticate, authorizeAdmin, async (req, res) => {
             });
         }
         const result = await client.query(
-            `INSERT INTO genre (name)
-             VALUES ($1) RETURNING 
+            `INSERT INTO genre (name, description)
+             VALUES ($1, $2) RETURNING 
                 genre_id AS id, 
-                name`,
-            [name.trim()]
+                name,
+                description`,
+            [name.trim(), descriptionText]
         );
         await client.query('COMMIT');
         res.status(201).json(result.rows[0]);
@@ -103,7 +108,7 @@ router.post('/genre', authenticate, authorizeAdmin, async (req, res) => {
 // PUT /api/genre/:genreId - Update genre
 router.put('/genre/:genreId', authenticate, authorizeAdmin, async (req, res) => {
     const {genreId} = req.params;
-    const {name} = req.body;
+    const {name, description} = req.body;
     const id = parseInt(genreId, 10);
     if (isNaN(id)) {
         return res.status(400).json({message: 'Invalid genre ID format'});
@@ -132,13 +137,17 @@ router.put('/genre/:genreId', authenticate, authorizeAdmin, async (req, res) => 
                 message: 'A genre with this name already exists'
             });
         }
+        const descriptionText = (typeof description === 'string') ? description.trim() : null;
+        
         const result = await client.query(
             `UPDATE genre
-             SET name = $1
+             SET name = $1,
+                 description = $3
              WHERE genre_id = $2 RETURNING 
                 genre_id AS id, 
-                name`,
-            [name.trim(), id]
+                name,
+                description`,
+            [name.trim(), id, descriptionText]
         );
         if (result.rows.length === 0) {
             await client.query('ROLLBACK');

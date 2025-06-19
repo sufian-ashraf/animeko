@@ -55,9 +55,31 @@ export default function Profile() {
 
                 if (isOwnProfile) {
                     setProfileUser(currentUser);
+                    // For own profile, we already have the user data
+                    // Just ensure we have the latest favorites and friends
+                    const [favsRes, friendsRes] = await Promise.all([
+                        fetch('/api/favorites', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        }),
+                        fetch('/api/friends', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        })
+                    ]);
+
+                    if (favsRes.ok) {
+                        const favsData = await favsRes.json();
+                        setFavorites(Array.isArray(favsData) ? favsData : []);
+                    }
+
+                    
+                    if (friendsRes.ok) {
+                        const friendsData = await friendsRes.json();
+                        setFriends(Array.isArray(friendsData) ? friendsData : []);
+                    }
                 } else {
+                    // For other users' profiles, fetch their public data
                     const response = await fetch(`/api/users/profile/${userId}`, {
-                        headers: {Authorization: `Bearer ${token}`},
+                        headers: { 'Authorization': `Bearer ${token}` },
                     });
 
                     if (!response.ok) {
@@ -70,12 +92,14 @@ export default function Profile() {
                         }
                     }
 
+
                     const data = await response.json();
                     setProfileUser(data.user);
                     setFriends(data.friends || []);
                     setFavorites(data.favorites || []);
                 }
             } catch (err) {
+                console.error('Error fetching profile data:', err);
                 setError(err.message);
             } finally {
                 setLoading(false);
@@ -443,8 +467,11 @@ export default function Profile() {
         </section>
 
         {/* ───────────── Integrate “My Anime Lists” Here ───────────── */}
-        {isOwnProfile && (<section className="my-lists-section">
-            <MyLists/>
-        </section>)}
+        {isOwnProfile && (
+            <section className="my-lists-section">
+                <h3>My Anime Lists</h3>
+                <MyLists userId={profileUser.user_id} token={token} />
+            </section>
+        )}
     </div>);
 }

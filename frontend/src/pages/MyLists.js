@@ -9,46 +9,64 @@ function MyLists() {
 
     // Fetch user's lists on component mount
     useEffect(() => {
-        fetch('/lists', {
-            headers: {'Authorization': `Bearer ${token}`}
-        })
-            .then(res => res.json())
-            .then(data => {
-                console.log('Fetched data:', data);
+        const fetchLists = async () => {
+            try {
+                const response = await fetch('/api/lists', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Fetched lists:', data);
+                
                 if (Array.isArray(data)) {
                     setLists(data);
-                } else if (Array.isArray(data.lists)) {
-                    setLists(data.lists);
                 } else {
-                    console.error('Unexpected list response:', data);
+                    console.error('Unexpected list response format:', data);
                     setLists([]);
                 }
-            })
-            .catch(err => {
+            } catch (err) {
                 console.error('Error fetching lists:', err);
                 setLists([]);
-            });
+            }
+        };
+
+        if (token) {
+            fetchLists();
+        }
     }, [token]);
 
     // Create new list
     const handleCreate = async (e) => {
         e.preventDefault();
-        if (!newTitle.trim()) return;
+        const title = newTitle.trim();
+        if (!title) return;
+        
         try {
-            const res = await fetch('/lists', {
-                method: 'POST', headers: {
-                    'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`
-                }, body: JSON.stringify({title: newTitle.trim()})
+            const response = await fetch('/api/lists', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ title })
             });
-            if (res.ok) {
-                const created = await res.json();
-                setLists([...lists, created]);
-                setNewTitle('');
-            } else {
-                console.error('Create failed:', await res.text());
+            
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.message || 'Failed to create list');
             }
+            
+            const createdList = await response.json();
+            setLists(prevLists => [...prevLists, createdList]);
+            setNewTitle('');
+            
         } catch (error) {
             console.error('Error creating list:', error);
+            alert(error.message || 'Failed to create list');
         }
     };
 

@@ -16,7 +16,7 @@ router.get('/voice-actors', async (req, res) => {
             SELECT 
                 voice_actor_id as "id",
                 name,
-                birth_date as "birthDate",
+                TO_CHAR(birth_date, 'YYYY-MM-DD') as "birthDate",
                 nationality
             FROM voice_actor
             ORDER BY name
@@ -47,7 +47,7 @@ router.get('/voice-actors/:vaId', async (req, res) => {
             `SELECT 
                 voice_actor_id as "id",
                 name,
-                birth_date as "birthDate",
+                TO_CHAR(birth_date, 'YYYY-MM-DD') as "birthDate",
                 nationality
              FROM voice_actor 
              WHERE voice_actor_id = $1`,
@@ -98,6 +98,20 @@ router.post('/voice-actors', authenticate, authorizeAdmin, async (req, res) => {
     }
 
     try {
+        // Format the birth date properly (YYYY-MM-DD)
+        let formattedBirthDate = null;
+        if (birthDate) {
+            try {
+                // Parse the date and format it as YYYY-MM-DD
+                const date = new Date(birthDate);
+                if (!isNaN(date.getTime())) {
+                    formattedBirthDate = date.toISOString().split('T')[0];
+                }
+            } catch (e) {
+                console.warn('Invalid birth date format, setting to null');
+            }
+        }
+
         const result = await pool.query(
             `INSERT INTO voice_actor 
                 (name, birth_date, nationality)
@@ -107,7 +121,11 @@ router.post('/voice-actors', authenticate, authorizeAdmin, async (req, res) => {
                 name,
                 birth_date as "birthDate",
                 nationality`,
-            [name.trim(), birthDate || null, nationality || null]
+            [
+                name.trim(), 
+                formattedBirthDate, 
+                nationality?.trim() || null
+            ]
         );
 
         res.status(201).json(result.rows[0]);
@@ -140,6 +158,20 @@ router.put('/voice-actors/:vaId', authenticate, authorizeAdmin, async (req, res)
     }
 
     try {
+        // Format the birth date properly (YYYY-MM-DD)
+        let formattedBirthDate = null;
+        if (birthDate) {
+            try {
+                // Parse the date and format it as YYYY-MM-DD
+                const date = new Date(birthDate);
+                if (!isNaN(date.getTime())) {
+                    formattedBirthDate = date.toISOString().split('T')[0];
+                }
+            } catch (e) {
+                console.warn('Invalid birth date format, setting to null');
+            }
+        }
+
         const result = await pool.query(
             `UPDATE voice_actor 
              SET 
@@ -152,7 +184,12 @@ router.put('/voice-actors/:vaId', authenticate, authorizeAdmin, async (req, res)
                 name,
                 birth_date as "birthDate",
                 nationality`,
-            [name?.trim(), birthDate || null, nationality || null, id]
+            [
+                name?.trim(), 
+                formattedBirthDate, 
+                nationality?.trim() || null, 
+                id
+            ]
         );
 
         if (result.rows.length === 0) {

@@ -22,19 +22,54 @@ const AnimeTab = ({searchQuery}) => {
 
     const fetchAnime = async () => {
         try {
+            console.log('Fetching anime list...');
             const response = await fetch('http://localhost:5000/api/animes');
             if (!response.ok) {
-                throw new Error('Failed to fetch anime list');
+                const errorText = await response.text();
+                throw new Error('Failed to fetch anime list: ' + errorText);
             }
             const data = await response.json();
-            // Ensure consistent ID field names
-            const formattedData = Array.isArray(data)
-                ? data.map(anime => ({
+            
+            // Log the first anime to see the data structure
+            if (Array.isArray(data) && data.length > 0) {
+                console.log('Sample anime data:', {
+                    id: data[0].id,
+                    anime_id: data[0].anime_id,
+                    title: data[0].title,
+                    release_date: data[0].release_date,
+                    company_id: data[0].company_id,
+                    raw_data: data[0]
+                });
+            }
+            
+            // Format the data with consistent fields
+            const formattedData = Array.isArray(data) ? data.map(anime => {
+                // Parse the release date if it exists
+                let releaseDate = null;
+                if (anime.release_date) {
+                    try {
+                        // Handle case where release_date might be a string or Date object
+                        const date = new Date(anime.release_date);
+                        releaseDate = isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
+                    } catch (e) {
+                        console.error('Error parsing release date:', e);
+                    }
+                }
+                
+                return {
                     ...anime,
-                    anime_id: anime.anime_id || anime.id, // Use anime_id if available, fallback to id
-                    id: anime.anime_id || anime.id          // Ensure id is always present
-                }))
-                : [];
+                    anime_id: anime.anime_id || anime.id,
+                    id: anime.anime_id || anime.id,
+                    release_date: releaseDate,
+                    company_id: anime.company_id || anime.companyId || null
+                };
+            }) : [];
+            
+            console.log('Anime data loaded:', { 
+                count: formattedData.length,
+                hasReleaseDates: formattedData.some(a => a.release_date),
+                hasCompanyIds: formattedData.some(a => a.company_id)
+            });
             setAnimeList(formattedData);
         } catch (err) {
             setError(err.message || 'Failed to fetch anime list');
@@ -46,9 +81,38 @@ const AnimeTab = ({searchQuery}) => {
 
     const fetchCompanies = async () => {
         try {
+            console.log('Fetching companies...');
             const response = await fetch('http://localhost:5000/api/company');
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error('Failed to fetch companies: ' + errorText);
+            }
             const data = await response.json();
-            setCompanies(Array.isArray(data) ? data : []);
+            
+            // Log sample company data
+            if (Array.isArray(data) && data.length > 0) {
+                console.log('Sample company data:', {
+                    id: data[0].id,
+                    company_id: data[0].company_id,
+                    name: data[0].name,
+                    raw_data: data[0]
+                });
+            }
+            
+            const companiesList = Array.isArray(data) 
+                ? data.map(company => ({
+                    ...company,
+                    id: company.id || company.company_id,
+                    // Ensure we have a consistent ID field
+                    company_id: company.company_id || company.id
+                })) 
+                : [];
+                
+            console.log('Companies loaded:', { 
+                count: companiesList.length,
+                sampleIds: companiesList.slice(0, 3).map(c => c.id)
+            });
+            setCompanies(companiesList);
         } catch (err) {
             console.error('Error fetching companies:', err);
             setError('Failed to fetch companies');
@@ -283,10 +347,50 @@ const AnimeTab = ({searchQuery}) => {
                             <div key={anime.anime_id} className="table-row">
                                 <div className="col-title">{anime.title}</div>
                                 <div className="col-release">
-                                    {anime.release_date ? new Date(anime.release_date).toLocaleDateString() : 'N/A'}
+                                    {(() => {
+                                        if (!anime.release_date) return 'N/A';
+                                        try {
+                                            const date = new Date(anime.release_date);
+                                            return !isNaN(date.getTime()) 
+                                                ? date.toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    timeZone: 'UTC'
+                                                })
+                                                : 'Invalid Date';
+                                        } catch (e) {
+                                            console.error('Error formatting date:', e);
+                                            return 'Date Error';
+                                        }
+                                    })()}
                                 </div>
                                 <div className="col-company">
-                                    {companies.find(c => c.id === anime.company_id)?.name || 'N/A'}
+                                    {(() => {
+                                        if (!anime.company_id) {
+                                            console.log(`Anime ${anime.id} has no company_id`);
+                                            return 'N/A';
+                                        }
+                                        
+                                        // Log the company ID we're looking for
+                                        console.log(`Looking for company with ID: ${anime.company_id} (Type: ${typeof anime.company_id})`);
+                                        
+                                        // Try to find the company by both id and company_id
+                                        const company = companies.find(c => {
+                                            const match = c.id === anime.company_id || c.company_id === anime.company_id;
+                                            if (match) {
+                                                console.log('Found matching company:', c);
+                                            }
+                                            return match;
+                                        });
+                                        
+                                        if (!company) {
+                                            console.log('No company found for ID:', anime.company_id);
+                                            console.log('Available company IDs:', companies.map(c => c.id || c.company_id));
+                                        }
+                                        
+                                        return company?.name || `Company ID: ${anime.company_id}`;
+                                    })()}
                                 </div>
                                 <div className="col-actions">
                                     <button

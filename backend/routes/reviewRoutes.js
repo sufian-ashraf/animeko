@@ -12,7 +12,7 @@ const router = express.Router();
  * (unchanged from before)
  */
 router.post('/anime/:animeId/review', authenticate, async (req, res) => {
-    const userId = req.user.user_id;
+    const userId = req.user.id; // Changed from req.user.user_id to req.user.id
     const animeId = parseInt(req.params.animeId, 10);
     const {rating, content} = req.body;
 

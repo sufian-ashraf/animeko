@@ -17,12 +17,19 @@ const GenreTab = ({searchQuery}) => {
     }, []);
 
     const fetchGenres = async () => {
+        console.log('Fetching genres...');
+        setLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/api/genre');
+            const response = await fetch('/api/genre');
+            console.log('Genres response status:', response.status);
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Failed to fetch genres:', errorText);
                 throw new Error('Failed to fetch genres');
             }
             const data = await response.json();
+            console.log('Fetched genres:', data);
+            
             const formattedData = Array.isArray(data)
                 ? data.map(genre => ({
                     ...genre,
@@ -30,10 +37,13 @@ const GenreTab = ({searchQuery}) => {
                     id: genre.genre_id || genre.id
                 }))
                 : [];
+                
+            console.log('Formatted genres:', formattedData);
             setGenres(formattedData);
+            setError('');
         } catch (err) {
-            setError(err.message);
             console.error('Fetch error:', err);
+            setError(err.message || 'Failed to load genres');
         } finally {
             setLoading(false);
         }
@@ -56,79 +66,111 @@ const GenreTab = ({searchQuery}) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('Form submission started', { formData, editingId });
         setLoading(true);
         setError('');
 
         if (!formData.name.trim()) {
-            showError('Genre name is required');
-            setLoading(false);
-            return;
-        }
-
-        const existingGenre = genres.find(genre => genre.name.toLowerCase() === formData.name.trim().toLowerCase());
-        if (existingGenre && existingGenre.genre_id !== editingId) {
-            showError('Genre with this name already exists');
+            const errorMsg = 'Genre name is required';
+            console.error('Validation error:', errorMsg);
+            showError(errorMsg);
             setLoading(false);
             return;
         }
 
         const url = editingId
-            ? `http://localhost:5000/api/genre/${editingId}`
-            : 'http://localhost:5000/api/genre';
+            ? `/api/genre/${editingId}`
+            : '/api/genre';
         const method = editingId ? 'PUT' : 'POST';
 
         try {
+            console.log(`Sending ${method} request to:`, url);
+            const requestBody = {
+                name: formData.name.trim(),
+                description: formData.description || null
+            };
+            console.log('Request payload:', requestBody);
+            
             const response = await fetch(url, {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(requestBody)
             });
 
+            const responseData = await response.json().catch(() => ({}));
+            console.log('API response:', { status: response.status, data: responseData });
+
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                showError(errorData.message || (editingId ? 'Failed to update genre' : 'Failed to add genre'));
-                setLoading(false);
-                return;
+                const errorMsg = responseData.message || 
+                    (editingId ? 'Failed to update genre' : 'Failed to add genre');
+                console.error('API error:', errorMsg);
+                throw new Error(errorMsg);
             }
 
+
+            console.log('Genre operation successful, refreshing list...');
             await fetchGenres();
             resetForm();
+            console.log('Form reset and list refreshed');
         } catch (err) {
-            showError(err.message);
+            console.error('Error in handleSubmit:', err);
+            showError(err.message || 'An error occurred');
         } finally {
             setLoading(false);
         }
     };
 
     const handleEdit = (genre) => {
-        if (!genre) return;
-        const genreId = genre.genre_id || genre.id;
-        if (!genreId) {
-            showError('Invalid genre data: missing ID');
+        console.log('Editing genre:', genre);
+        if (!genre) {
+            console.error('No genre data provided');
             return;
         }
+        
+        const genreId = genre.genre_id || genre.id;
+        if (!genreId) {
+            const errorMsg = 'Invalid genre data: missing ID';
+            console.error(errorMsg, genre);
+            showError(errorMsg);
+            return;
+        }
+        
+        console.log('Setting form data for genre ID:', genreId);
         setFormData({
             name: genre.name || '',
             description: genre.description || ''
         });
         setEditingId(genreId);
+        
+        // Scroll to form
+        document.querySelector('.admin-form-section')?.scrollIntoView({ behavior: 'smooth' });
     };
 
     const handleDelete = async (id) => {
+        console.log('Deleting genre ID:', id);
         if (!id) {
-            showError('Invalid genre ID');
+            const errorMsg = 'Invalid genre ID';
+            console.error(errorMsg);
+            showError(errorMsg);
             return;
         }
-        if (!window.confirm('Are you sure you want to delete this genre? This action cannot be undone.')) return;
+        
+        if (!window.confirm('Are you sure you want to delete this genre? This action cannot be undone.')) {
+            console.log('Deletion cancelled by user');
+            return;
+        }
+        
         try {
             const genreId = Number(id);
             if (isNaN(genreId)) {
                 throw new Error('Invalid genre ID format');
             }
-            const response = await fetch(`http://localhost:5000/api/genre/${genreId}`, {
+            
+            console.log(`Sending DELETE request for genre ID: ${genreId}`);
+            const response = await fetch(`/api/genre/${genreId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -136,17 +178,19 @@ const GenreTab = ({searchQuery}) => {
                 }
             });
 
+            const responseData = await response.json().catch(() => ({}));
+            console.log('Delete response:', { status: response.status, data: responseData });
+
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                showError(errorData.message || 'Failed to delete genre');
-                return;
+                const errorMsg = responseData.message || 'Failed to delete genre';
+                console.error('Delete failed:', errorMsg);
+                throw new Error(errorMsg);
             }
 
-            // Refresh the list after successful deletion
+            console.log('Genre deleted successfully, refreshing list...');
             await fetchGenres();
-
-            // Clear any previous errors
             setError('');
+            showError('Genre deleted successfully');
         } catch (err) {
             console.error('Delete error:', err);
             showError(err.message || 'Failed to delete genre');

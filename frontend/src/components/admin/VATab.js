@@ -19,19 +19,30 @@ const VATab = ({searchQuery}) => {
 
     const fetchVoiceActors = async () => {
         try {
+            setLoading(true);
             const response = await fetch('/api/voice-actors', {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             });
+            
             if (!response.ok) {
-                throw new Error('Failed to fetch voice actors');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Failed to fetch voice actors');
             }
+            
             const data = await response.json();
-            setVoiceActors(Array.isArray(data) ? data : []);
+            console.log('Fetched voice actors:', data); // Debug log
+            
+            // Handle both array and paginated response formats
+            const actors = Array.isArray(data) ? data : (data.results || data.voiceActors || []);
+            setVoiceActors(actors);
+            setError('');
         } catch (err) {
-            setError(err.message);
-            console.error(err);
+            console.error('Error fetching voice actors:', err);
+            setError(err.message || 'Failed to load voice actors');
+            setVoiceActors([]);
         } finally {
             setLoading(false);
         }
@@ -63,16 +74,6 @@ const VATab = ({searchQuery}) => {
             return;
         }
 
-        const existingVA = voiceActors.find(va =>
-            va.name.trim().toLowerCase() === formData.name.trim().toLowerCase() &&
-            va.voice_actor_id !== editingId
-        );
-        if (existingVA) {
-            showError('Voice actor with this name already exists');
-            setLoading(false);
-            return;
-        }
-
         const url = editingId
             ? `/api/voice-actors/${editingId}`
             : '/api/voice-actors';
@@ -87,16 +88,14 @@ const VATab = ({searchQuery}) => {
                 },
                 body: JSON.stringify({
                     name: formData.name.trim(),
-                    birthDate: formData.birth_date || null,  // Match backend's camelCase
+                    birthDate: formData.birth_date || null,
                     nationality: formData.nationality.trim() || null
                 })
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                showError(errorData.message || (editingId ? 'Failed to update voice actor' : 'Failed to add voice actor'));
-                setLoading(false);
-                return;
+                throw new Error(errorData.message || (editingId ? 'Failed to update voice actor' : 'Failed to add voice actor'));
             }
 
             await fetchVoiceActors();
@@ -109,18 +108,40 @@ const VATab = ({searchQuery}) => {
     };
 
     const handleEdit = (va) => {
-        if (!va) return;
-        const vaId = va.voice_actor_id;
+        if (!va) {
+            showError('No voice actor data provided');
+            return;
+        }
+        
+        // Handle both 'id' and 'voice_actor_id' for backward compatibility
+        const vaId = va.id || va.voice_actor_id;
         if (!vaId) {
+            console.error('Voice actor data missing ID:', va);
             showError('Invalid voice actor data: missing ID');
             return;
         }
-        setFormData({
-            name: va.name || '',
-            birth_date: va.birth_date ? va.birth_date.split('T')[0] : '',
-            nationality: va.nationality || ''
-        });
-        setEditingId(vaId);
+        
+        try {
+            // Format the date for the date input (YYYY-MM-DD)
+            let formattedDate = '';
+            const birthDate = va.birth_date || va.birthDate; // Handle both formats
+            if (birthDate) {
+                const date = new Date(birthDate);
+                if (!isNaN(date.getTime())) {
+                    formattedDate = date.toISOString().split('T')[0];
+                }
+            }
+            
+            setFormData({
+                name: va.name || '',
+                birth_date: formattedDate,
+                nationality: va.nationality || ''
+            });
+            setEditingId(vaId);
+        } catch (err) {
+            console.error('Error formatting voice actor data:', err);
+            showError('Error loading voice actor data');
+        }
     };
 
     const handleDelete = async (id) => {
@@ -137,23 +158,30 @@ const VATab = ({searchQuery}) => {
                 return;
             }
 
-            const response = await fetch(`http://localhost:5000/api/voice-actors/${vaId}`, {
+            setLoading(true);
+            const response = await fetch(`/api/voice-actors/${vaId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                showError(errorData.message || 'Failed to delete voice actor');
-                return;
+                throw new Error(errorData.message || 'Failed to delete voice actor');
             }
 
             await fetchVoiceActors();
             setError('');
+            // Show success message
+            setError('Voice actor deleted successfully');
+            setTimeout(() => setError(''), 3000);
         } catch (err) {
+            console.error('Delete error:', err);
             showError(err.message || 'Failed to delete voice actor');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -167,9 +195,11 @@ const VATab = ({searchQuery}) => {
         setError('');
     };
 
-    const filteredVAs = voiceActors.filter(va =>
-        va.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredVAs = (voiceActors || []).filter(va => {
+        if (!va) return false;
+        const name = va.name || '';
+        return name.toLowerCase().includes((searchQuery || '').toLowerCase());
+    });
 
     if (loading) return <div className="loading">Loading...</div>;
 
@@ -235,35 +265,62 @@ const VATab = ({searchQuery}) => {
                             <div className="col-nationality">Nationality</div>
                             <div className="col-actions">Actions</div>
                         </div>
-                        {filteredVAs.map(va => (
-                            <div key={va.voice_actor_id} className="table-row">
-                                <div className="col-name">{va.name}</div>
-                                <div className="col-birth-date">
-                                    {va.birth_date ? new Date(va.birth_date).toLocaleDateString() : 'N/A'}
-                                </div>
-                                <div className="col-nationality">
-                                    {va.nationality || 'N/A'}
-                                </div>
-                                <div className="col-actions">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleEdit(va)}
-                                        className="btn btn-edit btn-sm"
-                                        disabled={loading}
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDelete(va.voice_actor_id)}
-                                        className="btn btn-delete btn-sm"
-                                        disabled={loading}
-                                    >
-                                        Delete
-                                    </button>
+                        {filteredVAs.length === 0 ? (
+                            <div className="table-row">
+                                <div className="col-span-4" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '1rem' }}>
+                                    {loading ? 'Loading voice actors...' : 'No voice actors found'}
                                 </div>
                             </div>
-                        ))}
+                        ) : (
+                            filteredVAs.map(va => {
+                                if (!va) return null;
+                                // Handle both 'id' and 'voice_actor_id' for backward compatibility
+                                const vaId = va.id || va.voice_actor_id;
+                                if (!vaId) {
+                                    console.error('Voice actor missing ID:', va);
+                                    return null;
+                                }
+                                
+                                return (
+                                    <div key={`va-${vaId}`} className="table-row">
+                                        <div className="col-name">{va.name || 'N/A'}</div>
+                                        <div className="col-birth-date">
+                                            {va.birth_date || va.birthDate 
+                                                ? new Date(va.birth_date || va.birthDate).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    timeZone: 'UTC' // Prevent timezone-related date shifting
+                                                  })
+                                                : 'N/A'}
+                                        </div>
+                                        <div className="col-nationality">
+                                            {va.nationality || 'N/A'}
+                                        </div>
+                                        <div className="col-actions">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleEdit(va)}
+                                                className="btn btn-edit btn-sm"
+                                                disabled={loading}
+                                                aria-label={`Edit ${va.name || 'voice actor'}`}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDelete(vaId)}
+                                                className="btn btn-delete btn-sm"
+                                                disabled={loading}
+                                                aria-label={`Delete ${va.name || 'voice actor'}`}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
                     </div>
                 )}
             </div>

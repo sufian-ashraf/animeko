@@ -19,14 +19,18 @@ router.get('/animes', async (req, res, next) => {
 
         // Base query with proper column names from your schema
         let query = `
-            SELECT anime_id                             AS id,
-                   title,
-                   (SELECT STRING_AGG(g.name, ', ')
-                    FROM anime_genre ag
-                             JOIN genre g ON ag.genre_id = g.genre_id
-                    WHERE ag.anime_id = anime.anime_id) AS genre,
-                   EXTRACT(YEAR FROM release_date) AS year,
-        synopsis AS description
+            SELECT 
+                anime_id AS id,
+                anime_id,  -- Include the original ID as well for compatibility
+                title,
+                release_date,  -- Include release_date
+                company_id,  -- Include company_id
+                (SELECT STRING_AGG(g.name, ', ')
+                 FROM anime_genre ag
+                 JOIN genre g ON ag.genre_id = g.genre_id
+                 WHERE ag.anime_id = anime.anime_id) AS genre,
+                EXTRACT(YEAR FROM release_date) AS year,
+                synopsis AS description
             FROM anime
             WHERE 1=1
         `;
