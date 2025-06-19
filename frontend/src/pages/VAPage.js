@@ -17,7 +17,7 @@ export default function VAPage() {
 
     // fetch VA details
     useEffect(() => {
-        fetch(`/api/va/${vaId}`)
+        fetch(`/api/voice-actors/${vaId}`)
             .then(r => {
                 if (!r.ok) throw new Error(r.status);
                 return r.json();
@@ -47,9 +47,15 @@ export default function VAPage() {
         if (!token) return;
         setFavLoading(true);
         fetch('/api/favorites', {
-            method: 'POST', headers: {
-                'Content-Type': 'application/json', Authorization: `Bearer ${token}`
-            }, body: JSON.stringify({entityType: 'va', entityId: +vaId})
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json', 
+                'Authorization': `Bearer ${token}`
+            }, 
+            body: JSON.stringify({ 
+                entityType: 'va',
+                entityId: +vaId 
+            })
         })
             .then(r => r.json())
             .then(data => setIsFavorite(data.favorite))

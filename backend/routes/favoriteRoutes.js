@@ -10,8 +10,19 @@ const router = express.Router();
  * POST /api/favorites
  */
 router.post('/favorites', authenticate, async (req, res) => {
-    const userId = req.user.user_id;
+    // Get user ID from the authenticated request
+    const userId = req.user?.id || req.user?.user_id;
+    
+    if (!userId) {
+        console.error('No user ID found in request:', req.user);
+        return res.status(401).json({ message: 'User not authenticated' });
+    }
+    
     const {entityType, entityId, note = null} = req.body;
+    
+    if (!entityType || !entityId) {
+        return res.status(400).json({ message: 'entityType and entityId are required' });
+    }
 
     try {
         // If already in favorites, delete it:
@@ -43,7 +54,13 @@ router.post('/favorites', authenticate, async (req, res) => {
  * GET /api/favorites
  */
 router.get('/favorites', authenticate, async (req, res) => {
-    const userId = req.user.user_id;
+    // Get user ID from the authenticated request
+    const userId = req.user?.id || req.user?.user_id;
+    
+    if (!userId) {
+        console.error('No user ID found in request:', req.user);
+        return res.status(401).json({ message: 'User not authenticated' });
+    }
 
     try {
         const result = await pool.query(`

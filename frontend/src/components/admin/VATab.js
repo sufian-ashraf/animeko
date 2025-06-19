@@ -19,7 +19,7 @@ const VATab = ({searchQuery}) => {
 
     const fetchVoiceActors = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/voice-actors', {
+            const response = await fetch('/api/voice-actors', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -74,8 +74,8 @@ const VATab = ({searchQuery}) => {
         }
 
         const url = editingId
-            ? `http://localhost:5000/api/voice-actors/${editingId}`
-            : 'http://localhost:5000/api/voice-actors';
+            ? `/api/voice-actors/${editingId}`
+            : '/api/voice-actors';
         const method = editingId ? 'PUT' : 'POST';
 
         try {
@@ -87,7 +87,7 @@ const VATab = ({searchQuery}) => {
                 },
                 body: JSON.stringify({
                     name: formData.name.trim(),
-                    birth_date: formData.birth_date || null,
+                    birthDate: formData.birth_date || null,  // Match backend's camelCase
                     nationality: formData.nationality.trim() || null
                 })
             });

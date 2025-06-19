@@ -17,7 +17,6 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import listRoutes from './routes/listRoutes.js';
 import characterRoutes from "./routes/characterRoutes.js";
 import VARoutes from "./routes/VARoutes.js";
-import voiceActorRoutes from "./routes/voiceActorRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -52,7 +51,6 @@ app.use('/api', reviewRoutes);
 app.use('/api/lists', listRoutes);
 app.use('/api', characterRoutes);
 app.use('/api', VARoutes);
-app.use('/api', voiceActorRoutes);
 
 // Test database connection
 pool.connect()
