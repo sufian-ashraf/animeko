@@ -17,9 +17,41 @@
     "server": "node backend/server.js",
     "build": "cd frontend && npm run build",
     "install-all": "npm --prefix frontend install && npm --prefix backend install",
-    "postinstall": "npm run install-all"
+    "postinstall": "npm run install-all",
+    "test": "concurrently --kill-others --success first \"npm run test:server\" \"npm run test:client\"",
+    "test:server": "cd backend && npm test",
+    "test:client": "cd frontend && npm test",
+    "test:coverage": "concurrently --kill-others --success first \"npm run test:coverage:server\" \"npm run test:coverage:client\"",
+    "test:coverage:server": "cd backend && npm run test:coverage",
+    "test:coverage:client": "cd frontend && npm test -- --coverage",
+    "test:watch": "concurrently --kill-others --success first \"npm run test:watch:server\" \"npm run test:watch:client\"",
+    "test:watch:server": "cd backend && npm run test:watch",
+    "test:watch:client": "cd frontend && npm test -- --watch"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "@babel/core": "^7.27.4",
+    "@babel/plugin-transform-modules-commonjs": "^7.27.1",
+    "@babel/preset-env": "^7.27.2",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "babel-jest": "^30.0.1",
+    "concurrently": "^9.1.2",
+    "jest": "^27.5.1",
+    "jest-environment-jsdom": "^30.0.1",
+    "supertest": "^7.1.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "**/*.{js,jsx}",
+      "!**/node_modules/**",
+      "!**/coverage/**",
+      "!**/dist/**",
+      "!**/build/**",
+      "!**/public/**"
+    ]
   }
 }
