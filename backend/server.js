@@ -51,21 +51,6 @@ app.use('/api', VARoutes);
     .then(() => console.log('Connected to PostgreSQL database'))
     .catch(err => console.error('Database connection error:', err));
 
-// Input validation middleware
-const validateAnimeInput = (req, res, next) => {
-    const {title, genre, year, description} = req.body;
-
-    if (!title || title.trim() === '') {
-        return res.status(400).json({error: 'Title is required'});
-    }
-
-    if (year && (isNaN(year) || year < 1900 || year > 2100)) {
-        return res.status(400).json({error: 'Year must be a number between 1900 and 2100'});
-    }
-
-    next();
-};
-
 // Error handling middleware
 const errorHandler = (err, req, res, next) => {
     console.error('Server error:', err);
@@ -73,45 +58,6 @@ const errorHandler = (err, req, res, next) => {
         error: 'An unexpected error occurred', message: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 };
-
-
-app.get('/api/auth/profile', authenticate, (req, res) => {
-    // The authenticate middleware has already set req.user with all the necessary fields
-    // Just return the user object as is
-    console.log('Profile endpoint - returning user:', req.user);
-    return res.status(200).json(req.user);
-});
-
-// Direct admin check endpoint
-app.get('/api/auth/check-admin', authenticate, async (req, res) => {
-    try {
-        const result = await pool.query(
-            'SELECT is_admin FROM users WHERE user_id = $1',
-            [req.user.id]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({error: 'User not found'});
-        }
-
-        const isAdmin = result.rows[0].is_admin === true ||
-            result.rows[0].is_admin === 't' ||
-            result.rows[0].is_admin === 1;
-
-        // console.log('Direct admin check for user:', {
-        //     userId: req.user.id,
-        //     username: req.user.username,
-        //     is_admin: isAdmin,
-        //     raw_value: result.rows[0].is_admin
-        // });
-
-        return res.status(200).json({is_admin: isAdmin});
-    } catch (err) {
-        console.error('Error in admin check:', err);
-        return res.status(500).json({error: 'Internal server error'});
-    }
-});
-
 
 // Register error handler
 app.use(errorHandler);
@@ -132,3 +78,5 @@ process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
     process.exit(1);
 });
+
+

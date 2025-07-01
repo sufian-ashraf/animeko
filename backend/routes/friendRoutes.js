@@ -1,5 +1,7 @@
 import express from 'express';
-import pool from '../db.js';
+import Friendship from '../models/Friendship.js'; // Import the Friendship model
+import User from '../models/User.js'; // Import the User model
+import Favorite from '../models/Favorite.js'; // Import the Favorite model
 import authenticate from '../middlewares/authenticate.js';
 import authorizeAdmin from '../middlewares/authorizeAdmin.js';
 
@@ -18,29 +20,11 @@ router.post('/friends/requests', authenticate, async (req, res) => {
     }
 
     try {
-        // Check if any relationship already exists
-        const existingRelation = await pool.query(`
-            SELECT status
-            FROM friendship
-            WHERE (requester_id = $1 AND addressee_id = $2)
-               OR (requester_id = $2 AND addressee_id = $1)
-        `, [requester, addresseeId]);
-
-        if (existingRelation.rows.length > 0) {
-            const status = existingRelation.rows[0].status;
-            if (status === 'accepted') {
-                return res.status(400).json({message: "You are already friends"});
-            } else if (status === 'pending') {
-                return res.status(400).json({message: "Friend request already sent or received"});
-            }
-        }
-
-        await pool.query(`INSERT INTO friendship (requester_id, addressee_id, status)
-                          VALUES ($1, $2, 'pending')`, [requester, addresseeId]);
-        res.status(201).json({message: 'Request sent'});
+        const result = await Friendship.sendFriendRequest({ requesterId: requester, addresseeId });
+        res.status(201).json(result);
     } catch (err) {
         console.error(err);
-        res.status(500).json({message: 'Server error'});
+        res.status(400).json({message: err.message}); // Return specific error message from model
     }
 });
 
@@ -51,12 +35,8 @@ router.post('/friends/requests', authenticate, async (req, res) => {
 router.get('/friends/requests', authenticate, async (req, res) => {
     const me = req.user.user_id;
     try {
-        const result = await pool.query(`SELECT f.requester_id AS user_id, u.username, u.display_name
-                                         FROM friendship f
-                                                  JOIN users u ON u.user_id = f.requester_id
-                                         WHERE f.addressee_id = $1
-                                           AND f.status = 'pending'`, [me]);
-        res.json(result.rows);
+        const requests = await Friendship.getIncomingRequests(me);
+        res.json(requests);
     } catch (err) {
         console.error(err);
         res.status(500).json({message: 'Server error'});
@@ -74,16 +54,12 @@ router.post('/friends/requests/:requesterId/:action', authenticate, async (req, 
     if (!['accept', 'reject'].includes(action)) {
         return res.status(400).json({message: 'Invalid action'});
     }
-    const newStatus = action === 'accept' ? 'accepted' : 'rejected';
     try {
-        const result = await pool.query(`UPDATE friendship
-                                         SET status = $1
-                                         WHERE requester_id = $2
-                                           AND addressee_id = $3 RETURNING *`, [newStatus, requesterId, addressee]);
-        if (result.rowCount === 0) {
+        const result = await Friendship.updateFriendRequest({ requesterId, addresseeId: addressee, action });
+        if (!result) {
             return res.status(404).json({message: 'Not found or already handled'});
         }
-        res.json({message: `Friend request ${newStatus}`});
+        res.json(result);
     } catch (err) {
         console.error(err);
         res.status(500).json({message: 'Server error'});
@@ -97,16 +73,8 @@ router.post('/friends/requests/:requesterId/:action', authenticate, async (req, 
 router.get('/friends', authenticate, async (req, res) => {
     const me = req.user.user_id;
     try {
-        const result = await pool.query(`SELECT u.user_id, u.username, u.display_name
-                                         FROM friendship f
-                                                  JOIN users u ON (u.user_id = CASE
-                                                                                   WHEN f.requester_id = $1
-                                                                                       THEN f.addressee_id
-                                                                                   ELSE f.requester_id
-                                             END)
-                                         WHERE (f.requester_id = $1 OR f.addressee_id = $1)
-                                           AND f.status = 'accepted'`, [me]);
-        res.json(result.rows);
+        const friends = await Friendship.getFriends(me);
+        res.json(friends);
     } catch (err) {
         console.error(err);
         res.status(500).json({message: 'Server error'});
@@ -123,50 +91,29 @@ router.get('/users/profile/:userId', authenticate, async (req, res) => {
 
     try {
         // Check if they are friends or if it's the same user
-        const friendshipCheck = await pool.query(`
-            SELECT 1
-            FROM friendship
-            WHERE ((requester_id = $1 AND addressee_id = $2)
-                OR (requester_id = $2 AND addressee_id = $1))
-              AND status = 'accepted'
-        `, [me, targetUserId]);
+        const isFriend = await Friendship.getProfileWithFriendStatus({ viewerId: me, targetUserId });
 
-        if (friendshipCheck.rows.length === 0 && me !== targetUserId) {
+        if (!isFriend && me !== targetUserId) {
             return res.status(403).json({message: 'You can only view profiles of friends'});
         }
 
         // Get user profile
-        const userResult = await pool.query(`
-            SELECT user_id, username, display_name, profile_bio, created_at
-            FROM users
-            WHERE user_id = $1
-        `, [targetUserId]);
+        const user = await User.findById(targetUserId);
 
-        if (userResult.rows.length === 0) {
+        if (!user) {
             return res.status(404).json({message: 'User not found'});
         }
 
         // Get user's friends (only display_name and username for privacy)
-        const friendsResult = await pool.query(`
-            SELECT u.user_id, u.username, u.display_name
-            FROM friendship f
-                     JOIN users u ON (u.user_id = CASE
-                                                      WHEN f.requester_id = $1 THEN f.addressee_id
-                                                      ELSE f.requester_id
-                END)
-            WHERE (f.requester_id = $1 OR f.addressee_id = $1)
-              AND f.status = 'accepted'
-        `, [targetUserId]);
+        const friends = await Friendship.getFriends(targetUserId);
 
         // Get user's favorites
-        const favoritesResult = await pool.query(`
-            SELECT entity_type as "entityType", entity_id as "entityId"
-            FROM user_favorite
-            WHERE user_id = $1
-        `, [targetUserId]);
+        const favorites = await Favorite.getFavorites(targetUserId);
 
         res.json({
-            user: userResult.rows[0], friends: friendsResult.rows, favorites: favoritesResult.rows
+            user: user,
+            friends: friends,
+            favorites: favorites
         });
 
     } catch (err) {
@@ -180,100 +127,25 @@ router.get('/users/profile/:userId', authenticate, async (req, res) => {
  * GET /api/users/search?q=...
  */
 router.get('/users/search', authenticate, async (req, res) => {
-    // Log the full user object for debugging
-    console.log('Authenticated user in search route:', req.user);
-    
-    // Try to get user ID from either id or user_id property
     const me = req.user.id || req.user.user_id;
     
     if (!me) {
         console.error('No user ID found in request. User object:', req.user);
         return res.status(401).json({ 
             message: 'User not authenticated',
-            userObject: req.user // For debugging
+            userObject: req.user 
         });
     }
     
-    console.log('Using user ID for search:', me);
     const searchTerm = (req.query.q || '').trim();
     
     if (!searchTerm) {
         return res.json([]);
     }
     
-    const q = `%${searchTerm}%`;
-    
-    console.log('Searching for users:', { searchTerm, me });
-
     try {
-        // First, try exact username match
-        const exactMatch = await pool.query(
-            `SELECT user_id, username, display_name
-             FROM users 
-             WHERE username = $1 AND user_id != $2
-             LIMIT 1`,
-            [searchTerm, me]
-        );
-
-        // If we have an exact username match, return just that
-        if (exactMatch.rows.length > 0) {
-            console.log('Found exact username match:', exactMatch.rows[0]);
-            // Get friendship status for the exact match
-            const friendStatus = await pool.query(
-                `SELECT status, 
-                        CASE WHEN requester_id = $1 THEN 'requester' ELSE 'addressee' END as role
-                 FROM friendship 
-                 WHERE (requester_id = $1 AND addressee_id = $2)
-                    OR (requester_id = $2 AND addressee_id = $1)`,
-                [me, exactMatch.rows[0].user_id]
-            );
-
-            const status = friendStatus.rows[0]?.status === 'accepted' 
-                ? 'friend' 
-                : friendStatus.rows[0]?.status === 'pending'
-                    ? (friendStatus.rows[0]?.role === 'requester' ? 'request_sent' : 'request_received')
-                    : 'none';
-
-            return res.json([{
-                ...exactMatch.rows[0],
-                friendship_status: status
-            }]);
-        }
-
-        // If no exact match, do a broader search
-        const result = await pool.query(`
-            SELECT 
-                u.user_id,
-                u.username,
-                u.display_name,
-                CASE
-                    WHEN f.status = 'accepted' THEN 'friend'
-                    WHEN f.status = 'pending' AND f.requester_id = $2 THEN 'request_sent'
-                    WHEN f.status = 'pending' AND f.addressee_id = $2 THEN 'request_received'
-                    ELSE 'none'
-                END as friendship_status
-            FROM users u
-            LEFT JOIN friendship f ON (
-                (f.requester_id = u.user_id AND f.addressee_id = $2) OR
-                (f.addressee_id = u.user_id AND f.requester_id = $2)
-            )
-            WHERE (u.username ILIKE $1 OR u.display_name ILIKE $1)
-              AND u.user_id != $2
-            ORDER BY 
-                -- Exact matches first
-                CASE 
-                    WHEN u.username ILIKE $1 AND u.display_name ILIKE $1 THEN 0
-                    WHEN u.username ILIKE $1 THEN 1
-                    WHEN u.display_name ILIKE $1 THEN 2
-                    ELSE 3
-                END,
-                -- Then by username length (shorter usernames first)
-                LENGTH(u.username)
-            LIMIT 20
-        `, [q, me]);
-
-        console.log('Search results count:', result.rows.length);
-        res.json(result.rows);
+        const searchResults = await Friendship.searchUsers({ searchTerm, currentUserId: me });
+        res.json(searchResults);
     } catch (err) {
         console.error('Search error:', err);
         res.status(500).json({message: 'Server error during search'});
@@ -283,13 +155,13 @@ router.get('/users/search', authenticate, async (req, res) => {
 // Debug route to check users
 router.get('/users/debug', authenticate, async (req, res) => {
     try {
-        const allUsers = await pool.query('SELECT user_id, username, display_name FROM users LIMIT 10');
-        const currentUser = await pool.query('SELECT user_id, username, display_name FROM users WHERE user_id = $1', [req.user.user_id]);
+        const allUsers = await User.getAllUsers();
+        const currentUser = await User.findById(req.user.user_id);
 
         res.json({
-            currentUser: currentUser.rows[0],
-            allUsers: allUsers.rows,
-            totalUsers: allUsers.rowCount,
+            currentUser: currentUser,
+            allUsers: allUsers,
+            totalUsers: allUsers.length,
             currentUserId: req.user.user_id,
             currentUserIdType: typeof req.user.user_id
         });
@@ -308,12 +180,9 @@ router.delete('/friends/:friendId', authenticate, async (req, res) => {
     const friendId = parseInt(req.params.friendId, 10);
 
     try {
-        const result = await pool.query(`DELETE
-                                         FROM friendship
-                                         WHERE (requester_id = $1 AND addressee_id = $2)
-                                            OR (requester_id = $2 AND addressee_id = $1)`, [me, friendId]);
+        const unfriended = await Friendship.unfriend({ userId: me, friendId });
 
-        if (result.rowCount === 0) {
+        if (!unfriended) {
             return res
                 .status(404)
                 .json({message: 'Friendship not found'});
@@ -330,12 +199,7 @@ router.delete('/friends/:friendId', authenticate, async (req, res) => {
 router.delete('/friendship/:reqId/:addId', authenticate, authorizeAdmin, async (req, res) => {
     const {reqId, addId} = req.params;
     try {
-        await db.query(
-            `DELETE FROM friendship 
-       WHERE (requester_id = $1 AND addressee_id = $2)
-          OR (requester_id = $2 AND addressee_id = $1)`,
-            [reqId, addId]
-        );
+        await Friendship.deleteFriendship({ reqId, addId });
         res.json({message: 'Friendship removed'});
     } catch (err) {
         console.error(err);

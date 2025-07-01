@@ -1,5 +1,5 @@
 import express from 'express';
-import pool from '../db.js';
+import Genre from '../models/Genre.js'; // Import the Genre model
 import authenticate from '../middlewares/authenticate.js';
 import authorizeAdmin from '../middlewares/authorizeAdmin.js';
 
@@ -8,14 +8,8 @@ const router = express.Router();
 // GET /api/genre - List all genres
 router.get('/genre', async (req, res) => {
     try {
-        const result = await pool.query(`
-            SELECT genre_id as id,
-                   name,
-                   description
-            FROM genre
-            ORDER BY name
-        `);
-        res.json(result.rows);
+        const genres = await Genre.getAll();
+        res.json(genres);
     } catch (err) {
         console.error('Error fetching genres:', err);
         res.status(500).json({
@@ -32,28 +26,18 @@ router.get('/genre/:genreId', async (req, res) => {
     if (isNaN(id)) {
         return res.status(400).json({message: 'Invalid genre ID format'});
     }
-    const client = await pool.connect();
     try {
-        const genreRes = await client.query(
-            `SELECT genre_id as id,
-                    name,
-                    description
-             FROM genre
-             WHERE genre_id = $1`,
-            [id]
-        );
-        if (genreRes.rows.length === 0) {
+        const genre = await Genre.getById(id);
+        if (!genre) {
             return res.status(404).json({message: 'Genre not found'});
         }
-        res.json(genreRes.rows[0]);
+        res.json(genre);
     } catch (err) {
         console.error('Error fetching genre detail:', err);
         res.status(500).json({
             message: 'Failed to fetch genre details',
             error: err.message
         });
-    } finally {
-        client.release();
     }
 });
 
@@ -64,44 +48,21 @@ router.post('/genre', authenticate, authorizeAdmin, async (req, res) => {
         return res.status(400).json({message: 'Genre name is required'});
     }
     
-    const descriptionText = (typeof description === 'string') ? description.trim() : null;
-    const client = await pool.connect();
     try {
-        await client.query('BEGIN');
-        const existingGenre = await client.query(
-            'SELECT 1 FROM genre WHERE LOWER(name) = LOWER($1)',
-            [name.trim()]
-        );
-        if (existingGenre.rows.length > 0) {
-            await client.query('ROLLBACK');
-            return res.status(400).json({
-                message: 'A genre with this name already exists'
-            });
-        }
-        const result = await client.query(
-            `INSERT INTO genre (name, description)
-             VALUES ($1, $2) RETURNING 
-                genre_id AS id, 
-                name,
-                description`,
-            [name.trim(), descriptionText]
-        );
-        await client.query('COMMIT');
-        res.status(201).json(result.rows[0]);
+        const newGenre = await Genre.create({ name, description });
+        res.status(201).json(newGenre);
     } catch (err) {
-        await client.query('ROLLBACK');
         console.error('Error creating genre:', err);
-        if (err.code === '23505') {
-            return res.status(400).json({
-                message: 'A genre with this name already exists'
-            });
+        let statusCode = 500;
+        let message = 'Failed to create genre';
+        if (err.message.includes('already exists')) {
+            statusCode = 400;
+            message = err.message;
         }
-        res.status(500).json({
-            message: 'Failed to create genre',
+        res.status(statusCode).json({
+            message: message,
             error: err.message
         });
-    } finally {
-        client.release();
     }
 });
 
@@ -116,59 +77,27 @@ router.put('/genre/:genreId', authenticate, authorizeAdmin, async (req, res) => 
     if (!name || typeof name !== 'string' || name.trim() === '') {
         return res.status(400).json({message: 'Genre name is required'});
     }
-    const client = await pool.connect();
     try {
-        await client.query('BEGIN');
-        const genreExists = await client.query(
-            'SELECT 1 FROM genre WHERE genre_id = $1',
-            [id]
-        );
-        if (genreExists.rows.length === 0) {
-            await client.query('ROLLBACK');
+        const updatedGenre = await Genre.update(id, { name, description });
+        if (!updatedGenre) {
             return res.status(404).json({message: 'Genre not found'});
         }
-        const nameExists = await client.query(
-            'SELECT 1 FROM genre WHERE LOWER(name) = LOWER($1) AND genre_id != $2',
-            [name.trim(), id]
-        );
-        if (nameExists.rows.length > 0) {
-            await client.query('ROLLBACK');
-            return res.status(400).json({
-                message: 'A genre with this name already exists'
-            });
-        }
-        const descriptionText = (typeof description === 'string') ? description.trim() : null;
-        
-        const result = await client.query(
-            `UPDATE genre
-             SET name = $1,
-                 description = $3
-             WHERE genre_id = $2 RETURNING 
-                genre_id AS id, 
-                name,
-                description`,
-            [name.trim(), id, descriptionText]
-        );
-        if (result.rows.length === 0) {
-            await client.query('ROLLBACK');
-            return res.status(404).json({message: 'Genre not found'});
-        }
-        await client.query('COMMIT');
-        res.json(result.rows[0]);
+        res.json(updatedGenre);
     } catch (err) {
-        await client.query('ROLLBACK');
         console.error('Error updating genre:', err);
-        if (err.code === '23505') {
-            return res.status(400).json({
-                message: 'A genre with this name already exists'
-            });
+        let statusCode = 500;
+        let message = 'Failed to update genre';
+        if (err.message.includes('not found')) {
+            statusCode = 404;
+            message = err.message;
+        } else if (err.message.includes('already exists')) {
+            statusCode = 400;
+            message = err.message;
         }
-        res.status(500).json({
-            message: 'Failed to update genre',
+        res.status(statusCode).json({
+            message: message,
             error: err.message
         });
-    } finally {
-        client.release();
     }
 });
 
@@ -179,56 +108,32 @@ router.delete('/genre/:genreId', authenticate, authorizeAdmin, async (req, res) 
     if (isNaN(id)) {
         return res.status(400).json({message: 'Invalid genre ID format'});
     }
-    const client = await pool.connect();
     try {
-        await client.query('BEGIN');
-        const checkResult = await client.query(
-            'SELECT 1 FROM genre WHERE genre_id = $1',
-            [id]
-        );
-        if (checkResult.rows.length === 0) {
-            await client.query('ROLLBACK');
+        const deletedGenre = await Genre.delete(id);
+        if (!deletedGenre) {
             return res.status(404).json({message: 'Genre not found'});
         }
-        const animeCheck = await client.query(
-            'SELECT 1 FROM anime_genre WHERE genre_id = $1 LIMIT 1',
-            [id]
-        );
-        if (animeCheck.rows.length > 0) {
-            await client.query('ROLLBACK');
-            return res.status(400).json({
-                message: 'Cannot delete genre with associated anime. Please update or delete the anime first.'
-            });
-        }
-        const result = await client.query(
-            'DELETE FROM genre WHERE genre_id = $1 RETURNING genre_id',
-            [id]
-        );
-        if (result.rowCount === 0) {
-            await client.query('ROLLBACK');
-            return res.status(404).json({message: 'Genre not found'});
-        }
-        await client.query('COMMIT');
         res.json({
             success: true,
             message: 'Genre deleted successfully',
             id: id
         });
     } catch (err) {
-        await client.query('ROLLBACK');
         console.error('Error deleting genre:', err);
-        if (err.code === '23503') {
-            return res.status(400).json({
-                message: 'Cannot delete genre with associated anime. Please update or delete the anime first.'
-            });
+        let statusCode = 500;
+        let message = 'Failed to delete genre';
+        if (err.message.includes('not found')) {
+            statusCode = 404;
+            message = err.message;
+        } else if (err.message.includes('associated anime')) {
+            statusCode = 400;
+            message = err.message;
         }
-        res.status(500).json({
-            message: 'Failed to delete genre',
+        res.status(statusCode).json({
+            message: message,
             error: err.message,
             code: err.code
         });
-    } finally {
-        client.release();
     }
 });
 

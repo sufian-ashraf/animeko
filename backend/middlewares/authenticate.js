@@ -1,6 +1,5 @@
-// backend/middlewares/authenticate.js
 import jwt from 'jsonwebtoken';
-import pool from '../db.js';
+import User from '../models/User.js'; // Import the User model
 
 async function authenticate(req, res, next) {
     const authHeader = req.headers.authorization;
@@ -13,32 +12,12 @@ async function authenticate(req, res, next) {
         // Verify the JWT token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Fetch the full user data from the database
-        // console.log('Fetching user from database with ID:', decoded.id);
-        const userResult = await pool.query(
-            `SELECT user_id,
-                    username,
-                    email,
-                    display_name,
-                    profile_bio,
-                    created_at,
-                    is_admin,
-                    subscription_status
-             FROM users
-             WHERE user_id = $1`,
-            [decoded.id]
-        );
+        // Fetch the full user data from the database using the User model
+        const user = await User.findById(decoded.id);
 
-        // console.log('Database query result:', userResult.rows[0]);
-
-        if (userResult.rows.length === 0) {
+        if (!user) {
             return res.status(401).json({message: 'User not found'});
         }
-
-        const user = userResult.rows[0];
-
-        // Log the raw user data from the database
-        // console.log('[AUTH] Raw user data from DB:', user);
 
         // Explicitly convert is_admin to boolean
         const isAdmin = user.is_admin === true || user.is_admin === 't' || user.is_admin === 1;
@@ -56,14 +35,6 @@ async function authenticate(req, res, next) {
         };
         
         console.log('Authenticated user set on req.user:', req.user);
-
-        // console.log('[AUTH] Authenticated user:', {
-        //     id: req.user.id,
-        //     username: req.user.username,
-        //     is_admin: req.user.is_admin,
-        //     is_admin_raw: user.is_admin,
-        //     is_admin_type: typeof user.is_admin
-        // });
 
         next();
     } catch (err) {

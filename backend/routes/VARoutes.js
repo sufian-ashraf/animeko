@@ -1,5 +1,5 @@
 import express from 'express';
-import pool from '../db.js';
+import VoiceActor from '../models/VoiceActor.js'; // Import the VoiceActor model
 import authenticate from '../middlewares/authenticate.js';
 import authorizeAdmin from '../middlewares/authorizeAdmin.js';
 
@@ -12,16 +12,8 @@ const router = express.Router();
  */
 router.get('/voice-actors', async (req, res) => {
     try {
-        const result = await pool.query(`
-            SELECT 
-                voice_actor_id as "id",
-                name,
-                TO_CHAR(birth_date, 'YYYY-MM-DD') as "birthDate",
-                nationality
-            FROM voice_actor
-            ORDER BY name
-        `);
-        res.json(result.rows);
+        const voiceActors = await VoiceActor.getAll();
+        res.json(voiceActors);
     } catch (err) {
         console.error('Error fetching voice actors:', err);
         res.status(500).json({ message: 'Server error' });
@@ -42,40 +34,11 @@ router.get('/voice-actors/:vaId', async (req, res) => {
     }
 
     try {
-        // 1) Fetch basic VA info
-        const vaResult = await pool.query(
-            `SELECT 
-                voice_actor_id as "id",
-                name,
-                TO_CHAR(birth_date, 'YYYY-MM-DD') as "birthDate",
-                nationality
-             FROM voice_actor 
-             WHERE voice_actor_id = $1`,
-            [id]
-        );
+        const va = await VoiceActor.getById(id);
 
-        if (vaResult.rows.length === 0) {
+        if (!va) {
             return res.status(404).json({ message: 'Voice actor not found' });
         }
-
-        const va = vaResult.rows[0];
-
-        // 2) Fetch all roles (anime & characters)
-        const rolesResult = await pool.query(
-            `SELECT 
-                a.anime_id as "animeId",
-                a.title as "animeTitle",
-                c.character_id as "characterId",
-                c.name as "characterName"
-             FROM anime_character ac
-             JOIN anime a ON a.anime_id = ac.anime_id
-             JOIN characters c ON c.character_id = ac.character_id
-             WHERE c.voice_actor_id = $1`,
-            [id]
-        );
-
-        // Always include roles array, even if empty
-        va.roles = rolesResult.rows;
 
         res.json(va);
     } catch (err) {
@@ -98,37 +61,8 @@ router.post('/voice-actors', authenticate, authorizeAdmin, async (req, res) => {
     }
 
     try {
-        // Format the birth date properly (YYYY-MM-DD)
-        let formattedBirthDate = null;
-        if (birthDate) {
-            try {
-                // Parse the date and format it as YYYY-MM-DD
-                const date = new Date(birthDate);
-                if (!isNaN(date.getTime())) {
-                    formattedBirthDate = date.toISOString().split('T')[0];
-                }
-            } catch (e) {
-                console.warn('Invalid birth date format, setting to null');
-            }
-        }
-
-        const result = await pool.query(
-            `INSERT INTO voice_actor 
-                (name, birth_date, nationality)
-             VALUES ($1, $2, $3)
-             RETURNING 
-                voice_actor_id as "id",
-                name,
-                birth_date as "birthDate",
-                nationality`,
-            [
-                name.trim(), 
-                formattedBirthDate, 
-                nationality?.trim() || null
-            ]
-        );
-
-        res.status(201).json(result.rows[0]);
+        const newVA = await VoiceActor.create({ name, birthDate, nationality });
+        res.status(201).json(newVA);
     } catch (err) {
         console.error('Error creating voice actor:', err);
         res.status(500).json({ 
@@ -158,46 +92,13 @@ router.put('/voice-actors/:vaId', authenticate, authorizeAdmin, async (req, res)
     }
 
     try {
-        // Format the birth date properly (YYYY-MM-DD)
-        let formattedBirthDate = null;
-        if (birthDate) {
-            try {
-                // Parse the date and format it as YYYY-MM-DD
-                const date = new Date(birthDate);
-                if (!isNaN(date.getTime())) {
-                    formattedBirthDate = date.toISOString().split('T')[0];
-                }
-            } catch (e) {
-                console.warn('Invalid birth date format, setting to null');
-            }
-        }
+        const updatedVA = await VoiceActor.update(id, { name, birthDate, nationality });
 
-        const result = await pool.query(
-            `UPDATE voice_actor 
-             SET 
-                name = COALESCE($1, name),
-                birth_date = $2,
-                nationality = $3
-             WHERE voice_actor_id = $4
-             RETURNING 
-                voice_actor_id as "id",
-                name,
-                birth_date as "birthDate",
-                nationality`,
-            [
-                name?.trim(), 
-                formattedBirthDate, 
-                nationality?.trim() || null, 
-                id
-            ]
-        );
-
-        if (result.rows.length === 0) {
+        if (!updatedVA) {
             return res.status(404).json({ message: 'Voice actor not found' });
         }
 
-
-        res.json(result.rows[0]);
+        res.json(updatedVA);
     } catch (err) {
         console.error('Error updating voice actor:', err);
         res.status(500).json({ 
@@ -221,23 +122,13 @@ router.delete('/voice-actors/:vaId', authenticate, authorizeAdmin, async (req, r
     }
 
     try {
-        // Check if VA exists
-        const check = await pool.query(
-            'SELECT 1 FROM voice_actor WHERE voice_actor_id = $1',
-            [id]
-        );
+        const deletedVA = await VoiceActor.delete(id);
 
-        if (check.rows.length === 0) {
+        if (!deletedVA) {
             return res.status(404).json({ message: 'Voice actor not found' });
         }
 
-        // Delete the VA
-        await pool.query(
-            'DELETE FROM voice_actor WHERE voice_actor_id = $1',
-            [id]
-        );
-
-        res.json({ message: 'Voice actor deleted successfully' });
+        res.json(deletedVA);
     } catch (err) {
         console.error('Error deleting voice actor:', err);
 

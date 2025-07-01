@@ -1,8 +1,8 @@
-// backend/authRoutes.js
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import db from '../db.js';
+import User from '../models/User.js'; // Import the User model
+import authenticate from '../middlewares/authenticate.js'; // Import the global authenticate middleware
 
 const router = express.Router();
 
@@ -17,34 +17,21 @@ router.post('/register', async (req, res) => {
         }
 
         // 2) Check if username/email already exist
-        const existing = await db.query(
-            'SELECT user_id FROM users WHERE username = $1 OR email = $2',
-            [username, email]
-        );
-        if (existing.rows.length > 0) {
+        const existingUser = await User.findByUsernameOrEmail(username, email);
+        if (existingUser) {
             return res.status(409).json({message: 'Username or email already in use.'});
         }
 
-        // 3) Hash password
-        const saltRounds = 10;
-        const password_hash = await bcrypt.hash(password, saltRounds);
-
-        // 4) Decide is_admin based on provided adminCode
-        //    Store your “secret admin code” in an environment variable, e.g. process.env.ADMIN_SECRET
+        // 3) Decide is_admin based on provided adminCode
         let is_admin = false;
         if (adminCode && adminCode === process.env.ADMIN_SECRET) {
             is_admin = true;
         }
 
-        // 5) Insert new user
-        const insert = await db.query(
-            `INSERT INTO users (username, email, password_hash, display_name, is_admin)
-             VALUES ($1, $2, $3, $4, $5) RETURNING user_id, username, email, display_name, is_admin`,
-            [username, email, password_hash, display_name || username, is_admin]
-        );
-        const newUser = insert.rows[0];
+        // 4) Create new user using the User model
+        const newUser = await User.create({ username, email, password, display_name, isAdmin: is_admin });
 
-        // 6) Optionally auto‐login: sign a JWT including "is_admin" and "user_id"
+        // 5) Optionally auto-login: sign a JWT including "is_admin" and "user_id"
         const tokenPayload = {
             id: newUser.user_id,
             username: newUser.username,
@@ -53,7 +40,6 @@ router.post('/register', async (req, res) => {
         const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
             expiresIn: '7d'
         });
-        // console.log('>>> Signing JWT payload:', tokenPayload);
 
         res.status(201).json({
             user: {
@@ -74,11 +60,11 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     const {username, password} = req.body;
     try {
-        const result = await db.query('SELECT user_id, username, password_hash, is_admin FROM users WHERE username = $1', [username]);
-        if (!result.rows.length) {
+        const user = await User.findByUsernameOrEmail(username, username); // Search by username
+        if (!user) {
             return res.status(401).json({message: 'Invalid credentials'});
         }
-        const user = result.rows[0];
+
         const match = await bcrypt.compare(password, user.password_hash);
         if (!match) {
             return res.status(401).json({message: 'Invalid credentials'});
@@ -105,17 +91,16 @@ router.post('/login', async (req, res) => {
     }
 });
 
-
 // Get user profile
-router.get('/profile', authenticateToken, async (req, res) => {
+router.get('/profile', authenticate, async (req, res) => {
     try {
-        const result = await db.query('SELECT user_id, username, email, display_name, profile_bio, created_at, subscription_status FROM users WHERE user_id = $1', [req.user.id]);
+        const user = await User.findById(req.user.id);
 
-        if (result.rows.length === 0) {
+        if (!user) {
             return res.status(404).json({message: 'User not found'});
         }
 
-        res.json(result.rows[0]);
+        res.json(user);
 
     } catch (error) {
         console.error('Profile fetch error:', error);
@@ -124,14 +109,14 @@ router.get('/profile', authenticateToken, async (req, res) => {
 });
 
 // Update user profile
-router.put('/profile', authenticateToken, async (req, res) => {
+router.put('/profile', authenticate, async (req, res) => {
     try {
         const {display_name, profile_bio} = req.body;
 
-        const result = await db.query('UPDATE users SET display_name = $1, profile_bio = $2 WHERE user_id = $3 RETURNING user_id, username, email, display_name, profile_bio', [display_name, profile_bio, req.user.id]);
+        const updatedUser = await User.updateProfile(req.user.id, {display_name, profile_bio});
 
         res.json({
-            message: 'Profile updated successfully', user: result.rows[0]
+            message: 'Profile updated successfully', user: updatedUser
         });
 
     } catch (error) {
@@ -140,24 +125,20 @@ router.put('/profile', authenticateToken, async (req, res) => {
     }
 });
 
-// Middleware to authenticate JWT token
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+// Direct admin check endpoint
+router.get('/check-admin', authenticate, async (req, res) => {
+    try {
+        const isAdmin = await User.isAdmin(req.user.id);
 
-    if (!token) {
-        return res.status(401).json({message: 'Authentication required'});
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({message: 'Invalid or expired token'});
+        if (isAdmin === null) {
+            return res.status(404).json({error: 'User not found'});
         }
 
-        req.user = user;
-        next();
-    });
-}
+        return res.status(200).json({is_admin: isAdmin});
+    } catch (err) {
+        console.error('Error in admin check:', err);
+        return res.status(500).json({error: 'Internal server error'});
+    }
+});
 
 export default router;
-
