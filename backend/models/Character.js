@@ -26,9 +26,11 @@ class Character {
 
         // 3) Anime list via anime_character join
         const animeListRes = await pool.query(`SELECT a.anime_id AS "animeId",
-                                                      a.title    AS "animeTitle"
+                                                      a.title    AS "animeTitle",
+                                                      m.url      AS "imageUrl"
                                                FROM anime_character ac
                                                         JOIN anime a ON a.anime_id = ac.anime_id
+                                                        LEFT JOIN media m ON a.anime_id = m.entity_id AND m.media_type = 'image' AND entity_type = 'anime'
                                                WHERE ac.character_id = $1`, [charId]);
         character.animeList = animeListRes.rows;  // always an array
 

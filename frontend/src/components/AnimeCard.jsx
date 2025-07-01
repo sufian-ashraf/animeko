@@ -8,7 +8,7 @@ function AnimeCard({ anime }) {
         <Link to={`/anime/${anime.id}`} className="anime-card-link">
             <div className="anime-card">
                 <img
-                    src={placeholder}
+                    src={anime.imageUrl || placeholder}
                     alt="No cover available"
                     className="anime-card-image"
                 />

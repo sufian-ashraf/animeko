@@ -30,11 +30,13 @@ class Company {
             }
             const company = companyRes.rows[0];
             const animeListRes = await client.query(
-                `SELECT anime_id as "animeId",
-                        title
-                 FROM anime
-                 WHERE company_id = $1
-                 ORDER BY title`,
+                `SELECT a.anime_id as "animeId",
+                        a.title,
+                        m.url as "imageUrl"
+                 FROM anime a
+                 LEFT JOIN media m ON a.anime_id = m.entity_id AND m.media_type = 'image' AND entity_type = 'anime'
+                 WHERE a.company_id = $1
+                 ORDER BY a.title`,
                 [companyId]
             );
             company.animeList = animeListRes.rows;

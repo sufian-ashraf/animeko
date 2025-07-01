@@ -1,4 +1,5 @@
 import pool from '../db.js';
+import { getMediaUrl } from '../utils/mediaUtils.js';
 
 class Anime {
     static async getAll({ title, genre, year }) {
@@ -24,7 +25,7 @@ class Anime {
 
         if (title) {
             params.push(`%${title}%`);
-            query += ` AND title ILIKE $${paramCount++}`;
+            query += ` AND title ILIKE ${paramCount++}`;
         }
 
         if (genre) {
@@ -33,19 +34,23 @@ class Anime {
                 SELECT 1 FROM anime_genre ag
                 JOIN genre g ON ag.genre_id = g.genre_id
                 WHERE ag.anime_id = anime.anime_id
-                AND g.name LIKE $${paramCount++}
+                AND g.name LIKE ${paramCount++}
             )`;
         }
 
         if (year) {
             params.push(year);
-            query += ` AND EXTRACT(YEAR FROM release_date) = $${paramCount++}`;
+            query += ` AND EXTRACT(YEAR FROM release_date) = ${paramCount++}`;
         }
 
         query += ' ORDER BY title ASC';
 
         const result = await pool.query(query, params);
-        return result.rows;
+        const animeWithImages = await Promise.all(result.rows.map(async anime => {
+            anime.imageUrl = await getMediaUrl('anime', anime.anime_id, 'image');
+            return anime;
+        }));
+        return animeWithImages;
     }
 
     static async getById(animeId) {
@@ -93,6 +98,7 @@ class Anime {
             WHERE ac.anime_id = $1`, [animeId]);
 
         anime.cast = castResult.rows;
+        anime.imageUrl = await getMediaUrl('anime', animeId, 'image');
 
         return anime;
     }

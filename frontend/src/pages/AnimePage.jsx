@@ -365,8 +365,8 @@ export default function AnimePage() {
         {/* ───── Header Card ──────────────── */}
         <div className="anime-header-card">
             <img
-                src={placeholder}
-                alt={`${title} placeholder`}
+                src={anime.imageUrl || placeholder}
+                alt={`${title} cover`}
                 className="anime-photo"
             />
             <div className="anime-meta">

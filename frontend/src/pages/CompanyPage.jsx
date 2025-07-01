@@ -47,13 +47,13 @@ export default function CompanyPage() {
         {/* Anime Grid */}
         <h3 className="company-anime-heading">Anime produced by {name}</h3>
         {animeList.length > 0 ? (<div className="company-anime-grid">
-            {animeList.map(({animeId, title}) => (<Link
+            {animeList.map(({animeId, title, imageUrl}) => (<Link
                 to={`/anime/${animeId}`}
                 key={animeId}
                 className="company-anime-card"
             >
                 <img
-                    src={placeholder}
+                    src={imageUrl || placeholder}
                     alt={`${title} placeholder`}
                     className="anime-thumb"
                 />

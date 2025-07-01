@@ -99,13 +99,13 @@ export default function CharacterPage() {
         {/* Anime Appearances */}
         <h3 className="appearances-heading">Appears In</h3>
         {animeList.length > 0 ? (<div className="appearances-grid">
-            {animeList.map(({animeId, animeTitle}) => (<Link
+            {animeList.map(({animeId, animeTitle, imageUrl}) => (<Link
                 to={`/anime/${animeId}`}
                 key={animeId}
                 className="appearance-card"
             >
                 <img
-                    src={placeholder}
+                    src={imageUrl || placeholder}
                     alt={`${animeTitle} cover`}
                     className="appearance-thumb"
                 />
