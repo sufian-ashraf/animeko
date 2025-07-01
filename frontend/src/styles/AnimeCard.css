@@ -1,0 +1,44 @@
+.anime-card-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.anime-card {
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+    background-color: #fff;
+}
+
+.anime-card:hover {
+    transform: translateY(-5px);
+}
+
+.anime-card-image {
+    width: 200px;
+    height: 280px;
+    object-fit: cover;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+}
+
+.anime-card-title {
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+    text-align: center;
+}
+
+.anime-card-genre,
+.anime-card-year,
+.anime-card-description {
+    font-size: 0.9rem;
+    color: #555;
+    text-align: center;
+    margin-bottom: 0.25rem;
+}

@@ -65,15 +65,8 @@ export default function AnimePage() {
             return { data: [], pagination: {} };
         }
 
-        let baseUrl = process.env.REACT_APP_API_URL || '';
-        // Ensure baseUrl ends with a single slash
-        if (baseUrl && !baseUrl.endsWith('/')) {
-            baseUrl += '/';
-        }
-        
-        // Construct the URL properly based on whether we have a baseUrl or not
-        const apiPath = `api/lists/anime/${animeId}?page=${page}&limit=6`;
-        const url = baseUrl ? `${baseUrl}${apiPath}` : `/${apiPath}`;
+        const apiPath = `/api/lists/anime/${animeId}?page=${page}&limit=6`;
+        const url = apiPath;
 
         const headers = {
             'Content-Type': 'application/json',
@@ -147,16 +140,22 @@ export default function AnimePage() {
             }));
 
             const { data, pagination } = await fetchAnimeLists(page);
+            console.log('fetchContainingLists - Data received from fetchAnimeLists:', data);
+            console.log('fetchContainingLists - Pagination received from fetchAnimeLists:', pagination);
             
-            setContainingLists(prev => ({
-                ...prev,
-                data: page === 1 ? data : [...prev.data, ...data],
-                loading: false,
-                pagination: {
-                    ...prev.pagination,
-                    ...pagination
-                }
-            }));
+            setContainingLists(prev => {
+                const newState = {
+                    ...prev,
+                    data: page === 1 ? data : [...prev.data, ...data],
+                    loading: false,
+                    pagination: {
+                        ...prev.pagination,
+                        ...pagination
+                    }
+                };
+                console.log('fetchContainingLists - New containingLists state:', newState);
+                return newState;
+            });
         } catch (error) {
             console.error('Failed to load anime lists:', error);
             setContainingLists(prev => ({
@@ -178,7 +177,7 @@ export default function AnimePage() {
                 return;
             }
             
-            console.log('Fetching lists for anime ID:', animeId);
+            console.log('useEffect - Calling fetchContainingLists for anime ID:', animeId);
             await fetchContainingLists(1);
         };
         

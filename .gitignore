@@ -1,8 +1,25 @@
-# .gitignore
 
-# Node dependencies
+# Node.js
 node_modules/
-
-# dotenv environment file
+build/
 .env
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python/
+env/
+venv/
+
+# IDEs
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+thumbs.db

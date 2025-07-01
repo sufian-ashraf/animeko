@@ -21,6 +21,8 @@ function Navigation() {
                 Profile
             </Link>
 
+
+
             {/* Admin-only link */}
             {isAdmin && (
                 <Link to="/admin" className="nav-link admin-link">

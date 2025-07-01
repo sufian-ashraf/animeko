@@ -1,7 +1,6 @@
 // src/pages/Home.js
 import React, {useEffect, useState} from 'react';
-import {Link} from 'react-router-dom';
-import placeholder from '../images/image_not_available.jpg';
+import AnimeCard from '../components/AnimeCard'; // Import the new component
 
 // import the extracted styles
 import '../styles/Home.css';
@@ -25,9 +24,10 @@ function Home() {
             try {
                 const filteredCriteria = Object.fromEntries(Object.entries(searchCriteria).filter(([_, v]) => v !== ''));
                 const queryParams = new URLSearchParams(filteredCriteria).toString();
-                const response = await fetch(`http://localhost:5000/api/animes?${queryParams}`);
+                const response = await fetch(`/api/animes?${queryParams}`); // Use relative path for proxy
                 if (!response.ok) throw new Error(`Status ${response.status}`);
-                setAnimeList(await response.json());
+                const data = await response.json();
+                setAnimeList(data);
             } catch (err) {
                 setError(`Failed: ${err.message}`);
             } finally {
@@ -113,44 +113,9 @@ function Home() {
                 <p className="no-results">No anime found. Try different search criteria.</p>)}
 
             <div className="anime-grid">
-                {animeList.map(anime => (<Link
-                    to={`/anime/${anime.id}`}
-                    key={anime.id}
-                    className="anime-card-link"
-                >
-                    <div
-                        className="anime-card"
-                        style={{
-                            width: '220px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            padding: '0.75rem',
-                        }}
-                    >
-                        <img
-                            src={placeholder}
-                            alt="No cover available"
-                            style={{
-                                width: '200px',
-                                height: '280px',
-                                objectFit: 'cover',
-                                marginBottom: '0.5rem',
-                                borderRadius: '4px',
-                            }}
-                        />
-                        <h3>{anime.title}</h3>
-                        <p>
-                            <strong>Genre:</strong> {anime.genre || 'Not specified'}
-                        </p>
-                        <p>
-                            <strong>Year:</strong> {anime.year || 'Not specified'}
-                        </p>
-                        {anime.description && (<p>
-                            <strong>Description:</strong> {anime.description}
-                        </p>)}
-                    </div>
-                </Link>))}
+                {animeList.map(anime => (
+                    <AnimeCard key={anime.id} anime={anime} />
+                ))}
             </div>
         </section>
     </div>);

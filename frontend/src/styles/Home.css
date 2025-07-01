@@ -41,12 +41,7 @@
     font-size: 1.1rem;
 }
 
-/* Link overrides: white, no underline */
-.anime-card-link,
-.anime-card-link .anime-card h3,
-.anime-card-link .anime-card p {
-    color: white;
-}
+/* Link overrides: no underline */
 
 .anime-card-link,
 .anime-card-link .anime-card {

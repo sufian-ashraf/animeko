@@ -29,6 +29,9 @@ const AnimeTab = ({searchQuery}) => {
                 throw new Error('Failed to fetch anime list: ' + errorText);
             }
             const data = await response.json();
+            console.log(data);
+
+            
             
             // Log the first anime to see the data structure
             if (Array.isArray(data) && data.length > 0) {
