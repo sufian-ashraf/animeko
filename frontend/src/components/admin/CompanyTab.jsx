@@ -161,7 +161,12 @@ const CompanyTab = ({searchQuery}) => {
         company.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    if (loading) return <div className="loading">Loading...</div>;
+    if (loading) return (
+        <div className="spinner-container">
+            <div className="spinner"></div>
+            <p>Loading company data...</p>
+        </div>
+    );
 
     return (
         <div className="admin-tab-content">

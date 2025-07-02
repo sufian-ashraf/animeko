@@ -307,7 +307,9 @@ export default function ListDetail() {
     if (loading) {
         return (
             <div className="list-detail-container">
-                <div className="loading-state">Loading list...</div>
+                <div className="spinner-container">
+                    <div className="spinner"></div>
+                </div>
             </div>
         );
     }

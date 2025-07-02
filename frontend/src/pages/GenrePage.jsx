@@ -39,7 +39,10 @@ export default function GenrePage() {
         fetchData();
     }, [genreId, navigate]);
 
-    if (loading) return <div className="genre-loading">Loading genre…</div>;
+    if (loading) return <div className="spinner-container">
+                        <div className="spinner"></div>
+                        <p>Loading genre data...</p>
+                    </div>;
     if (error) return <div className="genre-error">{error}</div>;
     if (!genre) return <div className="genre-error">Genre not found</div>;
 

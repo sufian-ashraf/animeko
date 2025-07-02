@@ -31,7 +31,9 @@ const PaymentConfirmationPage = () => {
       {status === 'pending' && (
         <div className="pending-container">
           <h2>Processing your payment...</h2>
-          <div className="loader"></div>
+          <div className="spinner-container">
+            <div className="spinner"></div>
+          </div>
         </div>
       )}
 

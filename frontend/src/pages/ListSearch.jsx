@@ -72,7 +72,11 @@ export default function ListSearch() {
                     className="search-input"
                 />
             </div>
-            {loading && <p className="loading">Loading...</p>}
+            {loading && (
+                <div className="spinner-container">
+                    <div className="spinner"></div>
+                </div>
+            )}
             {error && <p className="error">{error}</p>}
             {!loading && !error && (
                 <div className="list-results">

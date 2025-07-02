@@ -26,7 +26,9 @@ export default function CompanyPage() {
             });
     }, [companyId]);
 
-    if (loading) return <div className="company-loading">Loading company…</div>;
+    if (loading) return <div className="spinner-container">
+                        <div className="spinner"></div>
+                    </div>;
     if (error) return <div className="company-error">{error}</div>;
     if (!company) return <div className="company-error">Company not found</div>;
 

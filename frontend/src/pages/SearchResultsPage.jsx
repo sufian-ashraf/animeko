@@ -8,6 +8,15 @@ function SearchResultsPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const location = useLocation();
+    const [sortField, setSortField] = useState('name'); // Actual sort field, triggers fetch
+    const [sortOrder, setSortOrder] = useState('asc'); // Actual sort order, triggers fetch
+    const [pendingSortField, setPendingSortField] = useState('name'); // For dropdown selection
+    const [pendingSortOrder, setPendingSortOrder] = useState('asc'); // For dropdown selection
+
+    const handleApplySort = () => {
+        setSortField(pendingSortField);
+        setSortOrder(pendingSortOrder);
+    };
 
     useEffect(() => {
         const fetchSearchResults = async () => {
@@ -26,7 +35,7 @@ function SearchResultsPage() {
             const queryString = new URLSearchParams(filteredCriteria).toString();
 
             try {
-                const response = await fetch(`/api/animes?${queryString}`);
+                const response = await fetch(`/api/animes?${queryString}&sortField=${sortField}&sortOrder=${sortOrder}`);
                 if (!response.ok) throw new Error(`Status ${response.status}`);
                 const data = await response.json();
                 setAnimeList(data);
@@ -38,13 +47,36 @@ function SearchResultsPage() {
         };
 
         fetchSearchResults();
-    }, [location.search]);
+    }, [location.search, sortField, sortOrder]);
 
     return (
         <div className="home-page"> {/* Reusing home-page class for styling */}
             <section className="results-section">
                 <h3>Search Results</h3>
-                {loading && <p className="loading-message">Loading...</p>}
+                <div className="sort-controls-container">
+                    <div className="sort-controls">
+                        <label htmlFor="sortField">Sort by:</label>
+                        <select id="sortField" value={pendingSortField} onChange={(e) => setPendingSortField(e.target.value)}>
+                            <option value="name">Name</option>
+                            <option value="rating">Rating</option>
+                            <option value="release_date">Release Date</option>
+                            <option value="rank">Rank</option>
+                        </select>
+
+                        <label htmlFor="sortOrder">Order:</label>
+                        <select id="sortOrder" value={pendingSortOrder} onChange={(e) => setPendingSortOrder(e.target.value)}>
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                    <button onClick={handleApplySort}>Apply Sort</button>
+                </div>
+                {loading && (
+                    <div className="spinner-container">
+                        <div className="spinner"></div>
+                        <p>Loading search results...</p>
+                    </div>
+                )}
                 {error && <p className="error-message">{error}</p>}
                 {!loading && !error && animeList.length === 0 && (
                     <p className="no-results">No anime found for your search criteria.</p>

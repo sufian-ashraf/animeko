@@ -84,7 +84,13 @@ const Login = () => {
                     className="auth-button"
                     disabled={isLoading}
                 >
-                    {isLoading ? 'Logging in...' : 'Login'}
+                    {isLoading ? (
+                        <div className="spinner-container-small">
+                            <div className="spinner-small"></div>
+                        </div>
+                    ) : (
+                        'Login'
+                    )}
                 </button>
             </form>
 

@@ -64,7 +64,9 @@ export default function VAPage() {
     };
 
     if (error) return <div className="va-error">{error}</div>;
-    if (!va) return <div className="va-loading">Loading voice actor…</div>;
+    if (!va) return <div className="spinner-container">
+                        <div className="spinner"></div>
+                    </div>;
 
     const {name, bio, roles = []} = va;
 

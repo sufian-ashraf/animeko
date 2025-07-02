@@ -357,7 +357,9 @@ export default function AnimePage() {
     };
 
     if (error) return <div className="anime-error">{error}</div>;
-    if (!anime) return <div className="anime-loading">Loading anime…</div>;
+    if (!anime) return <div className="spinner-container">
+                        <div className="spinner"></div>
+                    </div>;
 
     const {title, synopsis, company, genres = [], cast = []} = anime;
 

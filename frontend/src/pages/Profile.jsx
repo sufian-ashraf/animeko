@@ -439,7 +439,9 @@ export default function Profile() {
     };
 
     // Loading/Error states
-    if (loading) return <div className="loading">Loading profile…</div>;
+    if (loading) return <div className="spinner-container">
+                        <div className="spinner"></div>
+                    </div>;
     if (error) return (<div className="profile-page">
         <div className="profile-card">
             <div className="profile-error">{error}</div>

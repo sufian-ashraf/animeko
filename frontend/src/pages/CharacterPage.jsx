@@ -62,7 +62,9 @@ export default function CharacterPage() {
             .finally(() => setFavLoading(false));
     };
 
-    if (loading) return <div className="char-loading">Loading character…</div>;
+    if (loading) return <div className="spinner-container">
+                        <div className="spinner"></div>
+                    </div>;
     if (error) return <div className="char-error">{error}</div>;
     if (!char) return <div className="char-error">Character not found</div>;
 

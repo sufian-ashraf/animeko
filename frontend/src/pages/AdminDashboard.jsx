@@ -87,7 +87,9 @@ export default function AdminDashboard() {
             {/* Tab Content */}
             <div className="admin-content">
                 {loading ? (
-                    <div className="loading">Loading...</div>
+                    <div className="spinner-container">
+                        <div className="spinner"></div>
+                    </div>
                 ) : (
                     renderTabContent()
                 )}

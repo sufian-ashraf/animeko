@@ -86,6 +86,12 @@ function MyLists() {
         </form>
 
         {/* User's Lists */}
+        {lists.length === 0 && (
+            <div className="spinner-container">
+                <div className="spinner"></div>
+                <p>Loading your lists...</p>
+            </div>
+        )}
         <div className="lists-grid">
             {lists.map(list => (<div key={list.id} className="list-card">
                 <a href={`/my-lists/${list.id}`}>{list.title}</a>

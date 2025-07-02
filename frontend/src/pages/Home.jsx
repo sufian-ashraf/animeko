@@ -67,6 +67,7 @@ function Home() {
                 {loading && (
                     <div className="spinner-container">
                         <div className="spinner"></div>
+                        <p>Loading anime...</p>
                     </div>
                 )}
                 {error && <p className="error-message">{error}</p>}
