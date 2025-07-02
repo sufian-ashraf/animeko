@@ -33,10 +33,6 @@ async function authenticate(req, res, next) {
             created_at: user.created_at,
             is_admin: isAdmin
         };
-        
-        
-
-        console.log('Authenticated user set on req.user:', req.user);
 
         next();
     } catch (err) {

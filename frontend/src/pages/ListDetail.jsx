@@ -29,7 +29,7 @@ export default function ListDetail() {
     useEffect(() => {
         if (!token) return;
 
-        const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const baseUrl = 'http://localhost:5000';
         setLoading(true);
         setError(null);
 
@@ -69,7 +69,7 @@ export default function ListDetail() {
         if (!searchTerm || !token) return;
         if (!enterPressed) return;
 
-        const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const baseUrl = 'http://localhost:5000';
         
         const timeout = setTimeout(() => {
             setIsSearching(true);
@@ -108,7 +108,7 @@ export default function ListDetail() {
     const handleAddAnime = async (animeId) => {
         if (!isOwner || !token) return;
         
-        const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const baseUrl = 'http://localhost:5000';
 
         try {
             // Prevent duplicate
@@ -175,7 +175,7 @@ export default function ListDetail() {
     const handleRemoveAnime = async (animeId) => {
         if (!isOwner || !token) return;
 
-        const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const baseUrl = 'http://localhost:5000';
         
         try {
             const updatedEntries = list.items.filter((i) => i.anime_id !== animeId);
@@ -240,7 +240,7 @@ export default function ListDetail() {
     const handleSaveAll = async () => {
         if (!isOwner || !token) return;
 
-        const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const baseUrl = 'http://localhost:5000';
         
         try {
             // Sort items by rank ascending, then by anime_id to break ties

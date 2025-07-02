@@ -1,67 +1,99 @@
-import React, {useState} from 'react';
-import {Link, useLocation, useNavigate} from 'react-router-dom';
-import {useAuth} from '../contexts/AuthContext';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import '../styles/Navigation.css';
 
 function Navigation() {
-    const {user, logout, loading, isAdmin} = useAuth();
+    const { user, logout, loading, isAdmin } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
-
     const [searchTitle, setSearchTitle] = useState('');
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
 
-    // ✅ Hide navbar until auth loading finishes
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setDropdownOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [dropdownRef]);
+
     if (loading) return null;
 
     const handleLogout = () => {
         logout();
+        setDropdownOpen(false);
     };
 
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchTitle.trim()) {
             navigate(`/search-results?title=${encodeURIComponent(searchTitle.trim())}`);
-            setSearchTitle(''); // Clear search input after navigating
+            setSearchTitle('');
+            setMenuOpen(false);
         }
     };
 
-    return (<nav className="top-nav">
-        <Link to="/" className="nav-link">Home</Link>
+    return (
+        <>
+            <div className="nav-left">
+                <Link to="/" className="brand">Animeko</Link>
+            </div>
 
-        <form onSubmit={handleSearch} className="search-bar">
-            <input
-                type="text"
-                placeholder="Search anime..."
-                value={searchTitle}
-                onChange={(e) => setSearchTitle(e.target.value)}
-                aria-label="Search anime by title"
-            />
-            <button type="submit">Search</button>
-        </form>
+            <div className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
+                <div className={menuOpen ? 'ham-box ham-box-open' : 'ham-box'}>
+                    <span className={menuOpen ? 'line line-1 line-1-open' : 'line line-1'}></span>
+                    <span className={menuOpen ? 'line line-2 line-2-open' : 'line line-2'}></span>
+                    <span className={menuOpen ? 'line line-3 line-3-open' : 'line line-3'}></span>
+                </div>
+            </div>
 
-        {user ? (<>
-            <Link to="/profile" className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}>
-                Profile
-            </Link>
+            <div className={`nav-main-links ${menuOpen ? 'open' : ''}`}>
+                <div className="nav-center">
+                    <form onSubmit={handleSearch} className="search-bar">
+                        <input
+                            type="text"
+                            placeholder="Search anime..."
+                            value={searchTitle}
+                            onChange={(e) => setSearchTitle(e.target.value)}
+                            aria-label="Search anime by title"
+                        />
+                        <button type="submit">Search</button>
+                    </form>
+                </div>
 
-            {/* Admin-only link */}
-            {isAdmin && (
-                <Link to="/admin" className="nav-link admin-link">
-                    Admin Dashboard
-                </Link>
-            )}
-
-            <Link to="/search-lists" className="nav-link">Search Lists</Link>
-            <button onClick={handleLogout} className="nav-link">Logout</button>
-        </>) : (<>
-            <Link to="/login" className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`}>
-                Login
-            </Link>
-            <Link to="/register" className={`nav-link ${location.pathname === '/register' ? 'active' : ''}`}>
-                Register
-            </Link>
-        </>)}
-    </nav>);
+                <div className="nav-right">
+                    {user ? (
+                        <div className="user-menu" ref={dropdownRef}>
+                            <button onClick={() => setDropdownOpen(!dropdownOpen)} className="nav-link profile-button">
+                                Profile
+                            </button>
+                            {dropdownOpen && (
+                                <div className="dropdown-menu">
+                                    <Link to="/profile" className="dropdown-item">My Profile</Link>
+                                    {isAdmin && <Link to="/admin" className="dropdown-item">Admin Dashboard</Link>}
+                                    <Link to="/my-lists" className="dropdown-item">My Lists</Link>
+                                    <Link to="/subscription" className="dropdown-item">Subscription</Link>
+                                    <button onClick={handleLogout} className="dropdown-item logout-button">Logout</button>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="auth-links">
+                            <Link to="/login" className="nav-link">Login</Link>
+                            <Link to="/register" className="nav-link">Register</Link>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </>
+    );
 }
 
 export default Navigation;

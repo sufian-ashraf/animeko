@@ -23,10 +23,14 @@ import MyLists from './pages/MyLists';
 import ListDetail from './pages/ListDetail';
 import ListSearch from './pages/ListSearch';
 import AdminDashboard from './pages/AdminDashboard';
+import SubscriptionPage from './pages/SubscriptionPage';
+import PaymentConfirmationPage from './pages/PaymentConfirmationPage';
 
 // Import CSS
 import './styles/App.css';
 import './styles/Auth.css';
+import './styles/SubscriptionPage.css';
+import './styles/PaymentConfirmationPage.css';
 import './styles/Profile.css';
 import './styles/styles.css';
 import './styles/Navigation.css';
@@ -46,7 +50,7 @@ function App() {
                         <Navigation/>
                     </div>
                 </header>
-                <main>
+                <main className="main-content">
                     <Routes>
                         {/* Public Routes */}
                         <Route path="/" element={<Home/>}/>
@@ -104,6 +108,22 @@ function App() {
 
                         {/* 404 Route */}
                         <Route path="*" element={<NotFound/>}/>
+                        <Route
+                            path="/subscription"
+                            element={
+                                <ProtectedRoute>
+                                    <SubscriptionPage/>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/payment-confirmation"
+                            element={
+                                <ProtectedRoute>
+                                    <PaymentConfirmationPage/>
+                                </ProtectedRoute>
+                            }
+                        />
                     </Routes>
                 </main>
             </div>

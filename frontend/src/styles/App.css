@@ -1,16 +1,21 @@
+:root {
+    --header-height: 4rem; /* Define header height as a CSS variable */
+}
+
 .App {
     font-family: Arial, sans-serif;
+    margin: 0 auto;
+}
+
+.main-content {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
 }
 
 .App-header {
-    background-color: #282c34;
-    padding: 0.5rem 1rem;
     color: white;
     text-align: center;
-    border-radius: 5px;
     margin-bottom: 20px;
 }
 
@@ -88,14 +93,15 @@ button:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 100%;
-}
-
-.top-nav {
-    display: flex;
-    align-items: center; /* vertically centers links */
-    gap: 1rem;
-    padding: 0.25rem 0; /* smaller top/bottom padding */
+    max-width: 1200px; /* Set a maximum width */
+    margin: 0 auto; /* Center the header content */
+    background-color: #282828;
+    color: white;
+    position: relative;
+    z-index: 1000;
+    min-height: var(--header-height); /* Set min-height using the variable */
+    border-radius: 8px; /* Added border-radius for rounded corners */
+    padding: 1rem 2rem; /* Reintroduced padding for spacing from edges */
 }
 
 .nav-link {
@@ -104,10 +110,6 @@ button:hover {
     padding: 0.5rem 1rem;
     border-radius: 4px;
     transition: background-color 0.2s;
-}
-
-.top-nav .nav-link {
-    font-size: 0.9rem;
 }
 
 .nav-link:hover {
