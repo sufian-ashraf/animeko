@@ -28,6 +28,7 @@ export default function CompanyPage() {
 
     if (loading) return <div className="spinner-container">
                         <div className="spinner"></div>
+                        <p>Loading company data...</p>
                     </div>;
     if (error) return <div className="company-error">{error}</div>;
     if (!company) return <div className="company-error">Company not found</div>;
