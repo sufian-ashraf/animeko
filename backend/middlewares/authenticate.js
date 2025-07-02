@@ -34,6 +34,8 @@ async function authenticate(req, res, next) {
             is_admin: isAdmin
         };
         
+        
+
         console.log('Authenticated user set on req.user:', req.user);
 
         next();

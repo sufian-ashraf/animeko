@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import {dirname} from 'path';
@@ -27,7 +28,11 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 // Enable CORS for requests from your frontend
 
-app.use(cors());
+const corsOptions = {
+    origin: 'http://localhost:5173',
+    credentials: true,
+};
+app.use(cors(corsOptions));
 
 // Handle preflight requests
 //app.options('*', cors(corsOptions));

@@ -9,6 +9,7 @@ const AuthProvider = ({children}) => {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [logoutMessage, setLogoutMessage] = useState(null);
 
     // Function to decode token and set user info including isAdmin
     const setUserFromToken = useCallback((jwtToken) => {
@@ -38,6 +39,7 @@ const AuthProvider = ({children}) => {
         setToken(null);
         setUser(null);
         localStorage.removeItem('token');
+        setLogoutMessage('User logged out');
     }, []);
 
     const fetchUserProfile = useCallback(async () => {
@@ -227,7 +229,9 @@ const AuthProvider = ({children}) => {
             logout,
             register,
             updateProfile,
-            isAdmin: user?.is_admin || false
+            isAdmin: user?.is_admin || false,
+            logoutMessage,
+            setLogoutMessage
         }}>
             {!loading && children}
         </AuthContext.Provider>

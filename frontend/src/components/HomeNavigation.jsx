@@ -1,10 +1,14 @@
-import React from 'react';
-import {Link, useLocation} from 'react-router-dom';
+import React, {useState} from 'react';
+import {Link, useLocation, useNavigate} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
+import '../styles/Navigation.css';
 
 function Navigation() {
     const {user, logout, loading, isAdmin} = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
+
+    const [searchTitle, setSearchTitle] = useState('');
 
     // ✅ Hide navbar until auth loading finishes
     if (loading) return null;
@@ -13,15 +17,32 @@ function Navigation() {
         logout();
     };
 
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (searchTitle.trim()) {
+            navigate(`/search-results?title=${encodeURIComponent(searchTitle.trim())}`);
+            setSearchTitle(''); // Clear search input after navigating
+        }
+    };
+
     return (<nav className="top-nav">
         <Link to="/" className="nav-link">Home</Link>
+
+        <form onSubmit={handleSearch} className="search-bar">
+            <input
+                type="text"
+                placeholder="Search anime..."
+                value={searchTitle}
+                onChange={(e) => setSearchTitle(e.target.value)}
+                aria-label="Search anime by title"
+            />
+            <button type="submit">Search</button>
+        </form>
 
         {user ? (<>
             <Link to="/profile" className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}>
                 Profile
             </Link>
-
-
 
             {/* Admin-only link */}
             {isAdmin && (

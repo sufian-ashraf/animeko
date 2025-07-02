@@ -3,54 +3,64 @@ import { getMediaUrl } from '../utils/mediaUtils.js';
 
 class Anime {
     static async getAll({ title, genre, year }) {
-        let query = `
-            SELECT 
-                anime_id AS id,
-                anime_id,  
-                title,
-                release_date,  
-                company_id,  
-                (SELECT STRING_AGG(g.name, ', ')
-                 FROM anime_genre ag
-                 JOIN genre g ON ag.genre_id = g.genre_id
-                 WHERE ag.anime_id = anime.anime_id) AS genre,
-                EXTRACT(YEAR FROM release_date) AS year,
-                synopsis AS description
-            FROM anime
-            WHERE 1=1
-        `;
+        try {
+            let query = `
+                SELECT 
+                    anime_id AS id,
+                    anime_id,  
+                    title,
+                    release_date,  
+                    company_id,  
+                    (SELECT STRING_AGG(g.name, ', ')
+                     FROM anime_genre ag
+                     JOIN genre g ON ag.genre_id = g.genre_id
+                     WHERE ag.anime_id = anime.anime_id) AS genre,
+                    EXTRACT(YEAR FROM release_date) AS year,
+                    synopsis AS description
+                FROM anime
+                WHERE 1=1
+            `;
 
-        const params = [];
-        let paramCount = 1;
+            const params = [];
+            let paramCount = 1;
 
-        if (title) {
-            params.push(`%${title}%`);
-            query += ` AND title ILIKE ${paramCount++}`;
+            if (title) {
+                params.push(`%${title}%`);
+                query += ` AND title ILIKE $${paramCount++}`;
+            }
+
+            if (genre) {
+                params.push(`%${genre}%`);
+                query += ` AND EXISTS (
+                    SELECT 1 FROM anime_genre ag
+                    JOIN genre g ON ag.genre_id = g.genre_id
+                    WHERE ag.anime_id = anime.anime_id
+                    AND g.name LIKE $${paramCount++}
+                )`;
+            }
+
+            if (year) {
+                const parsedYear = parseInt(year, 10);
+                if (!isNaN(parsedYear)) {
+                    params.push(parsedYear);
+                    query += ` AND EXTRACT(YEAR FROM release_date) = ${paramCount++}`;
+                } else {
+                    console.warn(`Invalid year provided: ${year}. Skipping year filter.`);
+                }
+            }
+
+            query += ' ORDER BY title ASC';
+
+            const result = await pool.query(query, params);
+            const animeWithImages = await Promise.all(result.rows.map(async anime => {
+                anime.imageUrl = await getMediaUrl('anime', anime.anime_id, 'image');
+                return anime;
+            }));
+            return animeWithImages;
+        } catch (error) {
+            console.error("Error in Anime.getAll:", error);
+            throw error;
         }
-
-        if (genre) {
-            params.push(`%${genre}%`);
-            query += ` AND EXISTS (
-                SELECT 1 FROM anime_genre ag
-                JOIN genre g ON ag.genre_id = g.genre_id
-                WHERE ag.anime_id = anime.anime_id
-                AND g.name LIKE ${paramCount++}
-            )`;
-        }
-
-        if (year) {
-            params.push(year);
-            query += ` AND EXTRACT(YEAR FROM release_date) = ${paramCount++}`;
-        }
-
-        query += ' ORDER BY title ASC';
-
-        const result = await pool.query(query, params);
-        const animeWithImages = await Promise.all(result.rows.map(async anime => {
-            anime.imageUrl = await getMediaUrl('anime', anime.anime_id, 'image');
-            return anime;
-        }));
-        return animeWithImages;
     }
 
     static async getById(animeId) {
