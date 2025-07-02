@@ -510,3 +510,19 @@
     font-size: 0.9rem;
     margin-left: 0.4rem;
 }
+
+.login-prompt {
+    text-align: center;
+    padding: 1rem;
+    font-size: 1.1rem;
+    color: #555;
+}
+
+.spinner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%; /* Adjust as needed */
+    width: 100%; /* Adjust as needed */
+}

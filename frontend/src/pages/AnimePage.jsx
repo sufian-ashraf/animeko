@@ -359,6 +359,7 @@ export default function AnimePage() {
     if (error) return <div className="anime-error">{error}</div>;
     if (!anime) return <div className="spinner-container">
                         <div className="spinner"></div>
+                        <p>Loading anime...</p>
                     </div>;
 
     const {title, synopsis, company, genres = [], cast = []} = anime;
@@ -500,31 +501,37 @@ export default function AnimePage() {
             {/* Your Review Form */}
             <div className="your-review-form">
                 <h4>Your Review</h4>
-                <form onSubmit={handleSubmitReview}>
-                    <div className="star-selection">
-                        {[1, 2, 3, 4, 5].map((i) => (<span
-                            key={i}
-                            className={i <= reviewForm.rating ? 'star selected' : 'star'}
-                            onClick={() => handleStarClick(i)}
-                        >
-                  ★
-                </span>))}
+                {user ? (
+                    <form onSubmit={handleSubmitReview}>
+                        <div className="star-selection">
+                            {[1, 2, 3, 4, 5].map((i) => (<span
+                                key={i}
+                                className={i <= reviewForm.rating ? 'star selected' : 'star'}
+                                onClick={() => handleStarClick(i)}
+                            >
+                                ★
+                            </span>))}
+                        </div>
+                        <label>
+                            Comment:
+                            <textarea
+                                name="content"
+                                rows="4"
+                                value={reviewForm.content}
+                                onChange={handleReviewChange}
+                                disabled={reviewLoading}
+                            />
+                        </label>
+                        {reviewError && <div className="review-error">{reviewError}</div>}
+                        <button type="submit" disabled={reviewLoading}>
+                            {userReview ? 'Update Review' : 'Submit Review'}
+                        </button>
+                    </form>
+                ) : (
+                    <div className="login-prompt">
+                        <Link to="/login" style={{ color: 'blue' }}>Log in</Link> to submit reviews and ratings.
                     </div>
-                    <label>
-                        Comment:
-                        <textarea
-                            name="content"
-                            rows="4"
-                            value={reviewForm.content}
-                            onChange={handleReviewChange}
-                            disabled={reviewLoading}
-                        />
-                    </label>
-                    {reviewError && <div className="review-error">{reviewError}</div>}
-                    <button type="submit" disabled={reviewLoading}>
-                        {userReview ? 'Update Review' : 'Submit Review'}
-                    </button>
-                </form>
+                )}
             </div>
 
             {/* All Reviews List */}
