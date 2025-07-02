@@ -4,26 +4,62 @@ import '../styles/PaymentConfirmationPage.css';
 
 const PaymentConfirmationPage = () => {
   const [status, setStatus] = useState('pending');
+  const [transactionDetails, setTransactionDetails] = useState(null);
   const location = useLocation();
   const transactionId = new URLSearchParams(location.search).get('transactionId');
 
   useEffect(() => {
     const pollStatus = async () => {
-      // In a real application, you would make an API call to your backend to get the transaction status.
-      console.log(`Polling status for transaction ID: ${transactionId}`);
-      // Here, we'll simulate it with a timeout.
-      const timeout = setTimeout(() => {
-        // Simulate a random outcome
-        const randomStatus = Math.random() > 0.5 ? 'success' : 'failed';
-        setStatus(randomStatus);
-      }, 3000);
+      if (!transactionId) {
+        setStatus('failed');
+        return;
+      }
 
-      return () => clearTimeout(timeout);
+      let attempts = 0;
+      const maxAttempts = 10;
+      const pollInterval = 3000; // Poll every 3 seconds
+
+      const intervalId = setInterval(async () => {
+        attempts++;
+        if (attempts > maxAttempts) {
+          clearInterval(intervalId);
+          setStatus('failed');
+          console.error('Max polling attempts reached. Transaction status unknown.');
+          return;
+        }
+
+        try {
+          const response = await fetch(`https://test-project-production-88cc.up.railway.app/api/get-trx-details/${transactionId}`, {
+            headers: {
+              'apikey': '13acc245-b584-4767-b80a-5c9a1fe9d71e',
+            },
+          });
+
+          const data = await response.json();
+
+          if (data.valid) {
+            setTransactionDetails(data.transactionDetails);
+            if (data.transactionDetails.status && data.transactionDetails.status.toLowerCase().trim() === 'completed') {
+              setStatus('success');
+              clearInterval(intervalId);
+            } else if (data.transactionDetails.status && data.transactionDetails.status.toLowerCase().trim() === 'failed') {
+              setStatus('failed');
+              clearInterval(intervalId);
+            }
+          } else {
+            console.error('Failed to get transaction details:', data.message);
+            // Keep polling or set to failed if a specific error indicates it
+          }
+        } catch (error) {
+          console.error('Error polling transaction status:', error);
+          // Keep polling or set to failed if a specific error indicates it
+        }
+      }, pollInterval);
+
+      return () => clearInterval(intervalId);
     };
 
-    if (transactionId) {
-      pollStatus();
-    }
+    pollStatus();
   }, [transactionId]);
 
   return (
@@ -34,6 +70,9 @@ const PaymentConfirmationPage = () => {
           <div className="spinner-container">
             <div className="spinner"></div>
           </div>
+          {transactionDetails && (
+            <p>Status: {transactionDetails.status}</p>
+          )}
         </div>
       )}
 
@@ -41,6 +80,14 @@ const PaymentConfirmationPage = () => {
         <div className="success-container">
           <h2>Payment Successful!</h2>
           <p>Thank you for your purchase. Your subscription is now active.</p>
+          {transactionDetails && (
+            <>
+              <p>Recipient: {transactionDetails.recipient}</p>
+              <p>Amount: ${transactionDetails.subamount}</p>
+              <p>Fees: ${transactionDetails.feesamount}</p>
+              <p>Completed On: {new Date(transactionDetails.completed_on).toLocaleString()}</p>
+            </>
+          )}
         </div>
       )}
 
@@ -48,6 +95,9 @@ const PaymentConfirmationPage = () => {
         <div className="failed-container">
           <h2>Payment Failed</h2>
           <p>Unfortunately, we were unable to process your payment. Please try again.</p>
+          {transactionDetails && (
+            <p>Status: {transactionDetails.status}</p>
+          )}
         </div>
       )}
     </div>
