@@ -514,7 +514,7 @@ export default function Profile() {
                 <p>Bio: {profileUser.profile_bio || 'No bio provided'}</p>
                 <p>
                     Member Since:{' '}
-                    {new Date(profileUser.created_at).toLocaleDateString()}
+                    {profileUser.created_at}
                 </p>
                 <div className="profile-buttons">
                     {isOwnProfile ? (<>

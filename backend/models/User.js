@@ -23,7 +23,8 @@ class User {
 
     static async findById(userId) {
         const result = await pool.query(
-            `SELECT user_id, username, email, display_name, profile_bio, created_at, is_admin, subscription_status
+            `SELECT user_id, username, email, display_name, profile_bio, TO_CHAR(created_at, 'DD Mon YYYY') AS created_at
+, is_admin, subscription_status
              FROM users
              WHERE user_id = $1`,
             [userId]

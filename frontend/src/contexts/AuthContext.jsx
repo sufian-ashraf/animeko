@@ -81,6 +81,9 @@ const AuthProvider = ({children}) => {
                 username: userData.username,
                 email: userData.email || '',
                 display_name: userData.display_name || userData.username,
+                profile_bio: userData.profile_bio || '',
+                created_at: userData.created_at || '',
+                subscription_status: userData.subscription_status || '',
                 is_admin: tokenIsAdmin // Always use token value, never API response
             };
 
