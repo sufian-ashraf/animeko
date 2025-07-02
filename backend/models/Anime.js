@@ -2,15 +2,16 @@ import pool from '../db.js';
 import { getMediaUrl } from '../utils/mediaUtils.js';
 
 class Anime {
-    static async getAll({ title, genre, year }) {
+    static async getAll({ title, genre, year, sortField = 'name', sortOrder = 'asc' }) {
         try {
             let query = `
                 SELECT 
-                    anime_id AS id,
-                    anime_id,  
+                    anime_id AS id,  
                     title,
                     release_date,  
                     company_id,  
+                    rating,
+                    rank,  
                     (SELECT STRING_AGG(g.name, ', ')
                      FROM anime_genre ag
                      JOIN genre g ON ag.genre_id = g.genre_id
@@ -49,8 +50,35 @@ class Anime {
                 }
             }
 
-            query += ' ORDER BY title ASC';
+            let orderBy = 'title ASC'; // Default sort
 
+            if (sortField) {
+                let field = '';
+                switch (sortField) {
+                    case 'name':
+                        field = 'title';
+                        break;
+                    case 'rating':
+                        field = 'rating'; // Assuming a 'rating' column exists or will be added
+                        break;
+                    case 'release_date':
+                        field = 'release_date';
+                        break;
+                    case 'rank':
+                        field = 'rank'; // Assuming a 'rank' column exists or will be added
+                        break;
+                    default:
+                        field = 'title';
+                }
+                orderBy = `${field} ${sortOrder.toUpperCase()}`;
+                if (sortOrder.toUpperCase() === 'ASC') {
+                    orderBy += ' NULLS LAST';
+                } else {
+                    orderBy += ' NULLS FIRST';
+                }
+            }
+
+            query += ` ORDER BY ${orderBy}`;
             const result = await pool.query(query, params);
             const animeWithImages = await Promise.all(result.rows.map(async anime => {
                 anime.imageUrl = await getMediaUrl('anime', anime.anime_id, 'image');

@@ -11,10 +11,10 @@ const router = express.Router();
  */
 router.get('/animes', async (req, res, next) => {
     try {
-        const {title, genre, year} = req.query;
+        const {title, genre, year, sortField, sortOrder} = req.query;
 
         // Use the Anime model to get all anime
-        const animes = await Anime.getAll({ title, genre, year });
+        const animes = await Anime.getAll({ title, genre, year, sortField, sortOrder });
         res.json(animes);
     } catch (err) {
         console.error('Error fetching anime:', err);

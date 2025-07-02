@@ -34,11 +34,92 @@
     text-align: center;
 }
 
+.sort-controls-container {
+    display: flex;
+    justify-content: flex-end; /* Aligns items to the right */
+    align-items: center;
+    gap: 15px; /* Space between sort controls and button */
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: transparent;
+    border-radius: 8px;
+    /* box-shadow: 0 2px 5px rgba(0,0,0,0.05); */
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between label and select */
+}
+
+.sort-controls label {
+    font-weight: bold;
+    color: #555;
+}
+
+.sort-controls select {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.sort-controls select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.sort-controls-container button {
+    padding: 10px 20px;
+    background-color: #667eea;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.sort-controls-container button:hover {
+    background-color: #5a6cdb;
+}
+
+.sort-controls-container button:active {
+    background-color: #4a5bbd; /* Darker blue when pressed */
+    transform: translateY(1px); /* Slight press effect */
+}
+
 .initial-state {
     text-align: center;
     padding: 40px;
     color: #666;
     font-size: 1.1rem;
+}
+
+/* Spinner Styles */
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px; /* Adjust as needed */
+}
+
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #667eea; /* Blue color for the spinner */
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Link overrides: no underline */
@@ -56,5 +137,20 @@
 
     .welcome-section p {
         font-size: 1rem;
+    }
+
+    .sort-controls-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sort-controls {
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .sort-controls-container button {
+        width: 100%;
     }
 }
