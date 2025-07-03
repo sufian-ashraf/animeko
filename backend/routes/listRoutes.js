@@ -118,11 +118,7 @@ router.put('/:id', authenticate, async (req, res) => {
 // 8) GET /api/lists/anime/:animeId   (get lists containing an anime)
 // ──────────────────────────────────────────────────
 router.get('/anime/:animeId', async (req, res) => {
-    // Log request details
-    console.log('Request headers:', req.headers);
-    console.log('Request params:', req.params);
-    console.log('Request query:', req.query);
-    
+        
     // Set CORS headers
     res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -139,7 +135,7 @@ router.get('/anime/:animeId', async (req, res) => {
 
     try {
         // Log the anime ID being queried
-        console.log('Fetching lists for anime ID:', animeId);
+        
         
         const result = await List.getPaginatedListsByAnimeId(animeId, page, limit);
 

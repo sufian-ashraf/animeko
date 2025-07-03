@@ -139,7 +139,8 @@ const AuthProvider = ({children}) => {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Login failed');
+                const errorData = await response.json().catch(() => ({ message: 'An unexpected error occurred.' }));
+                throw new Error(errorData.message || 'Login failed. Please check your credentials.');
             }
 
             setToken(data.token);

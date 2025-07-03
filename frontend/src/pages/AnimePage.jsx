@@ -532,7 +532,7 @@ export default function AnimePage() {
                     </form>
                 ) : (
                     <div className="login-prompt">
-                        <Link to="/login" style={{ color: 'blue' }}>Log in</Link> to submit reviews and ratings.
+                        <Link to="/login">Log in</Link> to submit reviews and ratings.
                     </div>
                 )}
             </div>

@@ -2,15 +2,17 @@
 import React, {useEffect, useState} from 'react';
 import {Link, useLocation, useNavigate, useSearchParams} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
+import {useAlert} from '../components/AlertHandler';
 import '../styles/Auth.css';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    
     const [isLoading, setIsLoading] = useState(false);
 
     const {login, isAuthenticated} = useAuth();
+    const {showAlert} = useAlert();
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
@@ -28,10 +30,9 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
 
         if (!username.trim() || !password.trim()) {
-            setError('Please enter both username and password');
+            showAlert('error', 'Please enter both username and password');
             return;
         }
 
@@ -41,8 +42,8 @@ const Login = () => {
             console.log('Login successful, redirecting to:', redirectUrl);
             navigate(redirectUrl, {replace: true});
         } catch (err) {
-            console.error('Login error:', err);
-            setError(err.message || 'Login failed. Please check your credentials.');
+            console.error('Login error caught in Login.jsx:', err);
+            showAlert('error', err.message || 'Login failed. Please check your credentials.');
         } finally {
             setIsLoading(false);
         }
@@ -51,8 +52,6 @@ const Login = () => {
     return (<div className="auth-container">
         <div className="auth-card">
             <h2>Login to Animeko</h2>
-
-            {error && <div className="auth-error">{error}</div>}
 
             <form onSubmit={handleSubmit} className="auth-form">
                 <div className="form-group">

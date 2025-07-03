@@ -44,10 +44,11 @@
 
 .auth-form input {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 16px;
+    box-sizing: border-box;
 }
 
 .auth-form input:focus {
@@ -67,6 +68,7 @@
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s;
+    box-sizing: border-box;
 }
 
 .auth-button:hover {
@@ -87,6 +89,11 @@
 .auth-link a {
     color: #2196f3;
     text-decoration: none;
+}
+
+.login-prompt a {
+    color: #2196f3;
+    text-decoration: underline;
 }
 
 .auth-link a:hover {

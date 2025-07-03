@@ -96,6 +96,10 @@ body.dark-mode .login-prompt {
     color: #e0e0e0;
 }
 
+body.dark-mode .login-prompt a {
+    color: #2196f4;
+}
+
 body.dark-mode .link {
     color: #61dafb;
 }
@@ -184,10 +188,10 @@ body.dark-mode .sort-controls select {
 }
 
 body.dark-mode .sort-controls-container button {
-    background-color: #3a3a3a;
+    background-color: #6a72d9;
     color: #e0e0e0;
 }
 
 body.dark-mode .sort-controls-container button:hover {
-    background-color: #555;
+    background-color: #5a63c7;
 }
