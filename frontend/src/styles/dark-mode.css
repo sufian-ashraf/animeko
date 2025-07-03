@@ -1,0 +1,193 @@
+/* Dark Mode Styles */
+
+body.dark-mode {
+    background-color: #1a1a1a; /* Dark grey background */
+    color: #e0e0e0; /* Light grey text */
+}
+
+/* Navigation Bar */
+body.dark-mode .App-header {
+}
+
+body.dark-mode .brand {
+    color: #61dafb; /* Keep brand color or adjust for dark mode */
+}
+
+body.dark-mode .search-bar input {
+    background-color: #3a3a3a;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .search-bar input:focus {
+    border-color: #61dafb;
+}
+
+body.dark-mode .search-bar button {
+    background-color: #61dafb;
+    color: #1a1a1a;
+}
+
+body.dark-mode .search-bar button:hover {
+    background-color: #21a1f1;
+}
+
+body.dark-mode .nav-link,
+body.dark-mode .profile-button {
+    color: #e0e0e0;
+}
+
+body.dark-mode .dropdown-menu {
+    background-color: #282c34;
+    border: 1px solid #3a3a3a;
+}
+
+body.dark-mode .dropdown-item {
+    color: #e0e0e0;
+}
+
+body.dark-mode .dropdown-item:hover {
+    background-color: #61dafb;
+    color: #1a1a1a;
+}
+
+/* General Page Styles (e.g., cards, sections) */
+body.dark-mode .anime-header-card,
+body.dark-mode .cast-card,
+body.dark-mode .your-review-form,
+body.dark-mode .review-card,
+body.dark-mode .list-card,
+body.dark-mode .no-lists,
+body.dark-mode .loading,
+body.dark-mode .error {
+    background-color: #282c34;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: #3a3a3a;
+}
+
+body.dark-mode .anime-card {
+    background-color: #282c34;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid #3a3a3a;
+}
+
+body.dark-mode .anime-name,
+body.dark-mode .anime-desc,
+body.dark-mode .anime-company,
+body.dark-mode .anime-genres,
+body.dark-mode .anime-card-genre,
+body.dark-mode .anime-card-year,
+body.dark-mode .anime-card-description,
+body.dark-mode .cast-info strong,
+body.dark-mode .cast-info p,
+body.dark-mode .reviews-section h3,
+body.dark-mode .your-review-form h4,
+body.dark-mode .all-reviews-list h4,
+body.dark-mode .reviewer-name,
+body.dark-mode .review-content,
+body.dark-mode .list-card-title,
+body.dark-mode .list-owner,
+body.dark-mode .list-item-count,
+body.dark-mode .list-date,
+body.dark-mode .no-rating,
+body.dark-mode .avg-number,
+body.dark-mode .anime-rank,
+body.dark-mode .login-prompt {
+    color: #e0e0e0;
+}
+
+body.dark-mode .link {
+    color: #61dafb;
+}
+
+body.dark-mode .link:hover {
+    color: #21a1f1;
+}
+
+body.dark-mode .favorite-btn {
+    border-color: #555;
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+}
+
+body.dark-mode .favorite-btn:hover:not(:disabled) {
+    background-color: #555;
+    border-color: #666;
+    color: #e0e0e0;
+}
+
+body.dark-mode .favorite-btn.favorited,
+body.dark-mode .favorite-btn.favorited:visited {
+    background-color: #61dafb;
+    border-color: #61dafb;
+    color: #1a1a1a !important;
+}
+
+body.dark-mode .favorite-btn.favorited:hover:not(:disabled) {
+    background-color: #21a1f1;
+    border-color: #21a1f1;
+    color: #1a1a1a !important;
+}
+
+body.dark-mode .star-selection .star {
+    color: #555;
+}
+
+body.dark-mode .star-selection .star.selected {
+    color: #ffb400;
+}
+
+body.dark-mode .star-selection .star:hover,
+body.dark-mode .star-selection .star:hover ~ .star {
+    color: #ffd54f;
+}
+
+body.dark-mode textarea {
+    background-color: #3a3a3a;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .your-review-form button {
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+}
+
+body.dark-mode .your-review-form button:hover:not(:disabled) {
+    background-color: #555;
+}
+
+body.dark-mode .load-more-btn {
+    background: #3a3a3a;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .load-more-btn:hover:not(:disabled) {
+    background: #555;
+    border-color: #666;
+}
+
+body.dark-mode .spinner {
+    border-top-color: #61dafb;
+}
+
+/* Home Page Sort Controls */
+body.dark-mode .sort-controls label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .sort-controls select {
+    background-color: #3a3a3a;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .sort-controls-container button {
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+}
+
+body.dark-mode .sort-controls-container button:hover {
+    background-color: #555;
+}

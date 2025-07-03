@@ -1,6 +1,7 @@
 import React from 'react';
 import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import {AuthProvider} from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import {ProtectedRoute} from './components/ProtectedRoute';
 import AdminRoute from './components/admin/AdminRoute';
 import Navigation from './components/HomeNavigation';
@@ -38,9 +39,11 @@ import './styles/Home.css';
 import './styles/NotFound.css';
 import './styles/MyLists.css';
 import './styles/ListDetail.css';
+import './styles/dark-mode.css';
 
 function App() {
     return (<AuthProvider>
+        <ThemeProvider>
         <AlertHandler />
         <Router>
             <LogoutHandler />
@@ -128,6 +131,7 @@ function App() {
                 </main>
             </div>
         </Router>
+        </ThemeProvider>
     </AuthProvider>);
 }
 

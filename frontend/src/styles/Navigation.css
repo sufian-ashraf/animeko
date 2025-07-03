@@ -62,6 +62,7 @@
 .nav-right {
     display: flex;
     align-items: center;
+    gap: 1rem; /* Added spacing between buttons */
     margin-left: auto; /* Pushes nav-right to the far right within nav-main-links */
 }
 

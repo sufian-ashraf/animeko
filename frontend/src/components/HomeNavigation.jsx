@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import '../styles/Navigation.css';
 
 function Navigation() {
     const { user, logout, loading, isAdmin } = useAuth();
+    const { isDarkMode, toggleDarkMode } = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
     const [searchTitle, setSearchTitle] = useState('');
@@ -69,6 +71,9 @@ function Navigation() {
                 </div>
 
                 <div className="nav-right">
+                    <button onClick={toggleDarkMode} className="nav-link theme-toggle-button">
+                        {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                    </button>
                     {user ? (
                         <div className="user-menu" ref={dropdownRef}>
                             <button onClick={() => setDropdownOpen(!dropdownOpen)} className="nav-link profile-button">
