@@ -1,24 +1,25 @@
 import pool from '../db.js';
-import { getMediaUrl } from '../utils/mediaUtils.js';
 
 class Anime {
     static async getAll({ title, genre, year, sortField = 'name', sortOrder = 'asc' }) {
         try {
             let query = `
                 SELECT 
-                    anime_id AS id,  
-                    title,
-                    release_date,  
-                    company_id,  
-                    rating,
-                    rank,  
+                    a.anime_id AS id,
+                    a.title,
+                    a.release_date,
+                    a.company_id,
+                    a.rating,
+                    a.rank,
+                    m.url AS "imageUrl",
                     (SELECT STRING_AGG(g.name, ', ')
                      FROM anime_genre ag
                      JOIN genre g ON ag.genre_id = g.genre_id
-                     WHERE ag.anime_id = anime.anime_id) AS genre,
-                    EXTRACT(YEAR FROM release_date) AS year,
-                    synopsis AS description
-                FROM anime
+                     WHERE ag.anime_id = a.anime_id) AS genre,
+                    EXTRACT(YEAR FROM a.release_date) AS year,
+                    a.synopsis AS description
+                FROM anime a
+                LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'image'
                 WHERE 1=1
             `;
 
@@ -35,7 +36,7 @@ class Anime {
                 query += ` AND EXISTS (
                     SELECT 1 FROM anime_genre ag
                     JOIN genre g ON ag.genre_id = g.genre_id
-                    WHERE ag.anime_id = anime.anime_id
+                    WHERE ag.anime_id = a.anime_id
                     AND g.name LIKE $${paramCount++}
                 )`;
             }
@@ -44,7 +45,7 @@ class Anime {
                 const parsedYear = parseInt(year, 10);
                 if (!isNaN(parsedYear)) {
                     params.push(parsedYear);
-                    query += ` AND EXTRACT(YEAR FROM release_date) = ${paramCount++}`;
+                    query += ` AND EXTRACT(YEAR FROM a.release_date) = $${paramCount++}`;
                 } else {
                     console.warn(`Invalid year provided: ${year}. Skipping year filter.`);
                 }
@@ -80,11 +81,7 @@ class Anime {
 
             query += ` ORDER BY ${orderBy}`;
             const result = await pool.query(query, params);
-            const animeWithImages = await Promise.all(result.rows.map(async anime => {
-                anime.imageUrl = await getMediaUrl('anime', anime.anime_id, 'image');
-                return anime;
-            }));
-            return animeWithImages;
+            return result.rows;
         } catch (error) {
             console.error("Error in Anime.getAll:", error);
             throw error;
@@ -93,12 +90,14 @@ class Anime {
 
     static async getById(animeId) {
         const animeResult = await pool.query(`
-            SELECT anime_id AS id,
-                   title,
-                   synopsis,
-                   company_id
-            FROM anime
-            WHERE anime_id = $1`, [animeId]);
+            SELECT a.anime_id AS id,
+                   a.title,
+                   a.synopsis,
+                   a.company_id,
+                   m.url AS "imageUrl"
+            FROM anime a
+            LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'image'
+            WHERE a.anime_id = $1`, [animeId]);
 
         if (animeResult.rows.length === 0) {
             return null;
@@ -136,7 +135,6 @@ class Anime {
             WHERE ac.anime_id = $1`, [animeId]);
 
         anime.cast = castResult.rows;
-        anime.imageUrl = await getMediaUrl('anime', animeId, 'image');
 
         return anime;
     }

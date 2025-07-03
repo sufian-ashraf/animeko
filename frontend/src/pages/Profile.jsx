@@ -523,7 +523,6 @@ export default function Profile() {
                         <button onClick={() => setIsEditing(true)}>
                             Edit Profile
                         </button>
-                        <button onClick={logout}>Logout</button>
                     </>) : (<button onClick={() => navigate('/profile')}>
                         Back to My Profile
                     </button>)}
