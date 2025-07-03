@@ -104,10 +104,9 @@ export default function ListDetail() {
         return item.image_url || item.anime?.image_url || placeholderImg;
     };
 
-    // Add a new anime entry (only if owner)
     const handleAddAnime = async (animeId) => {
         if (!isOwner || !token) return;
-        
+
         const baseUrl = 'http://localhost:5000';
 
         try {
@@ -130,7 +129,7 @@ export default function ListDetail() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     title: list.title, // Include the title to prevent it from being cleared
                     animeEntries: updatedItems
                 })
@@ -141,33 +140,16 @@ export default function ListDetail() {
                 throw new Error(errorData.error || `Failed to add anime: ${response.status}`);
             }
 
-            // Optimistically update the UI
-            setList(prev => ({
-                ...prev,
-                items: updatedItems
-            }));
+            // On success, update the list with the returned data
+            const updatedList = await response.json();
+            setList({
+                ...updatedList,
+                items: Array.isArray(updatedList.items) ? updatedList.items : []
+            });
+
         } catch (err) {
             console.error('Error adding anime:', err);
             setError(err.message);
-            
-            // Revert optimistic update on error
-            try {
-                const res = await fetch(`${baseUrl}/api/lists/${id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (res.ok) {
-                    const updatedList = await res.json();
-                    setList({
-                        ...updatedList,
-                        items: Array.isArray(updatedList.items) ? updatedList.items : []
-                    });
-                }
-            } catch (fetchErr) {
-                console.error('Failed to refresh list after error:', fetchErr);
-            }
         }
     };
 
@@ -176,7 +158,7 @@ export default function ListDetail() {
         if (!isOwner || !token) return;
 
         const baseUrl = 'http://localhost:5000';
-        
+
         try {
             const updatedEntries = list.items.filter((i) => i.anime_id !== animeId);
 
@@ -186,9 +168,9 @@ export default function ListDetail() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     title: list.title,
-                    animeEntries: updatedEntries 
+                    animeEntries: updatedEntries
                 })
             });
 
@@ -197,32 +179,16 @@ export default function ListDetail() {
                 throw new Error(errorData.error || `Failed to remove anime: ${response.status}`);
             }
 
-            // Optimistically update the UI
-            setList(prev => ({
-                ...prev,
-                items: updatedEntries
-            }));
+            // On success, update the list with the returned data
+            const updatedList = await response.json();
+            setList({
+                ...updatedList,
+                items: Array.isArray(updatedList.items) ? updatedList.items : []
+            });
+
         } catch (err) {
             console.error('Error removing anime:', err);
             setError(err.message);
-            // Revert optimistic update on error
-            try {
-                const res = await fetch(`${baseUrl}/api/lists/${id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (res.ok) {
-                    const updatedList = await res.json();
-                    setList({
-                        ...updatedList,
-                        items: Array.isArray(updatedList.items) ? updatedList.items : []
-                    });
-                }
-            } catch (fetchErr) {
-                console.error('Failed to refresh list after error:', fetchErr);
-            }
         }
     };
 

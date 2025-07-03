@@ -121,18 +121,67 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    width: 100%; /* Ensure the container spans the full width */
 }
 
+.anime-name {
+    margin: 0;
+    font-size: 2rem;
+    flex-grow: 1; /* Allow title to take available space */
+    margin-right: 1rem; /* Add space to the right of the title */
+}
+
+/* Simplistic and stylish favorite button */
 .favorite-btn {
     background: transparent;
-    border: none;
-    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem; /* Adjusted padding */
+    width: 100px; /* Fixed width to encourage wrapping */
+    height: 60px; /* Taller height */
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
     cursor: pointer;
-    padding: 0.25rem 0.5rem;
+    transition: all 0.2s ease;
+    display: flex; /* Changed to flex */
+    flex-direction: column; /* Stack content vertically */
+    align-items: center;
+    justify-content: center; /* Center content */
+    text-align: center; /* Center text */
+    gap: 0.2rem; /* Reduced gap */
+    flex-shrink: 0;
+    white-space: normal; /* Allow text to wrap */
 }
 
-.favorite-btn.favorited {
-    color: gold;
+.favorite-btn .favorite-icon {
+    font-size: 1.2em; /* Make the star icon a bit larger relative to button font size */
+    line-height: 1;
+}
+
+.favorite-btn .favorite-text {
+    font-size: 0.8em; /* Make the text slightly smaller */
+    line-height: 1.2;
+}
+
+.favorite-btn:hover:not(:disabled) {
+    background-color: #f7f7f7;
+    border-color: #ccc;
+    color: #000;
+}
+
+/* Favorited state */
+.favorite-btn.favorited,
+.favorite-btn.favorited:visited {
+    background-color: #61dafb; /* Search button color */
+    border-color: #61dafb;
+    color: #1a1a1a !important; /* Dark text for contrast */
+}
+
+.favorite-btn.favorited:hover:not(:disabled) {
+    background-color: #21a1f1; /* Search button hover color */
+    border-color: #21a1f1;
+    color: #1a1a1a !important;
 }
 
 .favorite-btn:disabled {

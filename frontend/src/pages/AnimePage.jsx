@@ -375,13 +375,16 @@ export default function AnimePage() {
             <div className="anime-meta">
                 <div className="anime-meta-header">
                     <h2 className="anime-name">{title}</h2>
-                    <button
-                        className={`favorite-btn ${isFavorite ? 'favorited' : ''}`}
-                        onClick={handleToggleFavorite}
-                        disabled={favLoading}
-                    >
-                        {favLoading ? '…' : isFavorite ? '★ Unfavorite' : '☆ Favorite'}
-                    </button>
+                    {user && (
+                        <button
+                            className={`favorite-btn ${isFavorite ? 'favorited' : ''}`}
+                            onClick={handleToggleFavorite}
+                            disabled={favLoading}
+                        >
+                                                        <div className="favorite-icon">{isFavorite ? '★' : '☆'}</div>
+                            <div className="favorite-text">{favLoading ? '…' : isFavorite ? 'Remove from Favorite' : 'Add to Favorites'}</div>
+                        </button>
+                    )}
                 </div>
 
                 {/* ───── Average Rating & Rank ──────────── */}

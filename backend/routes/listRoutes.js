@@ -32,6 +32,19 @@ router.get('/all', async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────
+// 2.5) GET /api/lists/recent   (get the most recently created lists)
+// ──────────────────────────────────────────────────
+router.get('/recent', async (req, res) => {
+    try {
+        const lists = await List.getRecentLists();
+        res.json(lists);
+    } catch (err) {
+        console.error('[GET /lists/recent] Error:', err);
+        res.status(500).json({error: 'Failed to fetch recent lists: ' + err.message});
+    }
+});
+
+// ──────────────────────────────────────────────────
 // 3) GET /api/lists/search/:keyword   (search lists by keyword)
 // ──────────────────────────────────────────────────
 router.get('/search/:keyword', async (req, res) => {
@@ -42,55 +55,6 @@ router.get('/search/:keyword', async (req, res) => {
     } catch (err) {
         console.error('Search error:', err);
         res.status(500).json({error: 'Search failed: ' + err.message});
-    }
-});
-
-// ──────────────────────────────────────────────────
-// 4) GET /api/lists/anime/:animeId    (get lists containing a specific anime)
-// ──────────────────────────────────────────────────
-router.get('/anime/:animeId', async (req, res) => {
-    try {
-        const animeId = parseInt(req.params.animeId, 10);
-        
-        if (isNaN(animeId) || animeId <= 0) {
-            return res.status(400).json({error: 'Invalid anime ID'});
-        }
-
-        // Note: Anime existence check should ideally be in a separate Anime model method
-        // For now, we'll assume the List model handles it or it's checked elsewhere.
-
-        const lists = await List.getListsByAnimeId(animeId);
-        
-        res.json(lists);
-    } catch (err) {
-        console.error('[GET /lists/anime/:animeId] Error:', err);
-        res.status(500).json({error: 'Failed to fetch lists containing this anime: ' + err.message});
-    }
-});
-
-// ──────────────────────────────────────────────────
-// 4) POST /api/lists/        (create a new list)
-// ──────────────────────────────────────────────────
-router.post('/', authenticate, async (req, res) => {
-    try {
-        const { title, animeEntries = [] } = req.body;
-        const userId = req.user.id;
-
-        // Validate input
-        if (!title || typeof title !== 'string' || title.trim() === '') {
-            return res.status(400).json({ error: 'List title is required and must be a non-empty string' });
-        }
-
-        const newList = await List.createList({ userId, title, animeEntries });
-        
-        // Fetch the newly created list with item count for response
-        const result = await List.getListById(newList.id);
-        
-        res.status(201).json(result);
-        
-    } catch (err) {
-        console.error('[POST /lists] Error:', err);
-        res.status(500).json({ error: 'Failed to create list: ' + err.message });
     }
 });
 

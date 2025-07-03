@@ -39,12 +39,11 @@ function MyLists() {
         }
     }, [token]);
 
-    // Create new list
     const handleCreate = async (e) => {
         e.preventDefault();
         const title = newTitle.trim();
         if (!title) return;
-        
+
         try {
             const response = await fetch('/api/lists', {
                 method: 'POST',
@@ -52,18 +51,19 @@ function MyLists() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ title })
+                body: JSON.stringify({title})
             });
-            
+
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));
                 throw new Error(error.message || 'Failed to create list');
             }
-            
+
             const createdList = await response.json();
-            setLists(prevLists => [...prevLists, createdList]);
-            setNewTitle('');
-            
+
+            // Redirect to the new list's detail page
+            window.location.href = `/my-lists/${createdList.id}`;
+
         } catch (error) {
             console.error('Error creating list:', error);
             alert(error.message || 'Failed to create list');

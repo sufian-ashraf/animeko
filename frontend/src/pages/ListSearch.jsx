@@ -1,116 +1,89 @@
 // src/pages/ListSearch.js
-import React, {useState, useEffect} from 'react';
-import {Link, useNavigate} from 'react-router-dom';
-import {useAuth} from '../contexts/AuthContext';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import '../styles/ListSearch.css';
 
 export default function ListSearch() {
-    const {token} = useAuth();
     const [lists, setLists] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const navigate = useNavigate();
 
-    const fetchLists = async (keyword = '') => {
+    const fetchLists = useCallback(async (keyword) => {
         setLoading(true);
-        setError('');
+        setError(null);
+        const endpoint = keyword
+            ? `/api/lists/search/${encodeURIComponent(keyword)}`
+            : '/api/lists/recent'; // Use the new 'recent' endpoint
+
         try {
-            const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-            const endpoint = keyword && keyword.trim() !== ''
-                ? `/api/lists/search/${encodeURIComponent(keyword.trim())}`
-                : '/api/lists/all';
-
-            const response = await fetch(`${baseUrl}${endpoint}`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
+            const response = await fetch(endpoint);
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({
-                    error: `HTTP error! status: ${response.status}`
-                }));
-                throw new Error(errorData.error || `Error: ${response.status}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-
             const data = await response.json();
             setLists(Array.isArray(data) ? data : []);
         } catch (err) {
-            console.error('Error fetching lists:', err);
-            setError(err.message || 'Failed to fetch lists. Please try again.');
+            setError(err.message);
             setLists([]);
         } finally {
             setLoading(false);
         }
-    };
-
-    useEffect(() => {
-        fetchLists();
     }, []);
 
-    const handleSearchChange = (e) => {
-        const value = e.target.value;
-        setSearchTerm(value);
-        fetchLists(value);
-    };
+    // Fetch recent lists on initial load
+    useEffect(() => {
+        fetchLists('');
+    }, [fetchLists]);
 
-    const handleListClick = (listId) => {
-        navigate(`/my-lists/${listId}`);
+    // Handle search form submission
+    const handleSearch = (e) => {
+        e.preventDefault();
+        fetchLists(searchTerm.trim());
     };
 
     return (
         <div className="list-search-container">
-            <h2>Search Custom Lists</h2>
-            <div className="search-input-container">
+            <h2>Find Anime Lists</h2>
+
+            {/* Search Form */}
+            <form onSubmit={handleSearch} className="search-form">
                 <input
                     type="text"
-                    placeholder="Search lists by title..."
+                    placeholder="Search by keyword..."
                     value={searchTerm}
-                    onChange={handleSearchChange}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="search-input"
                 />
-            </div>
+                <button type="submit" className="search-button">Search</button>
+            </form>
+
+            {/* Loading and Error States */}
             {loading && (
                 <div className="spinner-container">
                     <div className="spinner"></div>
                 </div>
             )}
-            {error && <p className="error">{error}</p>}
+            {error && <p className="error-message">Error: {error}</p>}
+
+            {/* List Results */}
             {!loading && !error && (
-                <div className="list-results">
-                    {lists.length === 0 ? (
-                        <div className="no-results">No lists found.</div>
+                <div className="lists-grid">
+                    {lists.length > 0 ? (
+                        lists.map(list => (
+                            <div key={list.id} className="list-card">
+                                <Link to={`/my-lists/${list.id}`} className="list-link">
+                                    <h3 className="list-title">{list.title}</h3>
+                                    <p className="list-owner">by {list.owner_username}</p>
+                                    <p className="list-item-count">{list.item_count} items</p>
+                                    <p className="list-created-date">
+                                        Created: {new Date(list.created_at).toLocaleDateString()}
+                                    </p>
+                                </Link>
+                            </div>
+                        ))
                     ) : (
-                        <div className="list-cards-grid">
-                            {lists.map(list => (
-                                <div
-                                    key={list.id}
-                                    onClick={() => handleListClick(list.id)}
-                                    className="list-card"
-                                    tabIndex={0}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
-                                            handleListClick(list.id);
-                                        }
-                                    }}
-                                >
-                                    <h3 className="list-title">
-                                        <Link to={`/my-lists/${list.id}`}>{list.title}</Link>
-                                    </h3>
-                                    <div className="list-meta">
-                                        <span className="owner-text">by user #{list.user_id}</span>
-                                        {list.created_at && (
-                                            <span className="date-text">
-                                                {new Date(list.created_at).toLocaleDateString()}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        <p>No lists found.</p>
                     )}
                 </div>
             )}
