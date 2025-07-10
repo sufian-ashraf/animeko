@@ -140,11 +140,12 @@ const AuthProvider = ({children}) => {
                 }, body: JSON.stringify({username, password})
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-                throw new Error(data.message || 'Login failed. Please check your credentials.');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Login failed. Please check your credentials.');
             }
+
+            const data = await response.json();
 
             setToken(data.token);
 
@@ -240,7 +241,7 @@ const AuthProvider = ({children}) => {
             logoutTrigger,
             resetLogoutTrigger
         }}>
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
 };

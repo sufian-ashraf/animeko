@@ -25,7 +25,7 @@ export default function AnimePage() {
     // Reviews state
     const [reviews, setReviews] = useState([]);
     const [userReview, setUserReview] = useState(null);
-    const [reviewForm, setReviewForm] = useState({ rating: 5, content: '' });
+    const [reviewForm, setReviewForm] = useState({ rating: 0, content: '' });
     const [reviewLoading, setReviewLoading] = useState(false);
     const [reviewError, setReviewError] = useState(null);
     const [submittingReview, setSubmittingReview] = useState(false);
@@ -381,7 +381,7 @@ export default function AnimePage() {
                             onClick={handleToggleFavorite}
                             disabled={favLoading}
                         >
-                                                        <div className="favorite-icon">{isFavorite ? '★' : '☆'}</div>
+                                                        <div className="favorite-icon">{isFavorite ? '❤️' : '🤍'}</div>
                             <div className="favorite-text">{favLoading ? '…' : isFavorite ? 'Remove from Favorite' : 'Add to Favorites'}</div>
                         </button>
                     )}

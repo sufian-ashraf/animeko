@@ -99,3 +99,15 @@
 .auth-link a:hover {
     text-decoration: underline;
 }
+
+.error-message {
+    color: #d32f2f; /* A strong red for error messages */
+    background-color: #ffebee; /* Light red background */
+    border: 1px solid #ef9a9a; /* Slightly darker red border */
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 0.95em;
+    font-weight: 500;
+}
