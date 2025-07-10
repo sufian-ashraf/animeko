@@ -46,8 +46,8 @@ function App() {
     return (<AuthProvider>
         <ThemeProvider>
         <AlertProvider>
-        <AlertHandler />
         <Router>
+            <AlertHandler />
             <LogoutHandler />
             <div className="App">
                 <header className="App-header">

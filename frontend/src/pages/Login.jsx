@@ -40,7 +40,7 @@ const Login = () => {
             setIsLoading(true);
             await login(username, password);
             console.log('Login successful, redirecting to:', redirectUrl);
-            navigate(redirectUrl, {replace: true});
+            navigate(redirectUrl, {replace: true, state: { alert: { type: 'success', message: 'Login successful', duration: 3000 } } });
         } catch (err) {
             console.error('Login error caught in Login.jsx:', err);
             showAlert('error', err.message || 'Login failed. Please check your credentials.');
