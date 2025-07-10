@@ -1,30 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import '../styles/Alert.css'; // We will create this CSS file
+import '../styles/Alert.css';
 
-const Alert = ({ message, type, duration = 5000, onClose }) => {
-    const [visible, setVisible] = useState(!!message);
+const Alert = ({ id, message, type, duration = 5000, onClose, index }) => {
+    const [visible, setVisible] = useState(true);
 
     useEffect(() => {
-        setVisible(!!message);
         if (message) {
             const timer = setTimeout(() => {
                 setVisible(false);
-                if (onClose) {
-                    onClose();
-                }
+                onClose(id); // Call onClose with the alert's ID
             }, duration);
             return () => clearTimeout(timer);
         }
-    }, [message, duration, onClose]);
+    }, [message, duration, onClose, id]);
 
-    if (!visible || !message) return null;
+    if (!visible) return null;
 
     const alertClass = `alert alert-${type || 'info'}`;
+    const topPosition = 20 + (index * 70); // Adjust 70px based on alert height + margin
 
     return (
-        <div className={alertClass} role="alert">
+        <div className={alertClass} role="alert" style={{ top: `${topPosition}px` }}>
             {message}
-            <button type="button" className="close" onClick={() => setVisible(false)} aria-label="Close">
+            <button type="button" className="close" onClick={() => {
+                setVisible(false);
+                onClose(id);
+            }} aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
         </div>

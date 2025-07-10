@@ -1,25 +1,26 @@
 // frontend/src/components/AlertHandler.js
-import React, { useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React from 'react';
+import { useAlert } from '../contexts/AlertContext';
 import Alert from './Alert';
 
 const AlertHandler = () => {
-    const { logoutMessage, setLogoutMessage } = useAuth();
+    const { alerts, removeAlert } = useAlert();
 
-    useEffect(() => {
-        if (logoutMessage) {
-            const timer = setTimeout(() => {
-                setLogoutMessage(null);
-            }, 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [logoutMessage, setLogoutMessage]);
-
-    if (logoutMessage) {
-        return <Alert message={logoutMessage} type="success" onClose={() => setLogoutMessage(null)} />;
-    }
-
-    return null;
+    return (
+        <div className="alert-container">
+            {alerts.map((alert, index) => (
+                <Alert
+                    key={alert.id}
+                    id={alert.id}
+                    message={alert.message}
+                    type={alert.type}
+                    duration={alert.duration}
+                    onClose={removeAlert}
+                    index={index} // Pass index for stacking
+                />
+            ))}
+        </div>
+    );
 };
 
 export default AlertHandler;

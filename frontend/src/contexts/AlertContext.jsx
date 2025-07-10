@@ -1,29 +1,23 @@
 // frontend/src/contexts/AlertContext.jsx
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import Alert from '../components/Alert';
 
 const AlertContext = createContext(null);
 
 export const AlertProvider = ({ children }) => {
-    const [alert, setAlert] = useState(null);
+    const [alerts, setAlerts] = useState([]);
 
-    const showAlert = useCallback((type, message) => {
-        setAlert({ type, message });
+    const showAlert = useCallback((type, message, duration = 5000) => {
+        const newId = Date.now() + Math.random(); // More robust unique ID
+        const newAlert = { id: newId, type, message, duration };
+        setAlerts(prevAlerts => [...prevAlerts, newAlert]);
     }, []);
 
-    const closeAlert = () => {
-        setAlert(null);
-    };
+    const removeAlert = useCallback((id) => {
+        setAlerts(prevAlerts => prevAlerts.filter(alert => alert.id !== id));
+    }, []);
 
     return (
-        <AlertContext.Provider value={{ showAlert }}>
-            {alert && (
-                <Alert
-                    message={alert.message}
-                    type={alert.type}
-                    onClose={closeAlert}
-                />
-            )}
+        <AlertContext.Provider value={{ showAlert, removeAlert, alerts }}>
             {children}
         </AlertContext.Provider>
     );
