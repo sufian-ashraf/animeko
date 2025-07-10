@@ -92,7 +92,17 @@ body.dark-mode .list-date,
 body.dark-mode .no-rating,
 body.dark-mode .avg-number,
 body.dark-mode .anime-rank,
-body.dark-mode .login-prompt {
+body.dark-mode .login-prompt,
+body.dark-mode .review-timestamp,
+body.dark-mode .review-rating,
+body.dark-mode .anime-desc,
+body.dark-mode .cast-card p,
+body.dark-mode .no-cast,
+body.dark-mode .anime-loading,
+body.dark-mode .your-review-form label,
+body.dark-mode .no-reviews,
+body.dark-mode .review-body,
+body.dark-mode .owner-text {
     color: #e0e0e0;
 }
 
