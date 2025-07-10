@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import {dirname} from 'path';
 import {fileURLToPath} from 'url';
-import pool from './db.js'; // ✅ import shared pool
+import pool from './db.js'; // import shared pool
 // import middlewares
 import authenticate from './middlewares/authenticate.js';
 

@@ -62,7 +62,7 @@ function Home() {
                             <option value="desc">Descending</option>
                         </select>
                     </div>
-                    <button onClick={handleApplySort}>Apply Sort</button>
+                    <button onClick={handleApplySort}>Apply</button>
                 </div>
                 {loading && (
                     <div className="spinner-container">
