@@ -11,21 +11,24 @@
 }
 
 .alert {
-    padding: 15px;
-    margin-bottom: 10px; /* Space between stacked alerts */
+    padding: 20px;
+    margin-bottom: 1px; /* Minimal space between stacked alerts */
     border: 1px solid transparent;
     border-radius: 4px;
-    position: relative; /* Changed from fixed to relative for stacking within container */
     min-width: 300px;
     text-align: center;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     pointer-events: auto; /* Re-enable clicks on the alert box itself */
 }
 
+.alert-content {
+    position: relative;
+}
+
 .alert .close {
     position: absolute;
-    top: 5px;
-    right: 10px;
+    top: -15px; /* Adjusted to be 5px from the top of the .alert box (20px padding - 15px) */
+    right: -10px; /* Adjusted to be 10px from the right of the .alert box (20px padding - 10px) */
     color: inherit;
     opacity: .4;
     background: none;

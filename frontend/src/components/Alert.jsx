@@ -21,13 +21,15 @@ const Alert = ({ id, message, type, duration = 5000, onClose, index }) => {
 
     return (
         <div className={alertClass} role="alert" style={{ top: `${topPosition}px` }}>
-            {message}
-            <button type="button" className="close" onClick={() => {
-                setVisible(false);
-                onClose(id);
-            }} aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <div className="alert-content">
+                {message}
+                <button type="button" className="close" onClick={() => {
+                    setVisible(false);
+                    onClose(id);
+                }} aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
         </div>
     );
 };
