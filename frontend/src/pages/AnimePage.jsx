@@ -21,6 +21,12 @@ export default function AnimePage() {
     // Favorite state
     const [isFavorite, setIsFavorite] = useState(false);
     const [favLoading, setFavLoading] = useState(false);
+
+    // Anime Library state
+    const [libraryStatus, setLibraryStatus] = useState(null);
+    const [libraryLoading, setLibraryLoading] = useState(true);
+    const [libraryError, setLibraryError] = useState(null);
+    const [showStatusDropdown, setShowStatusDropdown] = useState(false);
     
     // Reviews state
     const [reviews, setReviews] = useState([]);
@@ -249,6 +255,40 @@ export default function AnimePage() {
             .catch(console.error);
     }, [animeId, token]);
 
+    // ───────────────────────────────────────────────────
+    // 4) Fetch anime library status
+    // ───────────────────────────────────────────────────
+    useEffect(() => {
+        if (!token) {
+            setLibraryStatus(null);
+            setLibraryLoading(false);
+            return;
+        }
+
+        setLibraryLoading(true);
+        fetch(`/api/anime-library/${animeId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then((r) => {
+                if (!r.ok) {
+                    if (r.status === 404) return { status: null }; // Not in library
+                    throw new Error(`Status ${r.status}`);
+                }
+                return r.json();
+            })
+            .then((data) => {
+                setLibraryStatus(data.status);
+            })
+            .catch((err) => {
+                console.error('Fetch library status error:', err);
+                setLibraryError('Failed to load library status.');
+                setLibraryStatus(null);
+            })
+            .finally(() => {
+                setLibraryLoading(false);
+            });
+    }, [animeId, token]);
+
     // Toggle favorite
     const handleToggleFavorite = () => {
         if (!token) return;
@@ -264,6 +304,85 @@ export default function AnimePage() {
             })
             .catch(console.error)
             .finally(() => setFavLoading(false));
+    };
+
+    // Handle adding anime to library
+    const handleAddToLibrary = async (status) => {
+        if (!token || libraryLoading) return;
+        setLibraryLoading(true);
+        try {
+            const res = await fetch('/api/anime-library', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ animeId: +animeId, status }),
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Failed to add anime to library');
+            }
+            setLibraryStatus(status);
+            setShowStatusDropdown(false);
+        } catch (err) {
+            console.error('Error adding to library:', err);
+            setLibraryError(err.message);
+        } finally {
+            setLibraryLoading(false);
+        }
+    };
+
+    // Handle updating anime status in library
+    const handleUpdateLibraryStatus = async (newStatus) => {
+        if (!token || libraryLoading) return;
+        setLibraryLoading(true);
+        try {
+            const res = await fetch(`/api/anime-library/${animeId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Failed to update library status');
+            }
+            setLibraryStatus(newStatus);
+            setShowStatusDropdown(false);
+        } catch (err) {
+            console.error('Error updating library status:', err);
+            setLibraryError(err.message);
+        } finally {
+            setLibraryLoading(false);
+        }
+    };
+
+    // Handle removing anime from library
+    const handleRemoveFromLibrary = async () => {
+        if (!token || libraryLoading) return;
+        setLibraryLoading(true);
+        try {
+            const res = await fetch(`/api/anime-library/${animeId}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Failed to remove anime from library');
+            }
+            setLibraryStatus(null);
+            setShowStatusDropdown(false);
+        } catch (err) {
+            console.error('Error removing from library:', err);
+            setLibraryError(err.message);
+        } finally {
+            setLibraryLoading(false);
+        }
     };
 
     // ───────────────────────────────────────────────────
@@ -384,6 +503,56 @@ export default function AnimePage() {
                                                         <div className="favorite-icon">{isFavorite ? '❤️' : '🤍'}</div>
                             <div className="favorite-text">{favLoading ? '…' : isFavorite ? 'Remove from Favorite' : 'Add to Favorites'}</div>
                         </button>
+                    )}
+
+                    {user && (
+                        <div className="anime-library-controls">
+                            {libraryLoading ? (
+                                <span className="loading-text">Loading library status...</span>
+                            ) : libraryError ? (
+                                <span className="error-text">{libraryError}</span>
+                            ) : (
+                                <div className="status-dropdown-container">
+                                    {libraryStatus ? (
+                                        <button
+                                            className="status-button current-status"
+                                            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                                        >
+                                            {`Status: ${libraryStatus}`}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="status-button add-to-library"
+                                            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                                        >
+                                            Add to Library
+                                        </button>
+                                    )}
+
+                                    {showStatusDropdown && (
+                                        <div className="status-dropdown-menu">
+                                            {[ 'Watching', 'Completed', 'Planned to Watch', 'Dropped', 'On Hold'].map((status) => (
+                                                <button
+                                                    key={status}
+                                                    className={`dropdown-item ${libraryStatus === status ? 'selected' : ''}`}
+                                                    onClick={() => handleUpdateLibraryStatus(status)}
+                                                >
+                                                    {status}
+                                                </button>
+                                            ))}
+                                            {libraryStatus && (
+                                                <button
+                                                    className="dropdown-item remove-from-library"
+                                                    onClick={handleRemoveFromLibrary}
+                                                >
+                                                    Remove from Library
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
 

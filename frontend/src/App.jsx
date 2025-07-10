@@ -22,6 +22,7 @@ import Home from './pages/Home';
 import SearchResultsPage from './pages/SearchResultsPage';
 import NotFound from './pages/NotFound';
 import MyLists from './pages/MyLists';
+import MyLibrary from './pages/MyLibrary';
 import ListDetail from './pages/ListDetail';
 import ListSearch from './pages/ListSearch';
 import AdminDashboard from './pages/AdminDashboard';
@@ -39,6 +40,7 @@ import './styles/Navigation.css';
 import './styles/Home.css';
 import './styles/NotFound.css';
 import './styles/MyLists.css';
+import './styles/MyLibrary.css';
 import './styles/ListDetail.css';
 import './styles/dark-mode.css';
 
@@ -79,6 +81,12 @@ function App() {
                             path="/my-lists"
                             element={<ProtectedRoute>
                                 <MyLists/>
+                            </ProtectedRoute>}
+                        />
+                        <Route
+                            path="/my-library"
+                            element={<ProtectedRoute>
+                                <MyLibrary/>
                             </ProtectedRoute>}
                         />
 
