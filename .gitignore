@@ -1,8 +1,10 @@
-
 # Node.js
 node_modules/
 build/
 .env
+
+#Project Related Suggestions
+project_review/
 
 # Python
 __pycache__/
