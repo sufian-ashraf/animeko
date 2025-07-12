@@ -126,6 +126,10 @@ function MyLibrary() {
 
     return (
         <div className="my-library-container">
+            <div className="refresh-notice">
+                ⚠️ To see status changes made here, refresh the page
+            </div>
+            
             <h2>My Anime Library</h2>
 
             <div className="filter-controls">
