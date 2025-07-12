@@ -1,25 +1,45 @@
 // src/pages/Home.js
 import React, {useEffect, useState} from 'react';
-import AnimeCard from '../components/AnimeCard'; // Import the new component
+import AnimeCard from '../components/AnimeCard';
+import { useAuth } from '../contexts/AuthContext';
 
 // import the extracted styles
 import '../styles/Home.css';
 
 function Home() {
+    const { token } = useAuth();
     const [animeList, setAnimeList] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [sortField, setSortField] = useState('name'); // Actual sort field, triggers fetch
-    const [sortOrder, setSortOrder] = useState('asc'); // Actual sort order, triggers fetch
-    const [pendingSortField, setPendingSortField] = useState('name'); // For dropdown selection
-    const [pendingSortOrder, setPendingSortOrder] = useState('asc'); // For dropdown selection
+    const [sortField, setSortField] = useState('name');
+    const [sortOrder, setSortOrder] = useState('asc');
+    const [pendingSortField, setPendingSortField] = useState('name');
+    const [pendingSortOrder, setPendingSortOrder] = useState('asc');
+    const [favorites, setFavorites] = useState([]);
+
+    // Fetch favorites once when component mounts or token changes
+    useEffect(() => {
+        if (!token) {
+            setFavorites([]);
+            return;
+        }
+
+        fetch('/api/favorites', {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(r => r.json())
+            .then(favs => {
+                setFavorites(favs);
+            })
+            .catch(console.error);
+    }, [token]);
 
     useEffect(() => {
         const fetchAllAnime = async () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`/api/animes?sortField=${sortField}&sortOrder=${sortOrder}`); // Fetch all anime with sorting
+                const response = await fetch(`/api/animes?sortField=${sortField}&sortOrder=${sortOrder}`);
                 if (!response.ok) throw new Error(`Status ${response.status}`);
                 const data = await response.json();
                 setAnimeList(data);
@@ -77,7 +97,11 @@ function Home() {
 
                 <div className="anime-grid">
                     {animeList.map(anime => (
-                        <AnimeCard key={anime.id} anime={anime} />
+                        <AnimeCard 
+                            key={anime.id} 
+                            anime={anime} 
+                            initialFavoriteStatus={favorites.some(f => f.entityType === 'anime' && +f.entityId === +anime.id)}
+                        />
                     ))}
                 </div>
             </section>

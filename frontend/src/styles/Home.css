@@ -129,6 +129,32 @@
     text-decoration: none;
 }
 
+.anime-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: 2rem;
+    row-gap: 2rem;
+    padding: 2rem;
+}
+
+@media (max-width: 1200px) {
+    .anime-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .anime-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .anime-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .welcome-section h2 {

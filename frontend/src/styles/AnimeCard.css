@@ -1,5 +1,5 @@
 .anime-card {
-    background: white;
+    background: #f8f9fa;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -7,6 +7,9 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
 }
 
 .anime-card:hover {
@@ -24,7 +27,7 @@
 
 .anime-card-image {
     width: 100%;
-    height: 180px;
+    height: 250px;
     object-fit: cover;
 }
 

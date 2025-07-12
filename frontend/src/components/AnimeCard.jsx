@@ -4,26 +4,15 @@ import { useAuth } from '../contexts/AuthContext';
 import placeholder from '../images/image_not_available.jpg';
 import '../styles/AnimeCard.css';
 
-function AnimeCard({ anime }) {
+function AnimeCard({ anime, initialFavoriteStatus = false }) {
     const { user, token } = useAuth();
-    const [isFavorite, setIsFavorite] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(initialFavoriteStatus);
     const [libraryStatus, setLibraryStatus] = useState(null);
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [favLoading, setFavLoading] = useState(false);
 
     const validLibraryStatuses = ['Watching', 'Completed', 'Planned to Watch', 'Dropped', 'On Hold'];
-
-    // Fetch favorite status
-    useEffect(() => {
-        if (!user) return;
-        
-        fetch(`/api/favorites/${anime.id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(r => r.json())
-            .then(data => setIsFavorite(data.isFavorite))
-            .catch(console.error);
-    }, [anime.id, user, token]);
 
     // Fetch library status
     useEffect(() => {
@@ -42,17 +31,27 @@ function AnimeCard({ anime }) {
 
     const toggleFavorite = async (e) => {
         e.preventDefault(); // Prevent navigation
-        if (!user) return;
+        if (!token) return;
+        setFavLoading(true);
 
         try {
-            const method = isFavorite ? 'DELETE' : 'POST';
-            await fetch(`/api/favorites/${anime.id}`, {
-                method,
-                headers: { Authorization: `Bearer ${token}` }
+            const response = await fetch('/api/favorites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    entityType: 'anime',
+                    entityId: +anime.id
+                })
             });
-            setIsFavorite(!isFavorite);
+            const data = await response.json();
+            setIsFavorite(data.favorite);
         } catch (err) {
             console.error('Error toggling favorite:', err);
+        } finally {
+            setFavLoading(false);
         }
     };
 
@@ -121,6 +120,7 @@ function AnimeCard({ anime }) {
                         className={`favorite-btn ${isFavorite ? 'active' : ''}`}
                         onClick={toggleFavorite}
                         title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                        disabled={favLoading}
                     >
                         {isFavorite ? '❤️' : '🤍'}
                     </button>
