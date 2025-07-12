@@ -48,24 +48,40 @@ class UserAnimeStatus {
 
     // Retrieve all anime in a user's library, optionally filtered by status
     static async getUserLibrary(userId, status = null) {
-        let query = `
-            SELECT uas.*, a.title, a.alternative_title, a.episodes, a.synopsis, a.rating, m.url as poster_url
-            FROM user_anime_status uas
-            JOIN anime a ON uas.anime_id = a.anime_id
-            LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'poster'
-            WHERE uas.user_id = $1
-        `;
-        const queryParams = [userId];
+        try {
+            let query = `
+                SELECT 
+                    uas.user_id,
+                    uas.anime_id,
+                    uas.status,
+                    uas.episodes_watched,
+                    uas.updated_at,
+                    a.title,
+                    a.alternative_title,
+                    a.episodes,
+                    a.synopsis,
+                    a.rating,
+                    m.url AS "imageUrl"
+                FROM user_anime_status uas
+                JOIN anime a ON uas.anime_id = a.anime_id
+                LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'image'
+                WHERE uas.user_id = $1
+            `;
+            const queryParams = [userId];
 
-        if (status) {
-            query += ' AND uas.status = $2';
-            queryParams.push(status);
+            if (status) {
+                query += ' AND uas.status = $2';
+                queryParams.push(status);
+            }
+
+            query += ' ORDER BY uas.updated_at DESC';
+
+            const result = await pool.query(query, queryParams);
+            return result.rows;
+        } catch (error) {
+            console.error("Error in UserAnimeStatus.getUserLibrary:", error);
+            throw error;
         }
-
-        query += ' ORDER BY uas.updated_at DESC';
-
-        const result = await pool.query(query, queryParams);
-        return result.rows;
     }
 
     // Retrieve the status of a specific anime for the logged-in user

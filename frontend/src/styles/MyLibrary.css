@@ -44,7 +44,7 @@
 
 .library-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;
     justify-content: center;
 }
@@ -57,6 +57,12 @@
     text-align: center;
     padding-bottom: 15px;
     transition: transform 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
 }
 
 .library-item-card:hover {
@@ -66,22 +72,28 @@
 .library-item-card a {
     text-decoration: none;
     color: inherit;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .library-item-poster {
     width: 100%;
-    height: 250px; /* Fixed height for posters */
+    height: 280px; /* Increased height to match AnimeCard better */
     object-fit: cover;
     border-bottom: 1px solid var(--border-color);
 }
 
 .library-item-card h3 {
-    font-size: 1.1em;
-    margin: 10px 5px 5px;
+    font-size: 1rem;
+    margin: 0.5rem;
     color: var(--text-color);
-    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.3;
 }
 
 .library-item-card p {
@@ -94,7 +106,9 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 0 10px;
+    padding: 0.5rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
 }
 
 .library-item-actions select {
