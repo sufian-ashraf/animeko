@@ -8,6 +8,9 @@ import '../styles/AnimePage.css';
 
 const roundToHalf = (num) => Math.round(num * 2) / 2;
 
+// Valid library statuses
+const validLibraryStatuses = ['Watching', 'Completed', 'Planned to Watch', 'Dropped', 'On Hold'];
+
 export default function AnimePage() {
     const { animeId } = useParams();
     const navigate = useNavigate();
@@ -265,7 +268,9 @@ export default function AnimePage() {
             return;
         }
 
+        let isMounted = true;
         setLibraryLoading(true);
+        
         fetch(`/api/anime-library/${animeId}`, {
             headers: { Authorization: `Bearer ${token}` },
         })
@@ -277,16 +282,26 @@ export default function AnimePage() {
                 return r.json();
             })
             .then((data) => {
-                setLibraryStatus(data.status);
+                if (isMounted) {
+                    setLibraryStatus(data.status);
+                }
             })
             .catch((err) => {
-                console.error('Fetch library status error:', err);
-                setLibraryError('Failed to load library status.');
-                setLibraryStatus(null);
+                if (isMounted) {
+                    console.error('Fetch library status error:', err);
+                    setLibraryError('Failed to load library status.');
+                    setLibraryStatus(null);
+                }
             })
             .finally(() => {
-                setLibraryLoading(false);
+                if (isMounted) {
+                    setLibraryLoading(false);
+                }
             });
+
+        return () => {
+            isMounted = false;
+        };
     }, [animeId, token]);
 
     // Toggle favorite
@@ -325,9 +340,10 @@ export default function AnimePage() {
             }
             setLibraryStatus(status);
             setShowStatusDropdown(false);
+            setLibraryError(null);
         } catch (err) {
             console.error('Error adding to library:', err);
-            setLibraryError(err.message);
+            setLibraryError(err.message || 'Network error. Please try again.');
         } finally {
             setLibraryLoading(false);
         }
@@ -352,9 +368,10 @@ export default function AnimePage() {
             }
             setLibraryStatus(newStatus);
             setShowStatusDropdown(false);
+            setLibraryError(null);
         } catch (err) {
             console.error('Error updating library status:', err);
-            setLibraryError(err.message);
+            setLibraryError(err.message || 'Network error. Please try again.');
         } finally {
             setLibraryLoading(false);
         }
@@ -377,9 +394,10 @@ export default function AnimePage() {
             }
             setLibraryStatus(null);
             setShowStatusDropdown(false);
+            setLibraryError(null);
         } catch (err) {
             console.error('Error removing from library:', err);
-            setLibraryError(err.message);
+            setLibraryError(err.message || 'Network error. Please try again.');
         } finally {
             setLibraryLoading(false);
         }
@@ -512,43 +530,38 @@ export default function AnimePage() {
                             ) : libraryError ? (
                                 <span className="error-text">{libraryError}</span>
                             ) : (
-                                <div className="status-dropdown-container">
-                                    {libraryStatus ? (
+                                <div className="library-controls-container">
+                                    {!libraryStatus ? (
                                         <button
-                                            className="status-button current-status"
-                                            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                                        >
-                                            {`Status: ${libraryStatus}`}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="status-button add-to-library"
-                                            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                                            className="add-to-library-btn"
+                                            onClick={() => handleAddToLibrary("Planned to Watch")}
                                         >
                                             Add to Library
                                         </button>
-                                    )}
-
-                                    {showStatusDropdown && (
-                                        <div className="status-dropdown-menu">
-                                            {[ 'Watching', 'Completed', 'Planned to Watch', 'Dropped', 'On Hold'].map((status) => (
-                                                <button
-                                                    key={status}
-                                                    className={`dropdown-item ${libraryStatus === status ? 'selected' : ''}`}
-                                                    onClick={() => handleUpdateLibraryStatus(status)}
+                                    ) : (
+                                        <>
+                                            <div className="status-controls">
+                                                <select
+                                                    value={libraryStatus}
+                                                    onChange={(e) => handleUpdateLibraryStatus(e.target.value)}
+                                                    className="status-select"
                                                 >
-                                                    {status}
-                                                </button>
-                                            ))}
-                                            {libraryStatus && (
-                                                <button
-                                                    className="dropdown-item remove-from-library"
-                                                    onClick={handleRemoveFromLibrary}
-                                                >
-                                                    Remove from Library
-                                                </button>
-                                            )}
-                                        </div>
+                                                    {validLibraryStatuses.map((status) => (
+                                                        <option key={status} value={status}>
+                                                            {status}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {libraryStatus && (
+                                                    <button
+                                                        className="remove-from-library-btn"
+                                                        onClick={handleRemoveFromLibrary}
+                                                    >
+                                                        Remove from Library
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </>
                                     )}
                                 </div>
                             )}

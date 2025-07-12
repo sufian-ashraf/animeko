@@ -12,7 +12,9 @@ const isValidStatus = (status) => {
 // POST /api/anime-library: Add a new anime to a user's library with an initial status.
 router.post('/', authenticateToken, async (req, res) => {
     const { animeId, status } = req.body;
-    const userId = req.user.userId;
+    const userId = req.user.user_id;
+
+    console.log('Adding to library:', { userId, animeId, status, user: req.user });
 
     if (!animeId || !status) {
         return res.status(400).json({ message: 'Anime ID and status are required.' });
@@ -38,7 +40,7 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:animeId', authenticateToken, async (req, res) => {
     const { animeId } = req.params;
     const { status, episodesWatched } = req.body;
-    const userId = req.user.userId;
+    const userId = req.user.user_id;
 
     if (!status && episodesWatched === undefined) {
         return res.status(400).json({ message: 'Status or episodesWatched is required for update.' });
@@ -79,7 +81,7 @@ router.put('/:animeId', authenticateToken, async (req, res) => {
 // DELETE /api/anime-library/:animeId: Remove an anime from a user's library.
 router.delete('/:animeId', authenticateToken, async (req, res) => {
     const { animeId } = req.params;
-    const userId = req.user.userId;
+    const userId = req.user.user_id;
 
     try {
         const result = await pool.query(
@@ -99,7 +101,7 @@ router.delete('/:animeId', authenticateToken, async (req, res) => {
 // GET /api/anime-library: Retrieve all anime in a user's library, optionally filtered by status.
 router.get('/', authenticateToken, async (req, res) => {
     const { status } = req.query;
-    const userId = req.user.userId;
+    const userId = req.user.user_id;
 
     try {
         let query = `
@@ -132,7 +134,7 @@ router.get('/', authenticateToken, async (req, res) => {
 // GET /api/anime-library/:animeId: Retrieve the status of a specific anime for the logged-in user.
 router.get('/:animeId', authenticateToken, async (req, res) => {
     const { animeId } = req.params;
-    const userId = req.user.userId;
+    const userId = req.user.user_id;
 
     try {
         const result = await pool.query(

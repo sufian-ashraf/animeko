@@ -84,6 +84,7 @@ function Navigation() {
                                     <Link to="/profile" className="dropdown-item">My Profile</Link>
                                     {isAdmin && <Link to="/admin" className="dropdown-item">Admin Dashboard</Link>}
                                     <Link to="/my-lists" className="dropdown-item">My Lists</Link>
+                                    <Link to="/my-library" className="dropdown-item">My Library</Link>
                                     <Link to="/subscription" className="dropdown-item">Subscription</Link>
                                     <button onClick={handleLogout} className="dropdown-item logout-button">Logout</button>
                                 </div>
