@@ -155,7 +155,7 @@ function MyLibrary() {
                         <div key={anime.anime_id} className="library-item-card">
                             <Link to={`/anime/${anime.anime_id}`}>
                                 <img
-                                    src={anime.imageurl || placeholder}
+                                    src={anime.image_url || placeholder}
                                     alt={`${anime.title} poster`}
                                     className="library-item-poster"
                                 />

@@ -61,7 +61,7 @@ class UserAnimeStatus {
                     a.episodes,
                     a.synopsis,
                     a.rating,
-                    m.url AS "imageUrl"
+                    m.url AS "image_url"
                 FROM user_anime_status uas
                 JOIN anime a ON uas.anime_id = a.anime_id
                 LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'image'
