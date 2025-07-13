@@ -72,7 +72,7 @@ export default function ListSearch() {
                     {lists.length > 0 ? (
                         lists.map(list => (
                             <div key={list.id} className="list-card">
-                                <Link to={`/my-lists/${list.id}`} className="list-link">
+                                <Link to={`/lists/${list.id}`} className="list-link">
                                     <h3 className="list-title">{list.title}</h3>
                                     <p className="list-owner">by {list.owner_username}</p>
                                     <p className="list-item-count">{list.item_count} items</p>

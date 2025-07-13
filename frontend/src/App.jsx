@@ -91,7 +91,7 @@ function App() {
                         />
 
                         <Route
-                            path="/my-lists/:id"
+                            path="/lists/:id"
                             element={<ProtectedRoute>
                                 <ListDetail/>
                             </ProtectedRoute>}

@@ -62,7 +62,7 @@ function MyLists() {
             const createdList = await response.json();
 
             // Redirect to the new list's detail page
-            window.location.href = `/my-lists/${createdList.id}`;
+            window.location.href = `/lists/${createdList.id}`;
 
         } catch (error) {
             console.error('Error creating list:', error);

@@ -6,7 +6,7 @@ function ListCard({ list }) {
     const formattedDate = new Date(list.created_at).toLocaleDateString();
     
     return (
-        <Link to={`/my-lists/${list.id}`} key={list.id} className={styles.listCard}>
+        <Link to={`/lists/${list.id}`} key={list.id} className={styles.listCard}>
             <div className={styles.listCardHeader}>
                 <h4 className={styles.listCardTitle}>{list.title}</h4>
                 <span className={styles.listItemCount}>{list.item_count} items</span>
