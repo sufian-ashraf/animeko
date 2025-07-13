@@ -634,12 +634,5 @@ export default function Profile() {
             </div>))}
         </section>
 
-        {/* ───────────── Integrate “My Anime Lists” Here ───────────── */}
-        {isOwnProfile && (
-            <section className="my-lists-section">
-                <h3>My Anime Lists</h3>
-                <MyLists userId={profileUser.user_id} token={token} />
-            </section>
-        )}
     </div>);
 }

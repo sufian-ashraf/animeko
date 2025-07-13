@@ -1,3 +1,59 @@
+body.dark-mode .error-message {
+    background: #22252c;
+    border-radius: 8px;
+    padding: 16px;
+    border: none;
+}
+body.dark-mode .not-found-page {
+    background: #181a1b;
+}
+
+body.dark-mode .not-found-container {
+    background: #23272f;
+    color: #e0e0e0;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+
+body.dark-mode .error-code h1 {
+    color: #8faaff;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .error-message h2 {
+    color: #e0e0e0;
+}
+
+body.dark-mode .error-message p {
+    color: #b0b0b0;
+}
+
+body.dark-mode .home-button {
+    background: linear-gradient(135deg, #3a5ad7 0%, #5a3ea1 100%);
+    color: #fff;
+}
+
+body.dark-mode .home-button:hover {
+    box-shadow: 0 4px 15px rgba(58, 90, 215, 0.4);
+}
+
+body.dark-mode .back-button {
+    background: #23272f;
+    color: #e0e0e0;
+    border: 2px solid #444a57;
+}
+
+body.dark-mode .back-button:hover {
+    background: #181a1b;
+}
+
+body.dark-mode .anime-themed-message {
+    background: #23243a;
+    border-left: 4px solid #8faaff;
+}
+
+body.dark-mode .anime-themed-message p {
+    color: #b0b0b0;
+}
 /* Not Found Page Styles */
 .not-found-page {
     min-height: 80vh;
