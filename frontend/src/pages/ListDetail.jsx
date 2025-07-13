@@ -344,74 +344,76 @@ export default function ListDetail() {
                     list.items
                         .sort((a, b) => (a.rank || 999) - (b.rank || 999)) // Sort by rank
                         .map((item) => (
-                            <div key={item.anime_id} className="anime-card">
-                                {/* Wrap the image and title in a Link */}
-                                <Link to={`/anime/${item.anime_id}`} className="anime-link">
-                                    <div className="anime-image-container">
-                                        <img
-                                            src={getImage(item)}
-                                            alt={item.anime_title || item.title || 'Anime'}
-                                            className="anime-thumbnail"
-                                            onError={(e) => {
-                                                e.target.src = placeholderImg;
-                                            }}
-                                        />
-                                        {item.rank && (
-                                            <div className="rank-badge">#{item.rank}</div>
+                            <div key={item.anime_id} className="anime-card animecard-row">
+                                <div className="animecard-img-col">
+                                    <Link to={`/anime/${item.anime_id}`} className="anime-link">
+                                        <div className="anime-image-container">
+                                            <img
+                                                src={getImage(item)}
+                                                alt={item.anime_title || item.title || 'Anime'}
+                                                className="anime-thumbnail"
+                                                onError={(e) => {
+                                                    e.target.src = placeholderImg;
+                                                }}
+                                            />
+                                            {item.rank && (
+                                                <div className="rank-badge">#{item.rank}</div>
+                                            )}
+                                        </div>
+                                    </Link>
+                                </div>
+                                <div className="animecard-info-col">
+                                    <Link to={`/anime/${item.anime_id}`} className="anime-link">
+                                        <h3 className="anime-title">{item.anime_title || item.title || 'Unknown Title'}</h3>
+                                    </Link>
+                                    <div className="anime-info">
+                                        {isOwner ? (
+                                            <>
+                                                <div className="input-group">
+                                                    <label>
+                                                        Rank:
+                                                        <input
+                                                            type="number"
+                                                            value={item.rank || ''}
+                                                            min="1"
+                                                            onChange={(e) =>
+                                                                handleEntryChange(item.anime_id, 'rank', e.target.value)
+                                                            }
+                                                            className="rank-input"
+                                                        />
+                                                    </label>
+                                                </div>
+                                                <div className="input-group">
+                                                    <label>
+                                                        Note:
+                                                        <textarea
+                                                            value={item.note || ''}
+                                                            onChange={(e) =>
+                                                                handleEntryChange(item.anime_id, 'note', e.target.value)
+                                                            }
+                                                            className="note-input"
+                                                            placeholder="Add a note..."
+                                                            rows="2"
+                                                        />
+                                                    </label>
+                                                </div>
+                                                <button
+                                                    className="remove-btn"
+                                                    onClick={() => handleRemoveAnime(item.anime_id)}
+                                                >
+                                                    Remove
+                                                </button>
+                                            </>
+                                        ) : (
+                                            // Non‐owners see plain text for rank and note
+                                            <>
+                                                <div className="anime-rank-text">Rank: #{item.rank || 'N/A'}</div>
+                                                {item.note && (
+                                                    <div className="anime-note-text">Note: {item.note}</div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
-                                    <h3 className="anime-title">{item.anime_title || item.title || 'Unknown Title'}</h3>
-                                </Link>
-
-                                <div className="anime-info">
-                                    {isOwner ? (
-                                        <>
-                                            <div className="input-group">
-                                                <label>
-                                                    Rank:
-                                                    <input
-                                                        type="number"
-                                                        value={item.rank || ''}
-                                                        min="1"
-                                                        onChange={(e) =>
-                                                            handleEntryChange(item.anime_id, 'rank', e.target.value)
-                                                        }
-                                                        className="rank-input"
-                                                    />
-                                                </label>
-                                            </div>
-
-                                            <div className="input-group">
-                                                <label>
-                                                    Note:
-                                                    <textarea
-                                                        value={item.note || ''}
-                                                        onChange={(e) =>
-                                                            handleEntryChange(item.anime_id, 'note', e.target.value)
-                                                        }
-                                                        className="note-input"
-                                                        placeholder="Add a note..."
-                                                        rows="2"
-                                                    />
-                                                </label>
-                                            </div>
-
-                                            <button
-                                                className="remove-btn"
-                                                onClick={() => handleRemoveAnime(item.anime_id)}
-                                            >
-                                                Remove
-                                            </button>
-                                        </>
-                                    ) : (
-                                        // Non‐owners see plain text for rank and note
-                                        <>
-                                            <div className="anime-rank-text">Rank: #{item.rank || 'N/A'}</div>
-                                            {item.note && (
-                                                <div className="anime-note-text">Note: {item.note}</div>
-                                            )}
-                                        </>
-                                    )}
                                 </div>
                             </div>
                         ))
@@ -470,7 +472,7 @@ export default function ListDetail() {
                                     return (
                                         <div key={animeId} className="anime-card search-card">
                                             <img
-                                                src={anime.image_url || placeholderImg}
+                                                src={anime.imageUrl || placeholderImg}
                                                 alt={anime.title}
                                                 className="anime-thumbnail-small"
                                                 onError={(e) => {

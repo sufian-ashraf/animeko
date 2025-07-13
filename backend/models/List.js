@@ -199,12 +199,12 @@ class List {
                     a.synopsis,
                     a.rating,
                     a.rank as anime_rank,
-                    m.url as cover_image
+                    m.url as image_url
                  FROM list_items li
                  JOIN anime a ON li.anime_id = a.anime_id
                  LEFT JOIN media m ON m.entity_id = a.anime_id 
                      AND m.entity_type = 'anime' 
-                     AND m.media_type = 'cover'
+                     AND m.media_type = 'image'
                  WHERE li.list_id = $1
                  ORDER BY li.rank ASC NULLS LAST, a.title ASC`,
                 [listId]
