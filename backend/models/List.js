@@ -3,10 +3,19 @@ import pool from '../db.js';
 class List {
     static async getListsByUserId(userId) {
         const result = await pool.query(
-            `SELECT id, title, created_at
-             FROM lists
-             WHERE user_id = $1
-             ORDER BY created_at DESC`,
+            `SELECT 
+                l.id,
+                l.title,
+                l.created_at,
+                COALESCE(li.item_count, 0) as item_count
+             FROM lists l
+             LEFT JOIN (
+                 SELECT list_id, COUNT(*) as item_count 
+                 FROM list_items 
+                 GROUP BY list_id
+             ) li ON l.id = li.list_id
+             WHERE l.user_id = $1
+             ORDER BY l.created_at DESC`,
             [userId]
         );
         return result.rows;

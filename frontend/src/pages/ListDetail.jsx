@@ -24,6 +24,7 @@ export default function ListDetail() {
     const [enterPressed, setEnterPressed] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     // Fetch list metadata & items
     useEffect(() => {
@@ -270,6 +271,32 @@ export default function ListDetail() {
         }
     };
 
+    // Delete the list (only if owner)
+    const handleDeleteList = async () => {
+        if (!isOwner || !token) return;
+        if (!window.confirm('Are you sure you want to delete this list? This action cannot be undone.')) return;
+        setDeleting(true);
+        const baseUrl = 'http://localhost:5000';
+        try {
+            const response = await fetch(`${baseUrl}/api/lists/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Failed to delete list: ${response.status}`);
+            }
+            // Redirect to My Lists after deletion
+            window.location.href = '/my-lists';
+        } catch (err) {
+            setDeleting(false);
+            alert(err.message || 'Failed to delete list');
+        }
+    };
+
     if (loading) {
         return (
             <div className="list-detail-container">
@@ -300,6 +327,15 @@ export default function ListDetail() {
                     Created: {new Date(list.created_at).toLocaleDateString()}
                     {list.items.length > 0 && ` • ${list.items.length} items`}
                 </p>
+                {isOwner && (
+                    <button
+                        className="delete-list-btn"
+                        onClick={handleDeleteList}
+                        disabled={deleting}
+                    >
+                        {deleting ? 'Deleting...' : 'Delete List'}
+                    </button>
+                )}
             </div>
 
             {/* ─────────── Current Items ─────────── */}
