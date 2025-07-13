@@ -1,11 +1,11 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {AuthContext} from '../contexts/AuthContext';
+import ListCard from '../components/ListCard';
 
 function MyLists() {
     const [lists, setLists] = useState([]);
     const [newTitle, setNewTitle] = useState('');
     const {token} = useContext(AuthContext);
-
 
     // Fetch user's lists on component mount
     useEffect(() => {
@@ -93,9 +93,9 @@ function MyLists() {
             </div>
         )}
         <div className="lists-grid">
-            {lists.map(list => (<div key={list.id} className="list-card">
-                <a href={`/my-lists/${list.id}`}>{list.title}</a>
-            </div>))}
+            {lists.map(list => (
+                <ListCard key={list.id} list={list} />
+            ))}
         </div>
     </div>);
 }

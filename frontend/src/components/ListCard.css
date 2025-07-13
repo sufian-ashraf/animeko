@@ -1,0 +1,76 @@
+.list-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e1e4e8;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.list-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.list-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.list-card-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary, #333);
+}
+
+.list-item-count {
+    font-size: 0.9rem;
+    color: var(--text-secondary, #666);
+    white-space: nowrap;
+}
+
+.list-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #666);
+}
+
+.list-owner {
+    font-weight: 500;
+}
+
+.list-date {
+    color: var(--text-tertiary, #888);
+}
+
+/* Dark mode styles */
+body.dark-mode .list-card {
+    background-color: #282c34;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid #3a3a3a;
+}
+
+body.dark-mode .list-card:hover {
+    background-color: #3a3a3a;
+}
+
+body.dark-mode .list-card-title {
+    color: #e0e0e0;
+}
+
+body.dark-mode .list-item-count,
+body.dark-mode .list-owner {
+    color: #aaa;
+}
+
+body.dark-mode .list-date {
+    color: #888;
+} 

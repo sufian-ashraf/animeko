@@ -1,0 +1,110 @@
+.list-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid #e1e4e8;
+}
+
+.list-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.list-card-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.list-card-title {
+    margin: 0 0 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #24292e;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.list-card .list-item-count {
+    font-size: 0.85rem;
+    color: #6a737d;
+    background: #f6f8fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    display: inline-block;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.list-card .list-card-footer {
+    padding: 0.75rem 1.25rem;
+    background: #fafbfc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    transition: background-color 0.2s ease;
+}
+
+.list-owner {
+    color: #24292e;
+    font-weight: 500;
+}
+
+.list-date {
+    color: #6a737d;
+}
+
+/* Dark mode styles */
+body.dark-mode .list-card {
+    background-color: #282c34;
+    border-color: #3a3a3a;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .list-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .list-card-header {
+    border-bottom-color: #3a3a3a;
+}
+
+body.dark-mode .list-card-title {
+    color: #61dafb;
+}
+
+body.dark-mode .list-card .list-item-count {
+    color: #61dafb !important;
+    background-color: #21252b !important;
+    border: 1px solid #3a3a3a;
+}
+
+body.dark-mode .list-card .list-card-footer {
+    background-color: #21252b !important;
+    border-top: 1px solid #3a3a3a;
+}
+
+body.dark-mode .list-owner {
+    color: #61dafb;
+}
+
+body.dark-mode .list-date {
+    color: #888;
+}
+
+/* Link styles */
+.list-card:link,
+.list-card:visited,
+.list-card:hover,
+.list-card:active {
+    text-decoration: none;
+    color: inherit;
+} 
