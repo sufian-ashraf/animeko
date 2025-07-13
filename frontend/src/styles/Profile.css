@@ -27,10 +27,19 @@
     padding: 0 1rem;
 }
 
+body.dark-mode .profile-page {
+    background: #181a1b;
+    color: #e0e0e0;
+}
+
 .profile-container {
     display: flex;
     justify-content: center;
     padding: 30px 20px;
+}
+
+body.dark-mode .profile-container {
+    background: #23272f;
 }
 
 .profile-card {
@@ -41,6 +50,13 @@
     width: 100%;
     max-width: 600px;
     margin-bottom: 2rem;
+}
+
+body.dark-mode .profile-card {
+    background-color: #23272f;
+    color: #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border: 1px solid #3a3a3a;
 }
 
 .logout-btn {
@@ -56,6 +72,10 @@
     text-align: center;
 }
 
+body.dark-mode .profile-card h2 {
+    color: #8faaff;
+}
+
 .profile-info .info-row {
     margin-bottom: 15px;
 }
@@ -66,9 +86,17 @@
     margin-bottom: 5px;
 }
 
+body.dark-mode .profile-info strong {
+    color: #b0b0b0;
+}
+
 .profile-info p {
     margin: 0;
     color: #333;
+}
+
+body.dark-mode .profile-info p {
+    color: #e0e0e0;
 }
 
 /* ================================
@@ -85,6 +113,10 @@
     color: #333;
 }
 
+body.dark-mode .profile-form label {
+    color: #e0e0e0;
+}
+
 .profile-form input,
 .profile-form textarea {
     width: 100%;
@@ -92,6 +124,13 @@
     border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 16px;
+}
+
+body.dark-mode .profile-form input,
+body.dark-mode .profile-form textarea {
+    background: #23272f;
+    color: #e0e0e0;
+    border: 1px solid #3a3a3a;
 }
 
 .profile-form textarea {
@@ -104,6 +143,12 @@
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+body.dark-mode .profile-form input:focus,
+body.dark-mode .profile-form textarea:focus {
+    border-color: #8faaff;
+    box-shadow: 0 0 0 2px rgba(143, 170, 255, 0.2);
 }
 
 .profile-buttons {
@@ -138,6 +183,12 @@
     border: 1px solid var(--border-color);
 }
 
+body.dark-mode .secondary-button {
+    background-color: #282c34;
+    color: #e0e0e0;
+    border: 1px solid #3a3a3a;
+}
+
 .secondary-button:hover:not(:disabled) {
     background-color: var(--secondary-hover);
 }
@@ -163,9 +214,19 @@
     color: var(--error-color);
 }
 
+body.dark-mode .profile-error {
+    background: #22252c;
+    color: #ff6f6f;
+}
+
 .profile-success {
     background-color: var(--success-bg);
     color: var(--success-color);
+}
+
+body.dark-mode .profile-success {
+    background: #1e2b22;
+    color: #8fff8f;
 }
 
 /* ================================
@@ -179,6 +240,11 @@
     border-radius: 4px;
     padding: 0.5rem;
     white-space: nowrap;
+}
+
+body.dark-mode .scroll-box {
+    background: #23272f;
+    border: 1px solid #3a3a3a;
 }
 
 .scroll-box:empty {
@@ -198,6 +264,14 @@
     padding: 10px;
 }
 
+/* Ensure fav-item and fav-card stack vertically and don't overlap */
+.fav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 0;
+}
+
 .fav-card {
     display: flex;
     flex-direction: column;
@@ -211,6 +285,15 @@
     position: relative;
     text-align: center;
     transition: transform 0.2s, box-shadow 0.2s;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+body.dark-mode .fav-card {
+    background-color: #282c34;
+    border: 1px solid #3a3a3a;
+    color: #e0e0e0;
 }
 
 .fav-card:hover {
@@ -231,9 +314,20 @@
     font-weight: 500;
     color: #222;
     line-height: 1.2;
-    max-height: 2.4em; /* allow up to two lines */
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-word;
+    white-space: normal;
+    max-width: 100%;
+    margin-top: 0.25rem;
+}
+/* Remove ellipsis and allow wrapping in dark mode too */
+body.dark-mode .fav-name {
+    color: #e0e0e0;
+    word-break: break-word;
+    white-space: normal;
+}
+
+body.dark-mode .fav-name {
+    color: #e0e0e0;
 }
 
 .hover-preview {
@@ -249,6 +343,12 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     white-space: nowrap;
     z-index: 10;
+}
+
+body.dark-mode .hover-preview {
+    background: #23272f;
+    border: 1px solid #3a3a3a;
+    color: #e0e0e0;
 }
 
 .fav-card:hover .hover-preview {
@@ -284,9 +384,20 @@
     transition: background-color 0.2s;
 }
 
+body.dark-mode .row,
+body.dark-mode .friend-row {
+    background-color: #23272f;
+    border: 1px solid #3a3a3a;
+}
+
 .row:hover,
 .friend-row:hover {
     background-color: var(--row-hover-bg);
+}
+
+body.dark-mode .row:hover,
+body.dark-mode .friend-row:hover {
+    background-color: #282c34;
 }
 
 .row:last-child {
@@ -349,9 +460,21 @@
     border: 1px solid #c3e6cb;
 }
 
+body.dark-mode .status-badge.friend {
+    background-color: #1e2b22;
+    color: #8fff8f;
+    border: 1px solid #2e7d32;
+}
+
 .status-badge.pending {
     background-color: #fff3cd;
     color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+body.dark-mode .status-badge.pending {
+    background-color: #23272f;
+    color: #ffeaa7;
     border: 1px solid #ffeaa7;
 }
 
@@ -370,9 +493,19 @@
     color: #fff;
 }
 
+body.dark-mode .btn-small.accept {
+    background-color: #1e2b22;
+    color: #8fff8f;
+}
+
 .btn-small.reject {
     background-color: #dc3545;
     color: #fff;
+}
+
+body.dark-mode .btn-small.reject {
+    background-color: #3a2323;
+    color: #ff6f6f;
 }
 
 .btn-small.accept:hover {
@@ -390,6 +523,11 @@
     padding: 5px 10px;
 }
 
+body.dark-mode .btn-small.unfriend {
+    background: #3a2323;
+    color: #ff6f6f;
+}
+
 .btn-small.unfriend:hover {
     background: #c0392b;
 }
@@ -404,10 +542,19 @@
     margin-top: 20px;
 }
 
+body.dark-mode .favorites-section {
+    border: 1px solid #3a3a3a;
+    background: #23272f;
+}
+
 .favorite-type-container {
     margin-bottom: 20px;
     padding-bottom: 15px;
     border-bottom: 1px solid var(--light-border);
+}
+
+body.dark-mode .favorite-type-container {
+    border-bottom: 1px solid #3a3a3a;
 }
 
 .favorite-type-container:last-child {
@@ -430,8 +577,17 @@
     transition: background-color 0.2s;
 }
 
+body.dark-mode .profile-nav .back-btn {
+    background-color: #23272f;
+    color: #e0e0e0;
+}
+
 .profile-nav .back-btn:hover {
     background-color: #5a6268;
+}
+
+body.dark-mode .profile-nav .back-btn:hover {
+    background-color: #181a1b;
 }
 
 .my-lists-section {
