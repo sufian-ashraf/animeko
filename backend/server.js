@@ -61,7 +61,7 @@ app.use('/api/anime-library', animeLibraryRoutes);
 // Error handling middleware
 const errorHandler = (err, req, res, next) => {
     console.error('Server error:', err);
-    res.status(500).json({
+    return res.status(500).json({
         error: 'An unexpected error occurred', message: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 };
@@ -72,18 +72,6 @@ app.use(errorHandler);
 // Start server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception:', err);
-    process.exit(1);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    process.exit(1);
 });
 
 

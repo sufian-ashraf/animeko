@@ -29,7 +29,7 @@ const PaymentConfirmationPage = () => {
         }
 
         try {
-          const response = await fetch(`https://test-project-production-88cc.up.railway.app/api/get-trx-details/${transactionId}`, {
+          const response = await fetch(`https://test-project-production-bf2e.up.railway.app/api/get-trx-details/${transactionId}`, {
             headers: {
               'apikey': '13acc245-b584-4767-b80a-5c9a1fe9d71e',
             },

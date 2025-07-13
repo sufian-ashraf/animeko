@@ -24,7 +24,7 @@ const SubscriptionPage = () => {
     }
 
     try {
-      const response = await fetch('https://test-project-production-88cc.up.railway.app/api/create-trx', {
+      const response = await fetch('https://test-project-production-bf2e.up.railway.app/api/create-trx', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
