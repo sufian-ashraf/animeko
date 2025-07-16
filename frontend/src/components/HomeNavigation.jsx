@@ -86,7 +86,7 @@ function Navigation() {
               <span className={`slider-icon ${isDarkMode ? 'right' : 'left'}`}>{isDarkMode ? "🌑" : "☀️"}</span>
               <div
                 className="slider-thumb"
-                style={{ left: isDarkMode ? '2px' : '34px' }}
+                style={{ left: isDarkMode ? '4px' : '34px' }}
               />
             </div>
           </div>
