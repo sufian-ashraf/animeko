@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext'; // Import useTheme
 import '../styles/PaymentConfirmationPage.css';
 
 const PaymentConfirmationPage = () => {
@@ -7,6 +8,7 @@ const PaymentConfirmationPage = () => {
   const [transactionDetails, setTransactionDetails] = useState(null);
   const location = useLocation();
   const transactionId = new URLSearchParams(location.search).get('transactionId');
+  const { isDarkMode } = useTheme(); // Get dark mode state""
 
   useEffect(() => {
     const pollStatus = async () => {
@@ -63,7 +65,7 @@ const PaymentConfirmationPage = () => {
   }, [transactionId]);
 
   return (
-    <div className="payment-confirmation-container">
+    <div className={`payment-confirmation-container ${isDarkMode ? 'dark-mode' : ''}`}>
       {status === 'pending' && (
         <div className="pending-container">
           <h2>Processing your payment...</h2>

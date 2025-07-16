@@ -32,14 +32,14 @@ const SubscriptionPage = () => {
         },
         body: JSON.stringify({
           username: 'scariful',
-          amount: parseInt(amount),
+          amount: parseFloat(amount),
         }),
       });
 
       const data = await response.json();
 
       if (data.valid) {
-        const transactionId = data.transacitonId;
+        const transactionId = data.transactionid;
         const redirectURL = encodeURIComponent(`${window.location.origin}/payment-confirmation?transactionId=${transactionId}`);
         const gatewayURL = `https://tpg-six.vercel.app/gateway?transactionid=${transactionId}&redirectURL=${redirectURL}`;
         window.location.href = gatewayURL; // Redirect to the payment gateway
