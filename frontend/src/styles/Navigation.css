@@ -1,3 +1,56 @@
+.theme-toggle-slider {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.slider-track {
+  position: relative;
+  width: 60px;
+  height: 28px;
+  border-radius: 999px;
+  transition: background 0.3s;
+}
+
+.slider-track.light {
+  background-color: #eccc11; /* bright orange for light mode */
+}
+
+.slider-track.dark {
+  background-color: #000000; /* black for dark mode */
+}
+
+.slider-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: white;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.slider-icon.left {
+  left: 8px;
+}
+
+.slider-icon.right {
+  right: 8px;
+}
+
+.slider-thumb {
+  position: absolute;
+  top: 4px;
+  width: 20px;
+  height: 20px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: left 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+
+
 /* General Navigation Styles - Applied to .header-content in App.css */
 
 .brand {
