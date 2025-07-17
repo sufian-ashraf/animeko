@@ -609,7 +609,7 @@ export default function Profile() {
 
         {/* Favorites Section */}
         <section className="favorites-section">
-            {['anime', 'character', 'va'].map((type) => (<div key={type} className="favorite-type-container">
+            {['anime', 'character', 'voice_actor'].map((type) => (<div key={type} className="favorite-type-container">
                 <h4>
                     {favoritesPrefix}{' '}
                     {type.charAt(0).toUpperCase() + type.slice(1)}s
@@ -618,7 +618,7 @@ export default function Profile() {
                     {favorites.filter((f) => f.entityType === type).length ? (favorites
                         .filter((f) => f.entityType === type)
                         .map((f) => {
-                            const path = `/${type}/${f.entityId}`;
+                            const path = `/${type === 'voice_actor' ? 'va' : type}/${f.entityId}`;
                             return (<div key={`${type}-${f.entityId}`} className="fav-item">
                                 <Link to={path} className="fav-card">
                                     <img

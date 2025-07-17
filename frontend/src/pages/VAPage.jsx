@@ -37,7 +37,7 @@ export default function VAPage() {
         })
             .then(r => r.json())
             .then(favs => {
-                setIsFavorite(favs.some(f => f.entityType === 'va' && +f.entityId === +vaId));
+                setIsFavorite(favs.some(f => f.entityType === 'voice_actor' && +f.entityId === +vaId));
             })
             .catch(console.error);
     }, [vaId, token]);
@@ -53,7 +53,7 @@ export default function VAPage() {
                 'Authorization': `Bearer ${token}`
             }, 
             body: JSON.stringify({ 
-                entityType: 'va',
+                entityType: 'voice_actor',
                 entityId: +vaId 
             })
         })
