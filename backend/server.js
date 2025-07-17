@@ -19,7 +19,6 @@ import listRoutes from './routes/listRoutes.js';
 import characterRoutes from "./routes/characterRoutes.js";
 import VARoutes from "./routes/VARoutes.js";
 import animeLibraryRoutes from "./routes/animeLibraryRoutes.js";
-import subscriptionRoutes from './routes/subscriptionRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -53,7 +52,6 @@ app.use('/api/lists', listRoutes);
 app.use('/api', characterRoutes);
 app.use('/api', VARoutes);
 app.use('/api/anime-library', animeLibraryRoutes);
-app.use('/api/subscriptions', subscriptionRoutes);
 
 // Test database connection
     pool.connect()

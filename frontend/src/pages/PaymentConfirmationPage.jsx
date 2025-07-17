@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext'; // Import useTheme
 import '../styles/PaymentConfirmationPage.css';
 
@@ -7,7 +7,6 @@ const PaymentConfirmationPage = () => {
   const [status, setStatus] = useState('pending');
   const [transactionDetails, setTransactionDetails] = useState(null);
   const location = useLocation();
-  const navigate = useNavigate();
   const transactionId = new URLSearchParams(location.search).get('transactionId');
   const { isDarkMode } = useTheme(); // Get dark mode state""
 
@@ -45,30 +44,6 @@ const PaymentConfirmationPage = () => {
             if (data.transactionDetails.status && data.transactionDetails.status.toLowerCase().trim() === 'completed') {
               setStatus('success');
               clearInterval(intervalId);
-
-              // Confirm payment with our backend
-              try {
-                const confirmResponse = await fetch('/api/subscriptions/confirm-payment', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    transactionId: transactionId,
-                    isPaid: true,
-                    completedOn: data.transactionDetails.completed_on,
-                  }),
-                });
-
-                if (!confirmResponse.ok) {
-                  const errorData = await confirmResponse.json();
-                  console.error('Failed to confirm payment with backend:', errorData.message);
-                  // Optionally, handle this error in the UI
-                }
-              } catch (error) {
-                console.error('Error confirming payment with backend:', error);
-              }
-
             } else if (data.transactionDetails.status && data.transactionDetails.status.toLowerCase().trim() === 'failed') {
               setStatus('failed');
               clearInterval(intervalId);
@@ -115,14 +90,6 @@ const PaymentConfirmationPage = () => {
               <p>Completed On: {new Date(transactionDetails.completed_on).toLocaleString()}</p>
             </>
           )}
-          <div className="action-buttons">
-            <button 
-              onClick={() => navigate('/')} 
-              className="home-button"
-            >
-              Return to Homepage
-            </button>
-          </div>
         </div>
       )}
 
@@ -133,20 +100,6 @@ const PaymentConfirmationPage = () => {
           {transactionDetails && (
             <p>Status: {transactionDetails.status}</p>
           )}
-          <div className="action-buttons">
-            <button 
-              onClick={() => navigate('/subscription')} 
-              className="retry-button"
-            >
-              Try Again
-            </button>
-            <button 
-              onClick={() => navigate('/')} 
-              className="home-button"
-            >
-              Return to Homepage
-            </button>
-          </div>
         </div>
       )}
     </div>
