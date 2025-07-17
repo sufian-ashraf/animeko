@@ -23,7 +23,6 @@ const AnimeTab = ({searchQuery}) => {
     const [isGenreDropdownOpen, setIsGenreDropdownOpen] = useState(false);
     const companyDropdownRef = useRef(null);
     const genreDropdownRef = useRef(null);
-    const dropdownRef = useRef(null); // Add this line
 
     useEffect(() => {
         fetchAnime();
@@ -396,12 +395,11 @@ const AnimeTab = ({searchQuery}) => {
                             onChange={handleInputChange}
                         />
                     </div>
-                    <div className="form-group" ref={dropdownRef}>
+                    <div className="form-group" ref={companyDropdownRef}>
                         <label>Production Company</label>
                         <div className="dropdown">
                             <div 
-                                className="form-control" 
-                                style={{ cursor: 'pointer' }}
+                                className="form-control company-dropdown-trigger"
                                 onClick={() => {
                                     setIsCompanyDropdownOpen(!isCompanyDropdownOpen);
                                     setCompanySearch('');
@@ -410,7 +408,7 @@ const AnimeTab = ({searchQuery}) => {
                                 {companies.find(c => c.id == formData.company_id)?.name || 'Select a company'}
                             </div>
                             {isCompanyDropdownOpen && (
-                                <div className="dropdown-menu show" style={{ width: '100%', padding: '0.5rem' }}>
+                                <div className="dropdown-menu show company-dropdown-menu">
                                     <input
                                         type="text"
                                         className="form-control form-control-sm mb-2"
@@ -420,7 +418,7 @@ const AnimeTab = ({searchQuery}) => {
                                         autoFocus
                                         onClick={(e) => e.stopPropagation()}
                                     />
-                                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                    <div className="company-dropdown-list">
                                         {companies
                                             .filter(company => 
                                                 !companySearch || 
@@ -438,7 +436,6 @@ const AnimeTab = ({searchQuery}) => {
                                                         }));
                                                         setIsCompanyDropdownOpen(false);
                                                     }}
-                                                    style={{ cursor: 'pointer' }}
                                                 >
                                                     {company.name}
                                                 </div>
@@ -454,62 +451,13 @@ const AnimeTab = ({searchQuery}) => {
                             )}
                         </div>
                     </div>
-                    <style jsx>{`
-                        .dropdown {
-                            position: relative;
-                        }
-                        .dropdown-menu {
-                            position: absolute;
-                            top: 100%;
-                            left: 0;
-                            z-index: 1000;
-                            background: white;
-                            border: 1px solid #ced4da;
-                            border-radius: 0.25rem;
-                            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-                            width: 100%;
-                        }
-                        .dropdown-item {
-                            display: block;
-                            width: 100%;
-                            padding: 0.25rem 1.5rem;
-                            clear: both;
-                            font-weight: 400;
-                            color: #212529;
-                            text-align: inherit;
-                            white-space: nowrap;
-                            background-color: transparent;
-                            border: 0;
-                            text-align: left;
-                        }
-                        .dropdown-item:hover {
-                            background-color: #f8f9fa;
-                            color: #16181b;
-                            text-decoration: none;
-                        }
-                        .dropdown-item:active {
-                            background-color: #e9ecef;
-                        }
-                    `}</style>
-                    <div className="form-actions">
-                    </div>
                     
                     {/* Genre Selection */}
                     <div className="form-group" ref={genreDropdownRef}>
                         <label>Genres</label>
                         <div className="dropdown">
                             <div 
-                                className="form-control" 
-                                style={{ 
-                                    minHeight: '38px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    flexWrap: 'wrap',
-                                    gap: '4px',
-                                    alignItems: 'center',
-                                    position: 'relative',
-                                    zIndex: 1
-                                }}
+                                className="form-control genre-dropdown-container"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setIsGenreDropdownOpen(!isGenreDropdownOpen);
@@ -522,21 +470,22 @@ const AnimeTab = ({searchQuery}) => {
                                     selectedGenres.map(genre => (
                                         <span 
                                             key={genre.genre_id || genre.id}
-                                            className="badge bg-primary me-1 d-inline-flex align-items-center"
-                                            style={{ cursor: 'pointer' }}
+                                            className="genre-tag"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 removeGenre(genre.genre_id || genre.id);
                                             }}
                                         >
                                             {genre.name}
-                                            <X size={14} className="ms-1" />
+                                            <button type="button" className="remove-btn">
+                                                <X size={14} />
+                                            </button>
                                         </span>
                                     ))
                                 )}
                             </div>
                             {isGenreDropdownOpen && (
-                                <div className="dropdown-menu show p-2" style={{ width: '100%' }}>
+                                <div className="dropdown-menu show p-2">
                                     <input
                                         type="text"
                                         className="form-control form-control-sm mb-2"
@@ -547,21 +496,10 @@ const AnimeTab = ({searchQuery}) => {
                                         onClick={(e) => e.stopPropagation()}
                                     />
                                     <div 
-                                        style={{ 
-                                            maxHeight: '200px', 
-                                            overflowY: 'auto',
-                                            padding: '8px'
-                                        }}
+                                        className="dropdown-menu-content"
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        <div style={{ 
-                                            display: 'flex', 
-                                            flexWrap: 'wrap', 
-                                            gap: '6px',
-                                            padding: '4px',
-                                            position: 'relative',
-                                            zIndex: 2
-                                        }}>
+                                        <div className="genre-selection-grid">
                                             {genres
                                                 .filter(genre => 
                                                     !genreSearch || 
@@ -574,41 +512,24 @@ const AnimeTab = ({searchQuery}) => {
                                                     return (
                                                         <div 
                                                             key={genre.genre_id || genre.id}
+                                                            className={`genre-selection-item ${isSelected ? 'selected' : ''}`}
                                                             onClick={(e) => {
                                                                 e.preventDefault();
                                                                 e.stopPropagation();
                                                                 toggleGenre(genre);
                                                             }}
                                                             onMouseDown={(e) => e.preventDefault()}
-                                                            style={{ 
-                                                                cursor: 'pointer',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                padding: '2px 8px',
-                                                                borderRadius: '4px',
-                                                                backgroundColor: isSelected ? '#e9ecef' : 'transparent',
-                                                                border: '1px solid #dee2e6',
-                                                                fontSize: '0.9rem',
-                                                                flexShrink: 0,
-                                                                userSelect: 'none'
-                                                            }}
                                                         >
-                                                            <span style={{ marginRight: '6px' }}>{genre.name}</span>
+                                                            <span className="genre-name">{genre.name}</span>
                                                             <input 
                                                                 type="checkbox" 
-                                                                className="form-check-input"
+                                                                className="form-check-input genre-checkbox"
                                                                 checked={isSelected}
                                                                 onChange={(e) => {
                                                                     e.stopPropagation();
                                                                     toggleGenre(genre);
                                                                 }}
                                                                 onClick={(e) => e.stopPropagation()}
-                                                                style={{
-                                                                    width: '14px',
-                                                                    height: '14px',
-                                                                    margin: 0,
-                                                                    cursor: 'pointer'
-                                                                }}
                                                             />
                                                         </div>
                                                     );
@@ -618,7 +539,7 @@ const AnimeTab = ({searchQuery}) => {
                                                 !genreSearch || 
                                                 (genre.name && genre.name.toLowerCase().includes(genreSearch.toLowerCase()))
                                             ).length === 0 && (
-                                                <div className="text-muted" style={{ padding: '8px' }}>No genres found</div>
+                                                <div className="text-muted no-results">No genres found</div>
                                             )}
                                         </div>
                                     </div>

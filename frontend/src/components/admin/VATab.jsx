@@ -269,7 +269,7 @@ const VATab = ({searchQuery}) => {
                         </div>
                         {filteredVAs.length === 0 ? (
                             <div className="table-row">
-                                <div className="col-span-4" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '1rem' }}>
+                                <div className="col-span-4 no-results-row">
                                     {loading ? 'Loading voice actors...' : 'No voice actors found'}
                                 </div>
                             </div>
