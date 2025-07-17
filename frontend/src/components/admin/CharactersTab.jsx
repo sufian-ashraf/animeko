@@ -285,7 +285,8 @@ const CharactersTab = ({ searchQuery }) => {
                         <label>Anime</label>
                         <div className="dropdown">
                             <div 
-                                className="form-control anime-dropdown-trigger" 
+                                className="form-control" 
+                                style={{ cursor: 'pointer' }}
                                 onClick={() => {
                                     setIsAnimeDropdownOpen(!isAnimeDropdownOpen);
                                     setAnimeSearch('');
@@ -294,7 +295,7 @@ const CharactersTab = ({ searchQuery }) => {
                                 {animeList.find(a => a.id == formData.animeId)?.title || 'Select an anime'}
                             </div>
                             {isAnimeDropdownOpen && (
-                                <div className="dropdown-menu show anime-dropdown-content">
+                                <div className="dropdown-menu show" style={{ width: '100%', padding: '0.5rem' }}>
                                     <input
                                         type="text"
                                         className="form-control form-control-sm mb-2"
@@ -304,7 +305,7 @@ const CharactersTab = ({ searchQuery }) => {
                                         autoFocus
                                         onClick={(e) => e.stopPropagation()}
                                     />
-                                    <div className="dropdown-scroll-container">
+                                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                         {animeList
                                             .filter(anime => 
                                                 !animeSearch || 
@@ -343,7 +344,8 @@ const CharactersTab = ({ searchQuery }) => {
                         <label>Voice Actor</label>
                         <div className="dropdown">
                             <div 
-                                className="form-control va-dropdown-trigger" 
+                                className="form-control" 
+                                style={{ cursor: 'pointer' }}
                                 onClick={() => {
                                     setIsVaDropdownOpen(!isVaDropdownOpen);
                                     setVoiceActorSearch('');
@@ -352,7 +354,7 @@ const CharactersTab = ({ searchQuery }) => {
                                 {voiceActors.find(va => va.id == formData.voiceActorId || va.voice_actor_id == formData.voiceActorId)?.name || 'Select a voice actor'}
                             </div>
                             {isVaDropdownOpen && (
-                                <div className="dropdown-menu show va-dropdown-content">
+                                <div className="dropdown-menu show" style={{ width: '100%', padding: '0.5rem' }}>
                                     <input
                                         type="text"
                                         className="form-control form-control-sm mb-2"
@@ -362,7 +364,7 @@ const CharactersTab = ({ searchQuery }) => {
                                         autoFocus
                                         onClick={(e) => e.stopPropagation()}
                                     />
-                                    <div className="dropdown-scroll-container">
+                                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                         {voiceActors
                                             .filter(va => 
                                                 !voiceActorSearch || 
@@ -397,6 +399,7 @@ const CharactersTab = ({ searchQuery }) => {
                             )}
                         </div>
                     </div>
+                    <style jsx>{"\n                        .dropdown {\n                            position: relative;\n                        }\n                        .dropdown-menu {\n                            position: absolute;\n                            top: 100%;\n                            left: 0;\n                            z-index: 1000;\n                            background: white;\n                            border: 1px solid #ced4da;\n                            border-radius: 0.25rem;\n                            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);\n                            width: 100%;\n                        }\n                        .dropdown-item {\n                            display: block;\n                            width: 100%;\n                            padding: 0.25rem 1.5rem;\n                            clear: both;\n                            font-weight: 400;\n                            color: #212529;\n                            text-align: inherit;\n                            white-space: nowrap;\n                            background-color: transparent;\n                            border: 0;\n                            text-align: left;\n                        }\n                        .dropdown-item:hover {\n                            background-color: #f8f9fa;\n                            color: #16181b;\n                            text-decoration: none;\n                        }\n                        .dropdown-item:active {\n                            background-color: #e9ecef;\n                        }\n                    "}</style>
                     <div className="form-actions">
                         <button type="submit" className="btn btn-primary" disabled={loading}>
                             {editingId ? 'Update' : 'Add'} Character
