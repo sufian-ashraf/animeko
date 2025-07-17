@@ -552,15 +552,18 @@ CREATE TRIGGER tr_review_delete_anime_rating_rank
 CREATE OR REPLACE FUNCTION fn_update_user_subscription()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- If the transaction is paid, update the user's subscription details
-  IF NEW.is_paid = TRUE THEN
-    UPDATE users
-    SET
-      subscription_status = TRUE,
-      active_transaction_id = NEW.transaction_history_id,
-      subscription_end_date = NEW.end_date
-    WHERE
-      user_id = NEW.user_id;
+  -- Only proceed if the ispaid status has actually changed
+  IF OLD.ispaid IS DISTINCT FROM NEW.ispaid THEN
+    -- If the transaction is paid, update the user's subscription details
+    IF NEW.ispaid = TRUE THEN
+      UPDATE users
+      SET
+        subscription_status = TRUE,
+        active_transaction_id = NEW.transaction_history_id,
+        subscription_end_date = NEW.end_date
+      WHERE
+        user_id = NEW.user_id;
+    END IF;
   END IF;
   RETURN NEW;
 END;
@@ -570,5 +573,4 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER tr_after_transaction_update
 AFTER UPDATE ON transaction_history
 FOR EACH ROW
-WHEN (OLD.is_paid IS DISTINCT FROM NEW.is_paid)
 EXECUTE FUNCTION fn_update_user_subscription();

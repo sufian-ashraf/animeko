@@ -3,6 +3,25 @@
   flex-direction: column;
   align-items: center;
   padding: 2rem;
+  min-height: 100vh;
+  background-color: var(--background-color, #ffffff);
+  color: var(--text-color, #333333);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode support */
+.dark-mode .subscription-container {
+  background-color: var(--dark-background-color, #1a1a1a);
+  color: var(--dark-text-color, #e0e0e0);
+}
+
+.subscription-container h1 {
+  color: var(--primary-color, #007bff);
+  margin-bottom: 1rem;
+}
+
+.dark-mode .subscription-container h1 {
+  color: var(--dark-primary-color, #4da6ff);
 }
 
 .subscription-options {
@@ -13,19 +32,198 @@
 }
 
 .subscription-plan {
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color, #ccc);
   border-radius: 8px;
   padding: 2rem;
   text-align: center;
   width: 200px;
+  background-color: var(--card-background, #ffffff);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dark-mode .subscription-plan {
+  border-color: var(--dark-border-color, #444);
+  background-color: var(--dark-card-background, #2d2d2d);
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.subscription-plan:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.dark-mode .subscription-plan:hover {
+  box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
 }
 
 .subscription-plan h2 {
   margin-top: 0;
+  color: var(--heading-color, #333);
+}
+
+.dark-mode .subscription-plan h2 {
+  color: var(--dark-heading-color, #e0e0e0);
+}
+
+.subscription-plan button {
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+  width: 100%;
+}
+
+.subscription-plan button:hover {
+  background-color: var(--primary-hover-color, #0056b3);
+}
+
+.dark-mode .subscription-plan button {
+  background-color: var(--dark-primary-color, #4da6ff);
+}
+
+.dark-mode .subscription-plan button:hover {
+  background-color: var(--dark-primary-hover-color, #1a8cff);
 }
 
 .price {
   font-size: 1.5rem;
   font-weight: bold;
   margin: 1rem 0;
+  color: var(--price-color, #333);
+}
+
+.dark-mode .price {
+  color: var(--dark-price-color, #e0e0e0);
+}
+
+.subscription-message {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  background-color: var(--card-background, #f9f9f9);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dark-mode .subscription-message {
+  border-color: var(--dark-border-color, #444);
+  background-color: var(--dark-card-background, #2d2d2d);
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.subscription-message h2 {
+  color: var(--heading-color, #333);
+  margin-top: 0;
+}
+
+.dark-mode .subscription-message h2 {
+  color: var(--dark-heading-color, #e0e0e0);
+}
+
+.subscription-message.expired {
+  border-color: var(--warning-color, #ffc107);
+  background-color: var(--warning-background, #fff3cd);
+}
+
+.dark-mode .subscription-message.expired {
+  border-color: var(--dark-warning-color, #ffb307);
+  background-color: var(--dark-warning-background, #2d2416);
+}
+
+.subscription-message.expired h2 {
+  color: var(--warning-text-color, #856404);
+}
+
+.dark-mode .subscription-message.expired h2 {
+  color: var(--dark-warning-text-color, #ffc107);
+}
+
+.subscription-details {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background-color: var(--detail-background, white);
+  border-radius: 6px;
+  border: 1px solid var(--detail-border, #e0e0e0);
+}
+
+.dark-mode .subscription-details {
+  background-color: var(--dark-detail-background, #1a1a1a);
+  border-color: var(--dark-detail-border, #555);
+}
+
+.detail-item {
+  margin: 0.8rem 0;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--item-border, #f0f0f0);
+}
+
+.dark-mode .detail-item {
+  border-bottom-color: var(--dark-item-border, #444);
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-item strong {
+  display: inline-block;
+  min-width: 140px;
+  color: var(--label-color, #333);
+}
+
+.dark-mode .detail-item strong {
+  color: var(--dark-label-color, #ccc);
+}
+
+.subscription-actions {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.profile-button {
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.profile-button:hover {
+  background-color: var(--primary-hover-color, #0056b3);
+}
+
+.dark-mode .profile-button {
+  background-color: var(--dark-primary-color, #4da6ff);
+}
+
+.dark-mode .profile-button:hover {
+  background-color: var(--dark-primary-hover-color, #1a8cff);
+}
+
+.loading-message {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted, #666);
+}
+
+.dark-mode .loading-message {
+  color: var(--dark-text-muted, #aaa);
+}
+
+.loading-message h1 {
+  color: var(--heading-color, #333);
+  margin-bottom: 1rem;
+}
+
+.dark-mode .loading-message h1 {
+  color: var(--dark-heading-color, #e0e0e0);
 }
