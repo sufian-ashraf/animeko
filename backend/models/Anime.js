@@ -7,6 +7,7 @@ class Anime {
                 SELECT 
                     a.anime_id AS id,
                     a.title,
+                    a.alternative_title AS "alternative_title",
                     a.release_date,
                     a.company_id,
                     a.rating,
@@ -27,8 +28,8 @@ class Anime {
             let paramCount = 1;
 
             if (title) {
-                params.push(`%${title}%`);
-                query += ` AND title ILIKE $${paramCount++}`;
+                params.push(`%${title}%`, `%${title}%`);
+                query += ` AND ( title ILIKE $${paramCount++} OR alternative_title ILIKE $${paramCount++} )`;
             }
 
             if (genre) {
@@ -92,6 +93,7 @@ class Anime {
         const animeResult = await pool.query(`
             SELECT a.anime_id AS id,
                    a.title,
+                   a.alternative_title AS "alternative_title",
                    a.synopsis,
                    a.company_id,
                    m.url AS "imageUrl"
