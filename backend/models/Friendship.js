@@ -75,7 +75,9 @@ class Friendship {
         const exactMatch = await pool.query(
             `SELECT user_id, username, display_name
              FROM users 
-             WHERE username = $1 AND user_id != $2
+             WHERE username = $1 
+               AND user_id != $2
+               AND is_admin = false  -- Exclude admin accounts
              LIMIT 1`,
             [searchTerm, currentUserId]
         );
@@ -120,6 +122,7 @@ class Friendship {
             )
             WHERE (u.username ILIKE $1 OR u.display_name ILIKE $1)
               AND u.user_id != $2
+              AND u.is_admin = false  -- Exclude admin accounts from search results
             ORDER BY 
                 CASE 
                     WHEN u.username ILIKE $1 AND u.display_name ILIKE $1 THEN 0

@@ -44,10 +44,11 @@ function Navigation() {
     }
   };
 
+
   return (
     <>
       <div className="nav-left">
-        <Link to="/" className="brand">
+        <Link to={isAdmin ? "/admin" : "/"} className="brand">
           Animeko
         </Link>
       </div>
@@ -67,18 +68,20 @@ function Navigation() {
       </div>
 
       <div className={`nav-main-links ${menuOpen ? "open" : ""}`}>
-        <div className="nav-center">
-          <form onSubmit={handleSearch} className="search-bar">
-            <input
-              type="text"
-              placeholder="Search anime..."
-              value={searchTitle}
-              onChange={(e) => setSearchTitle(e.target.value)}
-              aria-label="Search anime by title"
-            />
-            <button type="submit">Search</button>
-          </form>
-        </div>
+        {!isAdmin && (
+          <div className="nav-center">
+            <form onSubmit={handleSearch} className="search-bar">
+              <input
+                type="text"
+                placeholder="Search anime..."
+                value={searchTitle}
+                onChange={(e) => setSearchTitle(e.target.value)}
+                aria-label="Search anime by title"
+              />
+              <button type="submit">Search</button>
+            </form>
+          </div>
+        )}
 
         <div className="nav-right">
           <div className="theme-toggle-slider" onClick={toggleDarkMode}>
@@ -101,26 +104,30 @@ function Navigation() {
               </button>
               {dropdownOpen && (
                 <div className="dropdown-menu">
-                  <Link to="/profile" className="dropdown-item">
-                    My Profile
-                  </Link>
+                  {!isAdmin && (
+                    <>
+                      <Link to="/profile" className="dropdown-item">
+                        My Profile
+                      </Link>
+                      <Link to="/my-friends" className="dropdown-item">
+                        My Friends
+                      </Link>
+                      <Link to="/my-lists" className="dropdown-item">
+                        My Lists
+                      </Link>
+                      <Link to="/my-library" className="dropdown-item">
+                        My Library
+                      </Link>
+                      <Link to="/subscription" className="dropdown-item">
+                        Subscription
+                      </Link>
+                    </>
+                  )}
                   {isAdmin && (
                     <Link to="/admin" className="dropdown-item">
                       Admin Dashboard
                     </Link>
                   )}
-                  <Link to="/my-friends" className="dropdown-item">
-                    My Friends
-                  </Link>
-                  <Link to="/my-lists" className="dropdown-item">
-                    My Lists
-                  </Link>
-                  <Link to="/my-library" className="dropdown-item">
-                    My Library
-                  </Link>
-                  <Link to="/subscription" className="dropdown-item">
-                    Subscription
-                  </Link>
                   <button
                     onClick={handleLogout}
                     className="dropdown-item logout-button"

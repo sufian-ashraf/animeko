@@ -1,28 +1,41 @@
 // frontend/src/components/ProtectedRoute.js
-import React from 'react';
-import {Navigate} from 'react-router-dom';
-import {useAuth} from '../contexts/AuthContext';
+import React, { useEffect } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-export const ProtectedRoute = ({children}) => {
-    const {user, loading, token} = useAuth();
+export const ProtectedRoute = ({ children }) => {
+    const { user, loading, token } = useAuth();
+    const location = useLocation();
 
-    console.log('ProtectedRoute - Loading:', loading); // Debug log
-    console.log('ProtectedRoute - User:', user ? 'exists' : 'null'); // Debug log
-    console.log('ProtectedRoute - Token:', token ? 'exists' : 'null'); // Debug log
+    // Check if user is admin - handle different possible true values
+    const isAdmin = user && (
+        user.is_admin === true ||
+        user.is_admin === 't' ||
+        user.is_admin === 1 ||
+        user.is_admin === 'true' ||
+        user.is_admin === '1'
+    );
 
     // Show loading while checking authentication
     if (loading) {
-        console.log('ProtectedRoute - Still loading, showing loading screen');
-        return <div>Loading...</div>;
+        return (
+            <div className="spinner-container">
+                <div className="spinner"></div>
+                <p>Loading...</p>
+            </div>
+        );
     }
 
     // Redirect to login if no token
     if (!token) {
-        console.log('ProtectedRoute - No token, redirecting to login');
-        return <Navigate to="/login" replace/>;
+        return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
     }
 
-    // Render protected component
-    console.log('ProtectedRoute - Authentication valid, rendering children');
+    // If user is admin, redirect to admin dashboard
+    if (isAdmin) {
+        return <Navigate to="/admin" replace />;
+    }
+
+    // Render protected component for regular users
     return children;
 };

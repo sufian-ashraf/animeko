@@ -15,11 +15,18 @@ const router = express.Router();
 router.post('/friends/requests', authenticate, async (req, res) => {
     const requester = req.user.user_id;
     const {addresseeId} = req.body;
+    
     if (requester === addresseeId) {
         return res.status(400).json({message: "Cannot friend yourself"});
     }
 
     try {
+        // Check if the target user is an admin
+        const targetUser = await User.findById(addresseeId);
+        if (targetUser && (targetUser.is_admin === true || targetUser.is_admin === 't' || targetUser.is_admin === 1 || targetUser.is_admin === 'true' || targetUser.is_admin === '1')) {
+            return res.status(403).json({message: "Cannot send friend request to admin accounts"});
+        }
+
         const result = await Friendship.sendFriendRequest({ requesterId: requester, addresseeId });
         res.status(201).json(result);
     } catch (err) {
