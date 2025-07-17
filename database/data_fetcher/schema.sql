@@ -45,9 +45,9 @@ CREATE TABLE users
     profile_bio           TEXT,
     visible               BOOLEAN                      DEFAULT TRUE,
     created_at            TIMESTAMPTZ                  DEFAULT NOW(),
-    last_login            TIMESTAMPTZ,
     subscription_status   BOOLEAN                      DEFAULT FALSE,
     active_transaction_id INTEGER,
+    subscription_end_date TIMESTAMPTZ,
     is_admin              BOOLEAN             NOT NULL DEFAULT FALSE
 );
 
@@ -186,13 +186,19 @@ CREATE TABLE anime_genre
 
 CREATE TABLE transaction_history
 (
-    transaction_id        SERIAL PRIMARY KEY,
-    user_id               INTEGER     NOT NULL,
-    transaction_date      TIMESTAMPTZ DEFAULT NOW(),
-    status                VARCHAR(50) NOT NULL,
-    transaction_reference VARCHAR(255),
-    payment_method        VARCHAR(50)
+    transaction_history_id SERIAL PRIMARY KEY,
+    user_id                INTEGER NOT NULL,
+    transaction_id         VARCHAR(255)      NOT NULL,
+    subscription_type      VARCHAR(50)      NOT NULL,
+    amount                 FLOAT       NOT NULL,
+    status                 VARCHAR(50) NOT NULL,
+    completed_on           TIMESTAMPTZ,
+    end_date               TIMESTAMPTZ,
+    isPaid                 BOOLEAN      NOT NULL DEFAULT FALSE,
+
+    UNIQUE (transaction_id)
 );
+
 
 CREATE TABLE episode
 (
@@ -230,7 +236,7 @@ CREATE TABLE continue_watching
 
 -- Add foreign key constraints
 ALTER TABLE users
-    ADD CONSTRAINT fk_user_transaction FOREIGN KEY (active_transaction_id) REFERENCES transaction_history (transaction_id);
+    ADD CONSTRAINT fk_user_transaction FOREIGN KEY (active_transaction_id) REFERENCES transaction_history (transaction_history_id);
 
 ALTER TABLE anime
     ADD CONSTRAINT fk_anime_company FOREIGN KEY (company_id) REFERENCES company (company_id);
@@ -320,6 +326,7 @@ CREATE INDEX idx_review_user ON review (user_id);
 CREATE INDEX idx_review_anime ON review (anime_id);
 CREATE INDEX idx_anime_rating ON anime (rating DESC);
 CREATE INDEX idx_character_va ON characters (voice_actor_id);
+CREATE INDEX idx_transaction_history_user_id ON transaction_history(user_id);
 
 -- Create a function to manage continue watching entries (keep only 5 latest animes per users)
 CREATE
