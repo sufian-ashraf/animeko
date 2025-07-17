@@ -138,6 +138,9 @@ const GenreTab = ({searchQuery}) => {
             return;
         }
         
+        // Scroll to top of the page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
         console.log('Setting form data for genre ID:', genreId);
         setFormData({
             name: genre.name || '',

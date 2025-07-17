@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {useAuth} from '../../contexts/AuthContext';
 
 const AnimeTab = ({searchQuery}) => {
@@ -14,10 +14,24 @@ const AnimeTab = ({searchQuery}) => {
     });
     const [editingId, setEditingId] = useState(null);
     const [companies, setCompanies] = useState([]);
+    const [companySearch, setCompanySearch] = useState('');
+    const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
 
     useEffect(() => {
         fetchAnime();
         fetchCompanies();
+        
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsCompanyDropdownOpen(false);
+            }
+        };
+        
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
     }, []);
 
     const fetchAnime = async () => {
@@ -202,6 +216,9 @@ const AnimeTab = ({searchQuery}) => {
             return;
         }
 
+        // Scroll to top of the page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
         setFormData({
             title: anime.title || '',
             synopsis: anime.synopsis || '',
@@ -310,22 +327,99 @@ const AnimeTab = ({searchQuery}) => {
                             onChange={handleInputChange}
                         />
                     </div>
-                    <div className="form-group">
+                    <div className="form-group" ref={dropdownRef}>
                         <label>Production Company</label>
-                        <select
-                            name="company_id"
-                            className="form-control"
-                            value={formData.company_id}
-                            onChange={handleInputChange}
-                        >
-                            <option value="">Select a company</option>
-                            {companies.map(company => (
-                                <option key={company.id} value={company.id}>
-                                    {company.name}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="dropdown">
+                            <div 
+                                className="form-control" 
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => {
+                                    setIsCompanyDropdownOpen(!isCompanyDropdownOpen);
+                                    setCompanySearch('');
+                                }}
+                            >
+                                {companies.find(c => c.id == formData.company_id)?.name || 'Select a company'}
+                            </div>
+                            {isCompanyDropdownOpen && (
+                                <div className="dropdown-menu show" style={{ width: '100%', padding: '0.5rem' }}>
+                                    <input
+                                        type="text"
+                                        className="form-control form-control-sm mb-2"
+                                        placeholder="Search companies..."
+                                        value={companySearch}
+                                        onChange={(e) => setCompanySearch(e.target.value)}
+                                        autoFocus
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                        {companies
+                                            .filter(company => 
+                                                !companySearch || 
+                                                (company.name && company.name.toLowerCase().includes(companySearch.toLowerCase()))
+                                            )
+                                            .map(company => (
+                                                <button
+                                                    key={company.id}
+                                                    className="dropdown-item"
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setFormData(prev => ({...prev, company_id: company.id}));
+                                                        setIsCompanyDropdownOpen(false);
+                                                    }}
+                                                >
+                                                    {company.name}
+                                                </button>
+                                            ))
+                                        }
+                                        {companies.filter(company => 
+                                            !companySearch || 
+                                            (company.name && company.name.toLowerCase().includes(companySearch.toLowerCase()))
+                                        ).length === 0 && (
+                                            <div className="dropdown-item text-muted">No companies found</div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
+                    <style jsx>{`
+                        .dropdown {
+                            position: relative;
+                        }
+                        .dropdown-menu {
+                            position: absolute;
+                            top: 100%;
+                            left: 0;
+                            z-index: 1000;
+                            background: white;
+                            border: 1px solid #ced4da;
+                            border-radius: 0.25rem;
+                            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+                            width: 100%;
+                        }
+                        .dropdown-item {
+                            display: block;
+                            width: 100%;
+                            padding: 0.25rem 1.5rem;
+                            clear: both;
+                            font-weight: 400;
+                            color: #212529;
+                            text-align: inherit;
+                            white-space: nowrap;
+                            background-color: transparent;
+                            border: 0;
+                            text-align: left;
+                        }
+                        .dropdown-item:hover {
+                            background-color: #f8f9fa;
+                            color: #16181b;
+                            text-decoration: none;
+                        }
+                        .dropdown-item:active {
+                            background-color: #e9ecef;
+                        }
+                    `}</style>
                     <div className="form-actions">
                         <button type="submit" className="btn btn-primary">
                             {editingId ? 'Update' : 'Add'} Anime

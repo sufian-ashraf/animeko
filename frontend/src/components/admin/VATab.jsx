@@ -122,6 +122,8 @@ const VATab = ({searchQuery}) => {
         }
         
         try {
+            // Scroll to top of the page
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             // Format the date for the date input (YYYY-MM-DD)
             let formattedDate = '';
             const birthDate = va.birth_date || va.birthDate; // Handle both formats

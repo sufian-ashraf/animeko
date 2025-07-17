@@ -109,6 +109,10 @@ const CompanyTab = ({searchQuery}) => {
             showError('Invalid company data: missing ID');
             return;
         }
+        
+        // Scroll to top of the page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
         setFormData({
             name: company.name || '',
             country: company.country || '',
