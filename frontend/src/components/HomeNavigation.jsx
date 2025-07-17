@@ -109,6 +109,9 @@ function Navigation() {
                       Admin Dashboard
                     </Link>
                   )}
+                  <Link to="/my-friends" className="dropdown-item">
+                    My Friends
+                  </Link>
                   <Link to="/my-lists" className="dropdown-item">
                     My Lists
                   </Link>

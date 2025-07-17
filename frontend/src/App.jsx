@@ -28,6 +28,7 @@ import ListSearch from './pages/ListSearch';
 import AdminDashboard from './pages/AdminDashboard';
 import SubscriptionPage from './pages/SubscriptionPage';
 import PaymentConfirmationPage from './pages/PaymentConfirmationPage';
+import MyFriends from './pages/MyFriends';
 
 // Import CSS
 import './styles/App.css';
@@ -134,6 +135,14 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <PaymentConfirmationPage/>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/my-friends"
+                            element={
+                                <ProtectedRoute>
+                                    <MyFriends/>
                                 </ProtectedRoute>
                             }
                         />
