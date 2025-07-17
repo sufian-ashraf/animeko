@@ -45,9 +45,9 @@ CREATE TABLE users
     profile_bio           TEXT,
     visible               BOOLEAN                      DEFAULT TRUE,
     created_at            TIMESTAMPTZ                  DEFAULT NOW(),
-    last_login            TIMESTAMPTZ,
     subscription_status   BOOLEAN                      DEFAULT FALSE,
     active_transaction_id INTEGER,
+    subscription_end_date TIMESTAMPTZ,
     is_admin              BOOLEAN             NOT NULL DEFAULT FALSE
 );
 
@@ -186,13 +186,18 @@ CREATE TABLE anime_genre
 
 CREATE TABLE transaction_history
 (
-    transaction_id        SERIAL PRIMARY KEY,
-    user_id               INTEGER     NOT NULL,
-    transaction_date      TIMESTAMPTZ DEFAULT NOW(),
-    status                VARCHAR(50) NOT NULL,
-    transaction_reference VARCHAR(255),
-    payment_method        VARCHAR(50)
+    transaction_history_id SERIAL PRIMARY KEY,
+    user_id                INTEGER NOT NULL,
+    transaction_id         VARCHAR(255)      NOT NULL,
+    subscription_type      VARCHAR(50)      NOT NULL,
+    amount                 FLOAT       NOT NULL,
+    completed_on           TIMESTAMPTZ,
+    end_date               TIMESTAMPTZ,
+    is_paid                 BOOLEAN      NOT NULL DEFAULT FALSE,
+
+    UNIQUE (transaction_id)
 );
+
 
 CREATE TABLE episode
 (
@@ -230,7 +235,7 @@ CREATE TABLE continue_watching
 
 -- Add foreign key constraints
 ALTER TABLE users
-    ADD CONSTRAINT fk_user_transaction FOREIGN KEY (active_transaction_id) REFERENCES transaction_history (transaction_id);
+    ADD CONSTRAINT fk_user_transaction FOREIGN KEY (active_transaction_id) REFERENCES transaction_history (transaction_history_id);
 
 ALTER TABLE anime
     ADD CONSTRAINT fk_anime_company FOREIGN KEY (company_id) REFERENCES company (company_id);
@@ -320,6 +325,7 @@ CREATE INDEX idx_review_user ON review (user_id);
 CREATE INDEX idx_review_anime ON review (anime_id);
 CREATE INDEX idx_anime_rating ON anime (rating DESC);
 CREATE INDEX idx_character_va ON characters (voice_actor_id);
+CREATE INDEX idx_transaction_history_user_id ON transaction_history(user_id);
 
 -- Create a function to manage continue watching entries (keep only 5 latest animes per users)
 CREATE
@@ -359,41 +365,7 @@ CREATE TRIGGER tr_manage_continue_watching
     AFTER INSERT OR
 UPDATE ON continue_watching FOR EACH ROW EXECUTE FUNCTION manage_continue_watching();
 
--- Create a function to manage subscription changes
-CREATE
-OR REPLACE FUNCTION manage_subscription()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- If users already has an active transaction, update its status
-    IF
-EXISTS (
-        SELECT 1
-        FROM users u
-        WHERE u.user_id = NEW.user_id
-        AND u.active_transaction_id IS NOT NULL
-    ) THEN
-        -- Update the status of the previous transaction
-UPDATE transaction_history
-SET status = 'cancelled'
-WHERE transaction_id = (SELECT active_transaction_id FROM users WHERE user_id = NEW.user_id);
-END IF;
 
-    -- Update users's active_transaction_id to the new transaction
-UPDATE users
-SET active_transaction_id = NEW.transaction_id,
-    subscription_status   = TRUE
-WHERE user_id = NEW.user_id;
-
-RETURN NEW;
-END;
-$$
-LANGUAGE plpgsql;
-
--- Create trigger for subscription management
-CREATE TRIGGER tr_manage_subscription
-    AFTER INSERT
-    ON transaction_history
-    FOR EACH ROW WHEN (NEW.status = 'completed') EXECUTE FUNCTION manage_subscription();
 
 
 -- ─────────────────────────────────────────────
@@ -575,3 +547,28 @@ CREATE TRIGGER tr_review_delete_anime_rating_rank
     AFTER DELETE
     ON review
     FOR EACH ROW EXECUTE FUNCTION fn_update_anime_rating_and_rank_on_delete();
+
+-- Create a function to update user subscription on successful payment
+CREATE OR REPLACE FUNCTION fn_update_user_subscription()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- If the transaction is paid, update the user's subscription details
+  IF NEW.is_paid = TRUE THEN
+    UPDATE users
+    SET
+      subscription_status = TRUE,
+      active_transaction_id = NEW.transaction_history_id,
+      subscription_end_date = NEW.end_date
+    WHERE
+      user_id = NEW.user_id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create a trigger to call the function after a transaction is updated
+CREATE TRIGGER tr_after_transaction_update
+AFTER UPDATE ON transaction_history
+FOR EACH ROW
+WHEN (OLD.is_paid IS DISTINCT FROM NEW.is_paid)
+EXECUTE FUNCTION fn_update_user_subscription();
