@@ -617,23 +617,42 @@ export default function AnimePage() {
         {/* ───────── Cast Grid ─────────── (unchanged) */}
         <h3 className="cast-heading">Cast &amp; Voice Actors</h3>
         {cast.length > 0 ? (<div className="cast-grid">
-            {cast.map(({characterId, characterName, vaId, vaName}) => (
+            {cast.map(({characterId, characterName, vaId, vaName, characterImageUrl, vaImageUrl}) => (
                 <div key={characterId} className="cast-card">
-                    <img
-                        src={placeholder}
-                        alt={`${characterName} placeholder`}
-                        className="character-thumb"
-                    />
+                    <div className="character-thumb-container">
+                        <img
+                            src={characterImageUrl || placeholder}
+                            alt={characterName}
+                            className="character-thumb"
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = placeholder;
+                            }}
+                        />
+                    </div>
                     <div className="cast-info">
                         <Link to={`/character/${characterId}`} className="link">
                             <strong>{characterName}</strong>
                         </Link>
-                        <p>
-                            voiced by{' '}
-                            <Link to={`/va/${vaId}`} className="link">
-                                {vaName}
-                            </Link>
-                        </p>
+                        {vaName && (
+                            <div className="va-info">
+                                <span>voiced by</span>
+                                <Link to={`/va/${vaId}`} className="va-link">
+                                    <div className="va-thumb-container">
+                                        <img
+                                            src={vaImageUrl || placeholder}
+                                            alt={vaName}
+                                            className="va-thumb"
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = placeholder;
+                                            }}
+                                        />
+                                    </div>
+                                    <span>{vaName}</span>
+                                </Link>
+                            </div>
+                        )}
                     </div>
                 </div>))}
         </div>) : (<p className="no-cast">No cast information available.</p>)}

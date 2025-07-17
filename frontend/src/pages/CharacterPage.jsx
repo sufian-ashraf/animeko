@@ -68,16 +68,24 @@ export default function CharacterPage() {
     if (error) return <div className="char-error">{error}</div>;
     if (!char) return <div className="char-error">Character not found</div>;
 
-    const {name, description, vaId, vaName = 'Unknown', animeList = []} = char;
+    const {name, description, vaId, vaName = 'Unknown', animeList = [], imageUrl} = char;
 
     return (<div className="character-page">
         {/* Header Card */}
         <div className="character-header-card">
-            <img
-                src={placeholder}
-                alt={`${name} placeholder`}
-                className="character-photo"
-            />
+            <div className="character-photo-container">
+                <img
+                    src={imageUrl || placeholder}
+                    alt={name}
+                    className="character-photo"
+                    onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = placeholder;
+                        e.target.style.objectFit = 'contain';
+                        e.target.style.padding = '1rem';
+                    }}
+                />
+            </div>
             <div className="character-meta">
                 <div className="character-meta-header">
                     <h2 className="character-name">{name}</h2>
@@ -110,6 +118,10 @@ export default function CharacterPage() {
                     src={imageUrl || placeholder}
                     alt={`${animeTitle} cover`}
                     className="appearance-thumb"
+                    onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = placeholder;
+                    }}
                 />
                 <p className="appearance-title">{animeTitle}</p>
             </Link>))}

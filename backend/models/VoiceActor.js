@@ -4,12 +4,16 @@ class VoiceActor {
     static async getAll() {
         const result = await pool.query(`
             SELECT 
-                voice_actor_id as "id",
-                name,
-                TO_CHAR(birth_date, 'YYYY-MM-DD') as "birthDate",
-                nationality
-            FROM voice_actor
-            ORDER BY name
+                v.voice_actor_id as "id",
+                v.name,
+                TO_CHAR(v.birth_date, 'YYYY-MM-DD') as "birthDate",
+                v.nationality,
+                m.url as "imageUrl"
+            FROM voice_actor v
+            LEFT JOIN media m ON v.voice_actor_id = m.entity_id 
+                             AND m.entity_type = 'voice_actor' 
+                             AND m.media_type = 'image'
+            ORDER BY v.name
         `);
         return result.rows;
     }
@@ -17,12 +21,16 @@ class VoiceActor {
     static async getById(vaId) {
         const vaResult = await pool.query(
             `SELECT 
-                voice_actor_id as "id",
-                name,
-                TO_CHAR(birth_date, 'YYYY-MM-DD') as "birthDate",
-                nationality
-             FROM voice_actor 
-             WHERE voice_actor_id = $1`,
+                v.voice_actor_id as "id",
+                v.name,
+                TO_CHAR(v.birth_date, 'YYYY-MM-DD') as "birthDate",
+                v.nationality,
+                m.url as "imageUrl"
+             FROM voice_actor v
+             LEFT JOIN media m ON v.voice_actor_id = m.entity_id 
+                              AND m.entity_type = 'voice_actor' 
+                              AND m.media_type = 'image'
+             WHERE v.voice_actor_id = $1`,
             [vaId]
         );
 
@@ -36,11 +44,15 @@ class VoiceActor {
             `SELECT 
                 a.anime_id as "animeId",
                 a.title as "animeTitle",
+                m.url as "animeImageUrl",
                 c.character_id as "characterId",
                 c.name as "characterName"
              FROM anime_character ac
              JOIN anime a ON a.anime_id = ac.anime_id
              JOIN characters c ON c.character_id = ac.character_id
+             LEFT JOIN media m ON a.anime_id = m.entity_id 
+                              AND m.entity_type = 'anime' 
+                              AND m.media_type = 'image'
              WHERE c.voice_actor_id = $1`,
             [vaId]
         );

@@ -30,7 +30,7 @@ class Favorite {
                    CASE
                        WHEN uf.entity_type = 'anime' THEN a.title
                        WHEN uf.entity_type = 'character' THEN ch.name
-                       WHEN uf.entity_type = 'va' THEN va.name
+                       WHEN uf.entity_type = 'voice_actor' THEN va.name
                        ELSE NULL
                        END        AS "name",
 
@@ -47,7 +47,7 @@ class Favorite {
                                    AND uf.entity_id = ch.character_id
 
                      LEFT JOIN voice_actor va
-                               ON uf.entity_type = 'va'
+                               ON uf.entity_type = 'voice_actor'
                                    AND uf.entity_id = va.voice_actor_id
 
                      LEFT JOIN LATERAL (

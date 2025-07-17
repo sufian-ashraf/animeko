@@ -68,15 +68,34 @@ export default function VAPage() {
                         <div className="spinner"></div>
                     </div>;
 
-    const {name, bio, roles = []} = va;
+    const {name, bio, roles = [], imageUrl} = va;
+    console.log('Voice Actor Data:', { name, imageUrl });
+
+    // Check if we should show the placeholder
+    const showPlaceholder = !imageUrl || imageUrl === 'null' || imageUrl === 'undefined';
 
     return (<div className="va-page">
         <div className="va-header-card">
-            <img
-                src={placeholder}
-                alt={`${name} placeholder`}
-                className="va-photo"
-            />
+            <div className="va-photo-container">
+                <img
+                    src={showPlaceholder ? placeholder : imageUrl}
+                    alt={showPlaceholder ? `${name} - No Image Available` : name}
+                    className="va-photo"
+                    style={{
+                        objectFit: showPlaceholder ? 'contain' : 'cover',
+                        padding: showPlaceholder ? '1.5rem' : '0',
+                        opacity: showPlaceholder ? 0.7 : 1
+                    }}
+                    onError={(e) => {
+                        console.error('Error loading image:', imageUrl);
+                        e.target.onerror = null;
+                        e.target.src = placeholder;
+                        e.target.style.objectFit = 'contain';
+                        e.target.style.padding = '1.5rem';
+                        e.target.style.opacity = 0.7;
+                    }}
+                />
+            </div>
             <div className="va-info">
                 <div className="va-info-header">
                     <h2 className="va-name">{name}</h2>
@@ -94,9 +113,19 @@ export default function VAPage() {
 
         <h3 className="va-roles-heading">Roles</h3>
         {roles.length > 0 ? (<div className="va-roles-grid">
-            {roles.map(({animeId, animeTitle, characterId, characterName}) => (
+            {roles.map(({animeId, animeTitle, characterId, characterName, animeImageUrl}) => (
                 <div key={`${animeId}-${characterId}`} className="va-role-card">
                     <Link to={`/anime/${animeId}`} className="role-anime-link">
+                        <div className="role-anime-image">
+                            <img 
+                                src={animeImageUrl || placeholder} 
+                                alt={animeTitle}
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = placeholder;
+                                }}
+                            />
+                        </div>
                         <strong>{animeTitle}</strong>
                     </Link>
                     <p>

@@ -130,10 +130,18 @@ class Anime {
             SELECT ac.character_id  AS "characterId",
                    c.name           AS "characterName",
                    c.voice_actor_id AS "vaId",
-                   va.name          AS "vaName"
+                   va.name          AS "vaName",
+                   cm.url           AS "characterImageUrl",
+                   vm.url           AS "vaImageUrl"
             FROM anime_character ac
                      JOIN characters c ON c.character_id = ac.character_id
                      LEFT JOIN voice_actor va ON va.voice_actor_id = c.voice_actor_id
+                     LEFT JOIN media cm ON cm.entity_id = c.character_id 
+                                      AND cm.entity_type = 'character' 
+                                      AND cm.media_type = 'image'
+                     LEFT JOIN media vm ON vm.entity_id = va.voice_actor_id 
+                                  AND vm.entity_type = 'voice_actor' 
+                                  AND vm.media_type = 'image'
             WHERE ac.anime_id = $1`, [animeId]);
 
         anime.cast = castResult.rows;

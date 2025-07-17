@@ -3,12 +3,16 @@ import pool from '../db.js';
 class Character {
     static async getById(charId) {
         // 1) Basic character info
-        const charResult = await pool.query(`SELECT character_id   AS id,
-                                                    name,
-                                                    description,
-                                                    voice_actor_id AS "vaId"
-                                             FROM characters
-                                             WHERE character_id = $1`, [charId]);
+        const charResult = await pool.query(`SELECT c.character_id   AS id,
+                                                    c.name,
+                                                    c.description,
+                                                    c.voice_actor_id AS "vaId",
+                                                    m.url AS "imageUrl"
+                                             FROM characters c
+                                             LEFT JOIN media m ON c.character_id = m.entity_id 
+                                                              AND m.entity_type = 'character' 
+                                                              AND m.media_type = 'image'
+                                             WHERE c.character_id = $1`, [charId]);
         if (charResult.rows.length === 0) {
             return null;
         }
