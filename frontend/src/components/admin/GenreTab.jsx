@@ -260,19 +260,19 @@ const GenreTab = ({searchQuery}) => {
                 {filteredGenres.length === 0 ? (
                     <p>No genres found.</p>
                 ) : (
-                    <div className="admin-table">
+                    <div className="admin-table genre-table">
                         <div className="table-header">
-                            <div className="col-name">Name</div>
-                            <div className="col-desc">Description</div>
-                            <div className="col-actions">Actions</div>
+                            <div>Name</div>
+                            <div>Description</div>
+                            <div>Actions</div>
                         </div>
                         {filteredGenres.map(genre => (
                             <div key={genre.genre_id} className="table-row">
-                                <div className="col-name">{genre.name}</div>
-                                <div className="col-desc">
+                                <div>{genre.name}</div>
+                                <div>
                                     {genre.description || 'No description'}
                                 </div>
-                                <div className="col-actions">
+                                <div className="table-actions">
                                     <button
                                         type="button"
                                         onClick={() => handleEdit(genre)}

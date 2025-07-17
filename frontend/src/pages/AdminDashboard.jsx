@@ -2,6 +2,7 @@
 
 import React, {useState} from 'react';
 import {useAuth} from '../contexts/AuthContext';
+import {useTheme} from '../contexts/ThemeContext';
 import '../styles/AdminDashboard.css';
 
 // Tab components
@@ -13,6 +14,7 @@ import CharactersTab from '../components/admin/CharactersTab';
 
 export default function AdminDashboard() {
     const {user} = useAuth();
+    const {isDarkMode} = useTheme();
     const [activeTab, setActiveTab] = useState('anime');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
@@ -41,7 +43,7 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className="admin-container">
+        <div className={`admin-container ${isDarkMode ? 'dark-mode' : ''}`}>
             <h1>Admin Dashboard</h1>
 
             {/* Navigation Tabs */}
