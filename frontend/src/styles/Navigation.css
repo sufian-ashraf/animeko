@@ -141,7 +141,10 @@
     display: flex;
     flex-direction: column;
     z-index: 1000;
-    width: 200px;
+    min-width: 220px; /* Increased minimum width */
+    width: auto; /* Allow it to grow if needed */
+    white-space: nowrap; /* Prevent text wrapping */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for better visibility */
 }
 
 .dropdown-item {

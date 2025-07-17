@@ -1,5 +1,6 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useCallback} from 'react';
 import {useAuth} from '../../contexts/AuthContext';
+import { X } from 'react-feather'; // For the close icon in selected tags
 
 const AnimeTab = ({searchQuery}) => {
     const {token} = useAuth();
@@ -16,15 +17,25 @@ const AnimeTab = ({searchQuery}) => {
     const [companies, setCompanies] = useState([]);
     const [companySearch, setCompanySearch] = useState('');
     const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
+    const [genres, setGenres] = useState([]);
+    const [selectedGenres, setSelectedGenres] = useState([]);
+    const [genreSearch, setGenreSearch] = useState('');
+    const [isGenreDropdownOpen, setIsGenreDropdownOpen] = useState(false);
+    const companyDropdownRef = useRef(null);
+    const genreDropdownRef = useRef(null);
+    const dropdownRef = useRef(null); // Add this line
 
     useEffect(() => {
         fetchAnime();
         fetchCompanies();
+        fetchGenres();
         
         const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            if (companyDropdownRef.current && !companyDropdownRef.current.contains(event.target)) {
                 setIsCompanyDropdownOpen(false);
+            }
+            if (genreDropdownRef.current && !genreDropdownRef.current.contains(event.target)) {
+                setIsGenreDropdownOpen(false);
             }
         };
         
@@ -33,6 +44,62 @@ const AnimeTab = ({searchQuery}) => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+    
+    const fetchGenres = async () => {
+        try {
+            const response = await fetch('http://localhost:5000/api/genre');
+            if (response.ok) {
+                const data = await response.json();
+                // Normalize the genre data structure
+                const normalizedGenres = Array.isArray(data) 
+                    ? data.map(g => ({
+                        id: g.id || g.genre_id,
+                        genre_id: g.genre_id || g.id,
+                        name: g.name || g.genre_name || 'Unnamed Genre'
+                    }))
+                    : [];
+                setGenres(normalizedGenres);
+            }
+        } catch (err) {
+            console.error('Error fetching genres:', err);
+            showError('Failed to load genres');
+        }
+    };
+    
+    const toggleGenre = (genre) => {
+        setSelectedGenres(prev => {
+            const genreId = genre.genre_id || genre.id;
+            const exists = prev.some(g => (g.genre_id || g.id) === genreId);
+            if (exists) {
+                return prev.filter(g => (g.genre_id || g.id) !== genreId);
+            } else {
+                // Ensure we're adding a properly structured genre object
+                return [...prev, {
+                    id: genre.id || genre.genre_id,
+                    genre_id: genre.genre_id || genre.id,
+                    name: genre.name || genre.genre_name || 'Unnamed Genre'
+                }];
+            }
+        });
+    };
+    
+    const removeGenre = (genreId) => {
+        setSelectedGenres(prev => prev.filter(g => (g.genre_id || g.id) !== genreId));
+    };
+    
+    // Initialize selected genres when editing
+    const initializeSelectedGenres = useCallback((anime) => {
+        if (anime.genres) {
+            setSelectedGenres(anime.genres);
+        } else if (anime.genre) {
+            // Handle case where genre is a string (from initial data)
+            const genreNames = anime.genre.split(',').map(g => g.trim());
+            const matchedGenres = genres.filter(g => genreNames.includes(g.name));
+            setSelectedGenres(matchedGenres);
+        } else {
+            setSelectedGenres([]);
+        }
+    }, [genres]);
 
     const fetchAnime = async () => {
         try {
@@ -161,33 +228,32 @@ const AnimeTab = ({searchQuery}) => {
             setLoading(false);
             return;
         }
-
-        // Check for duplicate title
-        const existingAnime = animeList.find(anime => anime.title.toLowerCase() === formData.title.trim().toLowerCase());
-        if (existingAnime && existingAnime.anime_id !== editingId) {
-            showError('Anime with this title already exists');
-            setLoading(false);
-            return;
-        }
-
-        const url = editingId
-            ? `http://localhost:5000/api/animes/${editingId}`
-            : 'http://localhost:5000/api/animes';
-        const method = editingId ? 'PUT' : 'POST';
-
+        
         try {
+            const url = editingId 
+                ? `http://localhost:5000/api/animes/${editingId}`
+                : 'http://localhost:5000/api/animes';
+            const method = editingId ? 'PUT' : 'POST';
+
+            // Prepare the request body with genres
+            const requestBody = {
+                title: formData.title,
+                synopsis: formData.synopsis,
+                release_date: formData.release_date || null,
+                company_id: formData.company_id || null,
+                genres: selectedGenres.map(g => ({
+                    genre_id: g.genre_id || g.id,
+                    name: g.name
+                }))
+            };
+
             const response = await fetch(url, {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    title: formData.title.trim(),
-                    synopsis: formData.synopsis || null,
-                    release_date: formData.release_date || null,
-                    company_id: formData.company_id ? Number(formData.company_id) : null
-                })
+                body: JSON.stringify(requestBody)
             });
 
             if (!response.ok) {
@@ -225,6 +291,9 @@ const AnimeTab = ({searchQuery}) => {
             release_date: anime.release_date ? anime.release_date.split('T')[0] : '',
             company_id: anime.company_id ? String(anime.company_id) : ''
         });
+        
+        // Initialize selected genres
+        initializeSelectedGenres(anime);
         setEditingId(animeId);
     };
 
@@ -358,20 +427,22 @@ const AnimeTab = ({searchQuery}) => {
                                                 (company.name && company.name.toLowerCase().includes(companySearch.toLowerCase()))
                                             )
                                             .map(company => (
-                                                <button
+                                                <div
                                                     key={company.id}
                                                     className="dropdown-item"
-                                                    type="button"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setFormData(prev => ({...prev, company_id: company.id}));
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            company_id: company.id
+                                                        }));
                                                         setIsCompanyDropdownOpen(false);
                                                     }}
+                                                    style={{ cursor: 'pointer' }}
                                                 >
                                                     {company.name}
-                                                </button>
-                                            ))
-                                        }
+                                                </div>
+                                            ))}
                                         {companies.filter(company => 
                                             !companySearch || 
                                             (company.name && company.name.toLowerCase().includes(companySearch.toLowerCase()))
@@ -421,7 +492,143 @@ const AnimeTab = ({searchQuery}) => {
                         }
                     `}</style>
                     <div className="form-actions">
-                        <button type="submit" className="btn btn-primary">
+                    </div>
+                    
+                    {/* Genre Selection */}
+                    <div className="form-group" ref={genreDropdownRef}>
+                        <label>Genres</label>
+                        <div className="dropdown">
+                            <div 
+                                className="form-control" 
+                                style={{ 
+                                    minHeight: '38px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: '4px',
+                                    alignItems: 'center',
+                                    position: 'relative',
+                                    zIndex: 1
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsGenreDropdownOpen(!isGenreDropdownOpen);
+                                    setGenreSearch('');
+                                }}
+                            >
+                                {selectedGenres.length === 0 ? (
+                                    <span className="text-muted">Select genres</span>
+                                ) : (
+                                    selectedGenres.map(genre => (
+                                        <span 
+                                            key={genre.genre_id || genre.id}
+                                            className="badge bg-primary me-1 d-inline-flex align-items-center"
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeGenre(genre.genre_id || genre.id);
+                                            }}
+                                        >
+                                            {genre.name}
+                                            <X size={14} className="ms-1" />
+                                        </span>
+                                    ))
+                                )}
+                            </div>
+                            {isGenreDropdownOpen && (
+                                <div className="dropdown-menu show p-2" style={{ width: '100%' }}>
+                                    <input
+                                        type="text"
+                                        className="form-control form-control-sm mb-2"
+                                        placeholder="Search genres..."
+                                        value={genreSearch}
+                                        onChange={(e) => setGenreSearch(e.target.value)}
+                                        autoFocus
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <div 
+                                        style={{ 
+                                            maxHeight: '200px', 
+                                            overflowY: 'auto',
+                                            padding: '8px'
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <div style={{ 
+                                            display: 'flex', 
+                                            flexWrap: 'wrap', 
+                                            gap: '6px',
+                                            padding: '4px',
+                                            position: 'relative',
+                                            zIndex: 2
+                                        }}>
+                                            {genres
+                                                .filter(genre => 
+                                                    !genreSearch || 
+                                                    (genre.name && genre.name.toLowerCase().includes(genreSearch.toLowerCase()))
+                                                )
+                                                .map(genre => {
+                                                    const isSelected = selectedGenres.some(
+                                                        g => (g.genre_id || g.id) === (genre.genre_id || genre.id)
+                                                    );
+                                                    return (
+                                                        <div 
+                                                            key={genre.genre_id || genre.id}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                toggleGenre(genre);
+                                                            }}
+                                                            onMouseDown={(e) => e.preventDefault()}
+                                                            style={{ 
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                padding: '2px 8px',
+                                                                borderRadius: '4px',
+                                                                backgroundColor: isSelected ? '#e9ecef' : 'transparent',
+                                                                border: '1px solid #dee2e6',
+                                                                fontSize: '0.9rem',
+                                                                flexShrink: 0,
+                                                                userSelect: 'none'
+                                                            }}
+                                                        >
+                                                            <span style={{ marginRight: '6px' }}>{genre.name}</span>
+                                                            <input 
+                                                                type="checkbox" 
+                                                                className="form-check-input"
+                                                                checked={isSelected}
+                                                                onChange={(e) => {
+                                                                    e.stopPropagation();
+                                                                    toggleGenre(genre);
+                                                                }}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                style={{
+                                                                    width: '14px',
+                                                                    height: '14px',
+                                                                    margin: 0,
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    );
+                                                })
+                                            }
+                                            {genres.filter(genre => 
+                                                !genreSearch || 
+                                                (genre.name && genre.name.toLowerCase().includes(genreSearch.toLowerCase()))
+                                            ).length === 0 && (
+                                                <div className="text-muted" style={{ padding: '8px' }}>No genres found</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    
+                    <div className="form-actions">
+                        <button type="submit" className="btn btn-primary" disabled={loading}>
                             {editingId ? 'Update' : 'Add'} Anime
                         </button>
                         {editingId && (

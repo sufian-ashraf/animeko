@@ -25,9 +25,12 @@ const Login = () => {
     useEffect(() => {
         setLoginError(''); // Clear error on mount/navigation
         if (isAuthenticated) {
-            navigate(redirectUrl, {replace: true});
+            // Check if user is admin and redirect accordingly
+            const user = JSON.parse(localStorage.getItem('user'));
+            const targetPath = user?.is_admin ? '/admin' : '/';
+            navigate(targetPath, { replace: true });
         }
-    }, [isAuthenticated, navigate, redirectUrl]);
+    }, [isAuthenticated, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -40,9 +43,28 @@ const Login = () => {
         try {
             setIsLoading(true);
             setLoginError(''); // Clear previous errors on new attempt
+            
+            // Call login and wait for it to complete
             await login(username, password);
-            console.log('Login successful, redirecting to:', redirectUrl);
-            navigate(redirectUrl, {replace: true, state: { alert: { type: 'success', message: 'Login successful', duration: 3000 } } });
+            
+            // After successful login, get the latest user data from localStorage
+            // which was set by the AuthProvider
+            const user = JSON.parse(localStorage.getItem('user'));
+            
+            // Redirect based on user role
+            const targetPath = user?.is_admin ? '/admin' : '/';
+            console.log('Login successful, redirecting to:', targetPath);
+            
+            navigate(targetPath, {
+                replace: true, 
+                state: { 
+                    alert: { 
+                        type: 'success', 
+                        message: 'Login successful', 
+                        duration: 3000 
+                    } 
+                } 
+            });
         } catch (err) {
             console.error('Login error caught in Login.jsx:', err);
             console.log('Setting login error:', err.message || 'Login failed. Please check your credentials.');

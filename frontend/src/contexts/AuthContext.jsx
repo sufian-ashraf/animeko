@@ -135,9 +135,11 @@ const AuthProvider = ({children}) => {
             setError(null);
 
             const response = await fetch('http://localhost:5000/api/auth/login', {
-                method: 'POST', headers: {
+                method: 'POST',
+                headers: {
                     'Content-Type': 'application/json'
-                }, body: JSON.stringify({username, password})
+                },
+                body: JSON.stringify({username, password})
             });
 
             if (!response.ok) {
@@ -146,14 +148,33 @@ const AuthProvider = ({children}) => {
             }
 
             const data = await response.json();
-
+            
+            // Store the token and user data from the response
             setToken(data.token);
-
-            // Set user from token (this is the source of truth for is_admin)
+            
+            // Set the user data from the response
+            const userData = data.user || {};
+            if (userData) {
+                // Ensure we have all required fields
+                const completeUserData = {
+                    id: userData.user_id || userData.id,
+                    user_id: userData.user_id || userData.id,
+                    username: userData.username,
+                    email: userData.email || '',
+                    display_name: userData.display_name || userData.username,
+                    is_admin: Boolean(userData.is_admin)
+                };
+                
+                // Store user data in localStorage
+                localStorage.setItem('user', JSON.stringify(completeUserData));
+                setUser(completeUserData);
+                return completeUserData;
+            }
+            
+            // Fallback to token decoding if no user data in response
             const tokenUser = setUserFromToken(data.token);
-            console.log('Login successful, user set from token:', tokenUser);
+            return tokenUser || {};
 
-            return tokenUser;
         } catch (error) {
             setError(error.message);
             throw error;

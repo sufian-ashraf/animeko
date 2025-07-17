@@ -149,42 +149,122 @@ class Anime {
         return anime;
     }
 
-    static async create({ title, synopsis, release_date, company_id }) {
-        const releaseDate = !release_date || release_date === '' ? null : release_date;
-        const companyId = !company_id || company_id === '' ? null : company_id;
+    static async create({ title, synopsis, release_date, company_id, genres = [] }) {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            
+            const releaseDate = !release_date || release_date === '' ? null : release_date;
+            const companyId = !company_id || company_id === '' ? null : company_id;
 
-        const result = await pool.query(
-            `INSERT INTO anime (title, synopsis, release_date, company_id)
-             VALUES ($1, $2, $3, $4) RETURNING 
-                anime_id AS id, 
-                title, 
-                synopsis,
-                release_date as "releaseDate",
-                company_id as "companyId"`,
-            [title, synopsis, releaseDate, companyId]
-        );
-        return result.rows[0];
+            // Create the anime
+            const result = await client.query(
+                `INSERT INTO anime (title, synopsis, release_date, company_id)
+                 VALUES ($1, $2, $3, $4)
+                 RETURNING *`,
+                [title, synopsis, releaseDate, companyId]
+            );
+
+            const newAnime = result.rows[0];
+            
+            // Add genre associations if provided
+            if (Array.isArray(genres) && genres.length > 0) {
+                for (const genre of genres) {
+                    if (genre.genre_id || genre.id) {
+                        await client.query(
+                            'INSERT INTO anime_genre (anime_id, genre_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+                            [newAnime.anime_id, genre.genre_id || genre.id]
+                        );
+                    }
+                }
+                
+                // Fetch the genres to include in the response
+                const genreResult = await client.query(
+                    `SELECT g.genre_id as id, g.name 
+                     FROM genre g
+                     JOIN anime_genre ag ON g.genre_id = ag.genre_id
+                     WHERE ag.anime_id = $1`,
+                    [newAnime.anime_id]
+                );
+                newAnime.genres = genreResult.rows;
+            } else {
+                newAnime.genres = [];
+            }
+
+            await client.query('COMMIT');
+            return newAnime;
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
     }
 
-    static async update(animeId, { title, synopsis, release_date, company_id }) {
-        const releaseDate = !release_date || release_date === '' ? null : release_date;
-        const companyId = !company_id || company_id === '' ? null : company_id;
+    static async update(animeId, { title, synopsis, release_date, company_id, genres = [] }) {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            
+            const releaseDate = !release_date || release_date === '' ? null : release_date;
+            const companyId = !company_id || company_id === '' ? null : company_id;
 
-        const result = await pool.query(
-            `UPDATE anime
-             SET title        = COALESCE($1, title),
-                 synopsis     = COALESCE($2, synopsis),
-                 release_date = COALESCE($3, release_date),
-                 company_id   = COALESCE($4, company_id)
-             WHERE anime_id = $5 RETURNING 
-                anime_id AS id, 
-                title, 
-                synopsis,
-                release_date as "releaseDate",
-                company_id as "companyId"`,
-            [title, synopsis, releaseDate, companyId, animeId]
-        );
-        return result.rows[0];
+            // Update anime details
+            const result = await client.query(
+                `UPDATE anime
+                 SET title        = COALESCE($1, title),
+                     synopsis     = COALESCE($2, synopsis),
+                     release_date = COALESCE($3, release_date),
+                     company_id   = COALESCE($4, company_id)
+                 WHERE anime_id = $5 
+                 RETURNING *`,
+                [title, synopsis, releaseDate, companyId, animeId]
+            );
+
+            if (result.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return null;
+            }
+
+            // Update genre associations if genres are provided
+            if (Array.isArray(genres) && genres.length > 0) {
+                // First, remove all existing genre associations
+                await client.query(
+                    'DELETE FROM anime_genre WHERE anime_id = $1',
+                    [animeId]
+                );
+
+                // Then add the new ones
+                for (const genre of genres) {
+                    if (genre.genre_id || genre.id) {
+                        await client.query(
+                            'INSERT INTO anime_genre (anime_id, genre_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+                            [animeId, genre.genre_id || genre.id]
+                        );
+                    }
+                }
+            }
+
+            // Fetch the updated anime with genres
+            const updatedAnime = result.rows[0];
+            const genreResult = await client.query(
+                `SELECT g.genre_id as id, g.name 
+                 FROM genre g
+                 JOIN anime_genre ag ON g.genre_id = ag.genre_id
+                 WHERE ag.anime_id = $1`,
+                [animeId]
+            );
+            
+            updatedAnime.genres = genreResult.rows;
+            
+            await client.query('COMMIT');
+            return updatedAnime;
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
     }
 
     static async delete(animeId) {
@@ -192,11 +272,19 @@ class Anime {
         try {
             await client.query('BEGIN');
 
+            // First delete from junction tables
             await client.query(
                 'DELETE FROM anime_character WHERE anime_id = $1',
                 [animeId]
             );
 
+            // Delete from anime_genre junction table
+            await client.query(
+                'DELETE FROM anime_genre WHERE anime_id = $1',
+                [animeId]
+            );
+
+            // Then delete the anime
             const result = await client.query(
                 'DELETE FROM anime WHERE anime_id = $1 RETURNING anime_id',
                 [animeId]
@@ -206,6 +294,7 @@ class Anime {
             return result.rows[0];
         } catch (err) {
             await client.query('ROLLBACK');
+            console.error('Error deleting anime:', err);
             throw err;
         } finally {
             client.release();

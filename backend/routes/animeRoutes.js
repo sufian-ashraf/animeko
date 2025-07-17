@@ -47,11 +47,17 @@ router.get('/anime/:animeId', async (req, res) => {
 // ─── ADMIN‐ONLY ───────────────────────────────────────────────
 // POST /api/animes
 router.post('/animes', authenticate, authorizeAdmin, async (req, res) => {
-    const {title, synopsis, release_date, company_id} = req.body;
+    const {title, synopsis, release_date, company_id, genres} = req.body;
 
     try {
-        // Use the Anime model to create a new anime
-        const newAnime = await Anime.create({ title, synopsis, release_date, company_id });
+        // Use the Anime model to create a new anime with genres
+        const newAnime = await Anime.create({ 
+            title, 
+            synopsis, 
+            release_date: release_date || null, 
+            company_id: company_id || null,
+            genres: genres || []
+        });
         res.status(201).json(newAnime);
     } catch (err) {
         console.error('Error creating anime:', err);
@@ -65,11 +71,17 @@ router.post('/animes', authenticate, authorizeAdmin, async (req, res) => {
 // PUT /api/animes/:animeId
 router.put('/animes/:animeId', authenticate, authorizeAdmin, async (req, res) => {
     const {animeId} = req.params;
-    const {title, synopsis, release_date, company_id} = req.body;
+    const {title, synopsis, release_date, company_id, genres} = req.body;
 
     try {
-        // Use the Anime model to update an anime
-        const updatedAnime = await Anime.update(animeId, { title, synopsis, release_date, company_id });
+        // Use the Anime model to update an anime with genres
+        const updatedAnime = await Anime.update(animeId, { 
+            title, 
+            synopsis, 
+            release_date: release_date || null, 
+            company_id: company_id || null,
+            genres: genres || []
+        });
 
         if (!updatedAnime) {
             return res.status(404).json({message: 'Anime not found'});
