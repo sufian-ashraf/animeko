@@ -9,6 +9,7 @@ import AnimeTab from '../components/admin/AnimeTab';
 import GenreTab from '../components/admin/GenreTab';
 import CompanyTab from '../components/admin/CompanyTab';
 import VATab from '../components/admin/VATab';
+import CharactersTab from '../components/admin/CharactersTab';
 
 export default function AdminDashboard() {
     const {user} = useAuth();
@@ -32,6 +33,8 @@ export default function AdminDashboard() {
                 return <CompanyTab searchQuery={searchQuery}/>;
             case 'va':
                 return <VATab searchQuery={searchQuery}/>;
+            case 'characters':
+                return <CharactersTab searchQuery={searchQuery}/>;
             default:
                 return <div>Select a tab to begin</div>;
         }
@@ -66,6 +69,12 @@ export default function AdminDashboard() {
                     onClick={() => setActiveTab('va')}
                 >
                     Voice Actors
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === 'characters' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('characters')}
+                >
+                    Characters
                 </button>
             </div>
 
