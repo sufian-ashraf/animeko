@@ -100,7 +100,7 @@ function Navigation() {
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="nav-link profile-button"
               >
-                Profile
+                Menu
               </button>
               {dropdownOpen && (
                 <div className="dropdown-menu">

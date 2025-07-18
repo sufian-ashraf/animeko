@@ -1,9 +1,11 @@
 import React, {useEffect, useState, useRef, useCallback} from 'react';
 import {useAuth} from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { X } from 'react-feather'; // For the close icon in selected tags
 
 const AnimeTab = ({searchQuery}) => {
     const {token} = useAuth();
+    const { isDarkMode } = useTheme();
     const [animeList, setAnimeList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -23,7 +25,6 @@ const AnimeTab = ({searchQuery}) => {
     const [isGenreDropdownOpen, setIsGenreDropdownOpen] = useState(false);
     const companyDropdownRef = useRef(null);
     const genreDropdownRef = useRef(null);
-    const dropdownRef = useRef(null); // Add this line
 
     useEffect(() => {
         fetchAnime();
@@ -396,7 +397,7 @@ const AnimeTab = ({searchQuery}) => {
                             onChange={handleInputChange}
                         />
                     </div>
-                    <div className="form-group" ref={dropdownRef}>
+                    <div className="form-group" ref={companyDropdownRef}>
                         <label>Production Company</label>
                         <div className="dropdown">
                             <div 
@@ -522,8 +523,17 @@ const AnimeTab = ({searchQuery}) => {
                                     selectedGenres.map(genre => (
                                         <span 
                                             key={genre.genre_id || genre.id}
-                                            className="badge bg-primary me-1 d-inline-flex align-items-center"
-                                            style={{ cursor: 'pointer' }}
+                                            className="badge me-1 d-inline-flex align-items-center"
+                                            style={{
+                                                cursor: 'pointer',
+                                                backgroundColor: isDarkMode ? '#34495e' : '#e0f2f7', // Darker, muted blue for dark; very light blue for light
+                                                color: isDarkMode ? '#ecf0f1' : '#2c3e50', // Light text for dark; dark text for light
+                                                padding: '0.3em 0.6em',
+                                                borderRadius: '0.25rem',
+                                                fontSize: '0.85em',
+                                                fontWeight: '500',
+                                                border: `1px solid ${isDarkMode ? '#2c3e50' : '#a7d9ed'}`,
+                                            }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 removeGenre(genre.genre_id || genre.id);
@@ -586,7 +596,7 @@ const AnimeTab = ({searchQuery}) => {
                                                                 alignItems: 'center',
                                                                 padding: '2px 8px',
                                                                 borderRadius: '4px',
-                                                                backgroundColor: isSelected ? '#e9ecef' : 'transparent',
+                                                                backgroundColor: isSelected ? (isDarkMode ? '#495057' : '#e9ecef') : 'transparent',
                                                                 border: '1px solid #dee2e6',
                                                                 fontSize: '0.9rem',
                                                                 flexShrink: 0,

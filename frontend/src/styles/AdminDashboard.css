@@ -16,6 +16,7 @@
 /* Tabs */
 .admin-tabs {
     display: flex;
+    justify-content: center; /* Center the tab buttons */
     gap: 10px;
     margin-bottom: 25px;
     border-bottom: 2px solid #dee2e6;
@@ -38,6 +39,7 @@
     border-radius: 6px;
     transition: all 0.2s ease;
     color: #6c757d;
+    overflow: hidden; /* Ensure background respects border-radius */
 }
 
 .tab-btn:hover {
@@ -459,51 +461,4 @@ textarea.form-control {
 /* Dark Mode - Loading */
 .dark-mode .loading {
     color: #adb5bd;
-}
-
-/* Responsive */
-@media (max-width: 992px) {
-    .table-header,
-    .table-row {
-        grid-template-columns: 1.5fr 1fr 1fr 120px;
-    }
-}
-
-@media (max-width: 768px) {
-    .admin-container {
-        padding: 15px;
-    }
-
-    .admin-tabs {
-        overflow-x: auto;
-        padding-bottom: 5px;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .table-header,
-    .table-row {
-        grid-template-columns: 1fr 1fr 1fr 100px;
-        font-size: 14px;
-    }
-
-    .table-actions,
-    .table-row > div:last-child {
-        display: flex;
-        flex-direction: row;
-        gap: 4px;
-        justify-content: flex-end;
-        flex-wrap: nowrap;
-    }
-
-    .btn {
-        padding: 6px 8px;
-        font-size: 11px;
-        min-width: 40px;
-    }
-
-    .btn-sm {
-        padding: 4px 6px;
-        font-size: 10px;
-        min-width: 35px;
-    }
 }
