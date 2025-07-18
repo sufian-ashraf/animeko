@@ -130,19 +130,58 @@
 }
 
 /* favorite button styling */
-.favorite-btn {
+.character-meta-header .favorite-btn {
     background: transparent;
-    border: none;
-    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+    width: 100px;
+    height: 60px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
     cursor: pointer;
-    padding: 0.25rem 0.5rem;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.2rem;
+    flex-shrink: 0;
+    white-space: normal;
 }
 
-.favorite-btn.favorited {
-    color: gold;
+.character-meta-header .favorite-btn .favorite-icon {
+    font-size: 1.2em;
+    line-height: 1;
 }
 
-.favorite-btn:disabled {
+.character-meta-header .favorite-btn .favorite-text {
+    font-size: 0.8em;
+    line-height: 1.2;
+}
+
+.character-meta-header .favorite-btn:hover:not(:disabled) {
+    background-color: #f7f7f7;
+    border-color: #ccc;
+    color: #000;
+}
+
+.character-meta-header .favorite-btn.favorited,
+.character-meta-header .favorite-btn.favorited:visited {
+    background-color: #61dafb;
+    border-color: #61dafb;
+    color: #1a1a1a !important;
+}
+
+.character-meta-header .favorite-btn.favorited:hover:not(:disabled) {
+    background-color: #21a1f1;
+    border-color: #21a1f1;
+    color: #1a1a1a !important;
+}
+
+.character-meta-header .favorite-btn:disabled {
     opacity: 0.5;
     cursor: default;
 }
@@ -153,4 +192,45 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+/* Dark mode styles */
+.dark-mode .character-header-card {
+    background: #333;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .character-name,
+.dark-mode .character-desc,
+.dark-mode .character-va,
+.dark-mode .appearances-heading,
+.dark-mode .appearance-title,
+.dark-mode .char-loading {
+    color: #eee;
+}
+
+.dark-mode .va-link {
+    color: #61dafb;
+}
+
+.dark-mode .va-link:hover {
+    color: #21a1f1;
+}
+
+.dark-mode .va-unknown,
+.dark-mode .no-appearances {
+    color: #bbb;
+}
+
+.dark-mode .appearance-card {
+    background: #444;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .appearance-card:hover {
+    background: #555;
+}
+
+.dark-mode .char-error {
+    color: #ff6b6b;
 }

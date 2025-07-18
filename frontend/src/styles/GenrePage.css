@@ -32,75 +32,43 @@
     line-height: 1.4;
 }
 
-/* Grid heading */
-.genre-anime-heading {
-    align-self: flex-start;
-    max-width: 800px;
-    width: 100%;
-    margin-left: calc((100% - 800px) / 2);
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-}
-
 /* Anime card grid */
 .genre-anime-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjusted to match company-anime-grid */
     gap: 1rem;
     max-width: 800px;
     width: 100%;
 }
 
-.genre-anime-card {
+.company-anime-card { /* Renamed from .genre-anime-card */
     background: #fafafa;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     text-decoration: none;
     color: inherit;
-    transition: transform 0.2s, box-shadow 0.2s;
-    overflow: hidden;
-}
-
-.genre-anime-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.anime-card-content {
+    padding: 0.5rem;
+    text-align: center;
     display: flex;
-    align-items: flex-start;
-    padding: 1rem;
-    text-align: left;
+    flex-direction: column;
+    align-items: center;
 }
 
 .anime-thumb {
-    width: 80px;
-    height: 120px;
+    width: 60px; /* ¼ of 250px poster */
+    height: 90px; /* ¼ of 375px poster */
     object-fit: cover;
     border-radius: 4px;
-    margin-right: 1rem;
-    flex-shrink: 0;
-}
-
-.anime-details {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
+    margin-bottom: 0.5rem;
 }
 
 .anime-title {
-    margin: 0 0 0.5rem 0;
-    font-size: 1rem;
-    color: #333;
-    font-weight: 600;
-}
-
-.anime-company {
     margin: 0;
-    font-size: 0.85rem;
-    color: #666;
+    font-size: 0.9rem;
+    color: #333;
+    white-space: normal; /* Allow text to wrap */
+    overflow: visible; /* Ensure content is not hidden */
+    text-overflow: clip; /* Prevent ellipsis */
 }
 
 .no-anime {
@@ -118,4 +86,34 @@
 
 .genre-error {
     color: red;
+}
+
+/* Dark mode styles */
+.dark-mode .genre-header-card {
+    background: #333;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .genre-name,
+.dark-mode .genre-desc,
+.dark-mode .genre-loading,
+.dark-mode .no-anime {
+    color: #eee;
+}
+
+.dark-mode .company-anime-card { /* Renamed from .genre-anime-card */
+    background: #444;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .company-anime-card:hover {
+    background: #555;
+}
+
+.dark-mode .anime-title {
+    color: #eee;
+}
+
+.dark-mode .genre-error {
+    color: #ff6b6b;
 }

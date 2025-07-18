@@ -2,9 +2,11 @@ import {Link, useParams} from 'react-router-dom';
 import {useEffect, useState} from 'react';
 import placeholder from '../images/image_not_available.jpg';
 import '../styles/CompanyPage.css';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function CompanyPage() {
     const {companyId} = useParams();
+    const { isDarkMode } = useTheme();
     const [company, setCompany] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -35,7 +37,7 @@ export default function CompanyPage() {
 
     const {name, country, founded, animeList = []} = company;
 
-    return (<div className="company-page">
+    return (<div className={`company-page ${isDarkMode ? 'dark-mode' : ''}`}>
         {/* Header Card */}
         <div className="company-header-card">
             <div className="company-meta">

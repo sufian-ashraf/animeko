@@ -2,10 +2,12 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import placeholder from '../images/image_not_available.jpg';
 import '../styles/GenrePage.css';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function GenrePage() {
     const { genreId } = useParams();
     const navigate = useNavigate();
+    const { isDarkMode } = useTheme();
     const [genre, setGenre] = useState(null);
     const [animeList, setAnimeList] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -48,7 +50,7 @@ export default function GenrePage() {
 
     const { name, description } = genre;
 
-    return (<div className="genre-page">
+    return (<div className={`genre-page ${isDarkMode ? 'dark-mode' : ''}`}>
         {/* Header Card */}
         <div className="genre-header-card">
             <div className="genre-meta">
@@ -64,18 +66,14 @@ export default function GenrePage() {
                     <Link
                         to={`/anime/${anime.id || anime.anime_id}`}
                         key={anime.id || anime.anime_id}
-                        className="genre-anime-card"
+                        className="company-anime-card" /* Changed class name */
                     >
-                        <div className="anime-card-content">
-                            <img
-                                src={placeholder}
-                                alt={`${anime.title} placeholder`}
-                                className="anime-thumb"
-                            />
-                            <div className="anime-details">
-                                <h4 className="anime-title">{anime.title}</h4>
-                            </div>
-                        </div>
+                        <img
+                            src={anime.imageUrl || placeholder} /* Use anime.imageUrl */
+                            alt={`${anime.title} placeholder`}
+                            className="anime-thumb"
+                        />
+                        <p className="anime-title">{anime.title}</p>
                     </Link>
                 ))}
             </div>

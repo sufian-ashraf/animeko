@@ -18,7 +18,7 @@ export default function CharacterPage() {
 
     // fetch character details
     useEffect(() => {
-        fetch(`/api/character/${charId}`)
+        fetch(`/api/characters/${charId}`)
             .then(res => {
                 if (!res.ok) throw new Error(res.status);
                 return res.json();
@@ -94,7 +94,8 @@ export default function CharacterPage() {
                         onClick={toggleFavorite}
                         disabled={favLoading}
                     >
-                        {favLoading ? '…' : isFavorite ? '★ Unfavorite' : '☆ Favorite'}
+                        <div className="favorite-icon">{isFavorite ? '❤️' : '🤍'}</div>
+                        <div className="favorite-text">{favLoading ? '…' : isFavorite ? 'Remove from Favorite' : 'Add to Favorites'}</div>
                     </button>
                 </div>
                 {description && <p className="character-desc">{description}</p>}

@@ -104,7 +104,8 @@ export default function VAPage() {
                         onClick={toggleFavorite}
                         disabled={favLoading}
                     >
-                        {favLoading ? '…' : isFavorite ? '★ Unfavorite' : '☆ Favorite'}
+                        <div className="favorite-icon">{isFavorite ? '❤️' : '🤍'}</div>
+                        <div className="favorite-text">{favLoading ? '…' : isFavorite ? 'Remove from Favorite' : 'Add to Favorites'}</div>
                     </button>
                 </div>
                 {bio && <p className="va-bio">{bio}</p>}
