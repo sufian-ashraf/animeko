@@ -1,5 +1,6 @@
 // src/pages/Home.js
 import React, {useEffect, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import AnimeCard from '../components/AnimeCard';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -7,7 +8,8 @@ import { useAuth } from '../contexts/AuthContext';
 import '../styles/Home.css';
 
 function Home() {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
+    const navigate = useNavigate();
     const [animeList, setAnimeList] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -16,6 +18,12 @@ function Home() {
     const [pendingSortField, setPendingSortField] = useState('name');
     const [pendingSortOrder, setPendingSortOrder] = useState('asc');
     const [favorites, setFavorites] = useState([]);
+
+    useEffect(() => {
+        if (user && user.is_admin) {
+            navigate('/admin', { replace: true });
+        }
+    }, [user, navigate]);
 
     // Fetch favorites once when component mounts or token changes
     useEffect(() => {
