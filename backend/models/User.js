@@ -15,7 +15,7 @@ class User {
 
     static async findByUsernameOrEmail(username, email) {
         const result = await pool.query(
-            'SELECT user_id, username, email, password_hash, display_name, is_admin FROM users WHERE username = $1 OR email = $2',
+            'SELECT user_id, username, email, password_hash, display_name, is_admin, subscription_status, subscription_end_date FROM users WHERE username = $1 OR email = $2',
             [username, email]
         );
         return result.rows[0];

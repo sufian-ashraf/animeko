@@ -70,6 +70,12 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({message: 'Invalid credentials'});
         }
 
+        // Check for expired subscription
+        if (user.subscription_status && user.subscription_end_date && new Date(user.subscription_end_date) < new Date()) {
+            await User.deactivateSubscriptions([user.user_id]);
+            user.subscription_status = false; // Update user object in memory
+        }
+
         // Create JWT payload including is_admin
         const payload = {
             id: user.user_id, username: user.username, is_admin: user.is_admin
