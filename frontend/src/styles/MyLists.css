@@ -6,9 +6,20 @@
 
 .create-list-form input {
     flex: 1;
-    padding: 0.5rem;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+    width: 100%; /* Ensure it takes full width within its flex container */
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color); /* Use CSS variable */
+    font-size: 1rem;
+    background: var(--input-bg); /* Use CSS variable */
+    color: var(--text-color); /* Use CSS variable */
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.create-list-form input:focus {
+    outline: none;
+    border-color: var(--primary-color); /* Use CSS variable */
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2); /* Use CSS variable */
 }
 
 .create-list-form button {
@@ -22,6 +33,21 @@
 
 .create-list-form button:hover {
     background-color: #1c86ee;
+}
+
+/* Dark mode styles for create-list-form */
+.dark-mode .create-list-form {
+    color: #eee; /* Light text color */
+}
+
+.dark-mode .create-list-form input {
+    background-color: #555; /* Darker input background */
+    color: #eee; /* Light text color for input */
+    border-color: #777; /* Lighter border for input */
+}
+
+.dark-mode .create-list-form input::placeholder {
+    color: #bbb; /* Lighter placeholder text for dark mode */
 }
 
 .lists-grid {
@@ -51,4 +77,8 @@
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.dark-mode .my-lists-container {
+    color: #eee;
 }

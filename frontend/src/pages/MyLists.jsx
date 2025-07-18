@@ -1,11 +1,13 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {AuthContext} from '../contexts/AuthContext';
+import {useTheme} from '../contexts/ThemeContext';
 import ListCard from '../components/ListCard';
 
 function MyLists() {
     const [lists, setLists] = useState([]);
     const [newTitle, setNewTitle] = useState('');
     const {token} = useContext(AuthContext);
+    const {isDarkMode} = useTheme();
 
     // Fetch user's lists on component mount
     useEffect(() => {
@@ -70,11 +72,11 @@ function MyLists() {
         }
     };
 
-    return (<div className="my-lists-container">
+    return (<div className={`my-lists-container ${isDarkMode ? 'dark-mode' : ''}`}>
         <h2>My Anime Lists</h2>
 
         {/* Create List Form */}
-        <form className="create-list-form" onSubmit={handleCreate}>
+        <form className={`create-list-form ${isDarkMode ? 'dark-mode' : ''}`} onSubmit={handleCreate}>
             <input
                 type="text"
                 placeholder="New list title"
