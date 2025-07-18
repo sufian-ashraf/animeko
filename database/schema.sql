@@ -326,6 +326,7 @@ CREATE INDEX idx_review_anime ON review (anime_id);
 CREATE INDEX idx_anime_rating ON anime (rating DESC);
 CREATE INDEX idx_character_va ON characters (voice_actor_id);
 CREATE INDEX idx_transaction_history_user_id ON transaction_history(user_id);
+CREATE INDEX idx_user_subscription_expiry ON users (subscription_status, subscription_end_date);
 
 -- Create a function to manage continue watching entries (keep only 5 latest animes per users)
 CREATE

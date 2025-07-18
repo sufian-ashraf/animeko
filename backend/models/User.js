@@ -86,6 +86,30 @@ class User {
         const result = await pool.query('SELECT user_id, username, display_name FROM users LIMIT 10');
         return result.rows;
     }
+
+    static async findExpiredSubscriptions(date) {
+        const result = await pool.query(
+            `SELECT user_id
+             FROM users
+             WHERE subscription_status = TRUE
+               AND subscription_end_date < $1`,
+            [date]
+        );
+        return result.rows;
+    }
+
+    static async deactivateSubscriptions(userIds) {
+        if (userIds.length === 0) {
+            return;
+        }
+        const result = await pool.query(
+            `UPDATE users
+             SET subscription_status = FALSE
+             WHERE user_id = ANY ($1::int[])`,
+            [userIds]
+        );
+        return result.rowCount;
+    }
 }
 
 export default User;

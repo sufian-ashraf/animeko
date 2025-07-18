@@ -20,6 +20,7 @@ import characterRoutes from "./routes/characterRoutes.js";
 import VARoutes from "./routes/VARoutes.js";
 import animeLibraryRoutes from "./routes/animeLibraryRoutes.js";
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
+import subscriptionExpiryJob from './cron/subscriptionExpiryJob.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -74,4 +75,5 @@ app.use(errorHandler);
 // Start server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    subscriptionExpiryJob.start();
 });
