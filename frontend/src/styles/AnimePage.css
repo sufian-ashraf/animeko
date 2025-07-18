@@ -97,6 +97,7 @@
     gap: 0.5rem;
     color: #666;
     font-size: 0.9em;
+    flex-wrap: nowrap; /* Prevent wrapping of VA info */
 }
 
 .va-link {
@@ -153,9 +154,11 @@
     padding: 0.75rem;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    flex-direction: column; /* Arrange items in a column */
+    align-items: center; /* Center items horizontally */
+    gap: 0.5rem; /* Reduced gap for vertical layout */
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: center; /* Center text within the card */
 }
 
 .cast-card:hover {
@@ -190,6 +193,44 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    width: 100%; /* Take full width for text alignment */
+}
+
+.cast-info .link strong { /* Character name */
+    /* Allow text to wrap */
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    display: block; /* Ensure it takes its own line */
+}
+
+.va-info span { /* VA name */
+    /* Allow text to wrap */
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    /* Keep display: flex for va-info to maintain inline layout with image */
+}
+
+/* Dark mode adjustments for cast cards */
+.dark-mode .cast-card {
+    background: #333; /* Darker background */
+    color: #eee; /* Lighter text */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .cast-card .link,
+.dark-mode .cast-card .va-link {
+    color: #999; /* Adjust link color for dark mode */
+}
+
+.dark-mode .cast-card .link:hover,
+.dark-mode .cast-card .va-link:hover {
+    color: #fff; /* Adjust link hover color for dark mode */
+}
+
+.dark-mode .va-info {
+    color: #bbb; /* Adjust va-info text color for dark mode */
 }
 
 .anime-meta-header {
