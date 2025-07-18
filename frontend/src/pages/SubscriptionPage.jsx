@@ -40,14 +40,14 @@ const SubscriptionPage = () => {
     
     let amount;
     switch (plan) {
-      case 'monthly':
+      case 'Monthly':
         amount = 9.99;
         break;
-      case 'yearly':
+      case 'Yearly':
         amount = 99.99;
         break;
-      case 'lifetime':
-        amount = 299.99;
+      case 'Lifetime':
+        amount = 399.99;
         break;
       default:
         amount = 0;
@@ -99,9 +99,12 @@ const SubscriptionPage = () => {
             
             // Handle specific case where user already has subscription
             if (apiResponse.status === 400 && errorData.subscriptionDetails) {
+              const validUntilText = errorData.subscriptionDetails.subscriptionType === 'Lifetime' 
+                ? 'Lifetime Access' 
+                : (errorData.subscriptionDetails.endDate ? new Date(errorData.subscriptionDetails.endDate).toLocaleDateString() : 'N/A');
               alert(`You already have an active subscription! 
 Subscription Type: ${errorData.subscriptionDetails.subscriptionType}
-Valid Until: ${new Date(errorData.subscriptionDetails.endDate).toLocaleDateString()}`);
+Valid Until: ${validUntilText}`);
               // Refresh subscription details
               window.location.reload();
             } else {
@@ -155,15 +158,9 @@ Valid Until: ${new Date(errorData.subscriptionDetails.endDate).toLocaleDateStrin
                     <strong>Purchased On:</strong> {subscriptionDetails.purchasedOn ? new Date(subscriptionDetails.purchasedOn).toLocaleDateString() : 'N/A'}
                   </div>
                   <div className="detail-item">
-                    <strong>Valid Until:</strong> {subscriptionDetails.endDate ? new Date(subscriptionDetails.endDate).toLocaleDateString() : 'N/A'}
+                    <strong>Valid Until:</strong> {subscriptionDetails.subscriptionType === 'Lifetime' ? 'Lifetime Access' : (subscriptionDetails.endDate ? new Date(subscriptionDetails.endDate).toLocaleDateString() : 'N/A')}
                   </div>
-                </div>
-                
-                <div className="subscription-actions">
-                  <button onClick={() => navigate('/')} className="home-button">
-                    Go to Homepage
-                  </button>
-                </div>
+                </div>                
               </div>
             </>
           ) : subscriptionDetails && subscriptionDetails.isExpired ? (
@@ -186,17 +183,17 @@ Valid Until: ${new Date(errorData.subscriptionDetails.endDate).toLocaleDateStrin
                   <div className="subscription-plan">
                     <h2>Monthly</h2>
                     <p className="price">$9.99/month</p>
-                    <button onClick={() => handlePayment('monthly')}>Renew Monthly</button>
+                    <button onClick={() => handlePayment('Monthly')}>Renew Monthly</button>
                   </div>
                   <div className="subscription-plan">
                     <h2>Yearly</h2>
                     <p className="price">$99.99/year</p>
-                    <button onClick={() => handlePayment('yearly')}>Renew Yearly</button>
+                    <button onClick={() => handlePayment('Yearly')}>Renew Yearly</button>
                   </div>
                   <div className="subscription-plan">
                     <h2>Lifetime</h2>
                     <p className="price">$299.99</p>
-                    <button onClick={() => handlePayment('lifetime')}>Upgrade to Lifetime</button>
+                    <button onClick={() => handlePayment('Lifetime')}>Upgrade to Lifetime</button>
                   </div>
                 </div>
               </div>
@@ -223,6 +220,11 @@ Valid Until: ${new Date(errorData.subscriptionDetails.endDate).toLocaleDateStrin
               </div>
             </>
           )}
+          <div className="subscription-actions">
+            <button onClick={() => navigate('/')} className="home-button">
+              Go to Homepage
+            </button>
+          </div>
         </>
       )}
     </div>
