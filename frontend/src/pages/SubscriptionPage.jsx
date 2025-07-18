@@ -1,13 +1,43 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import '../styles/SubscriptionPage.css';
 
 const SubscriptionPage = () => {
   const navigate = useNavigate();
-  const { currentUser } = useContext(AuthContext);
+  const { currentUser, loading, token } = useContext(AuthContext);
+  const { isDarkMode } = useTheme();
+  const [subscriptionDetails, setSubscriptionDetails] = useState(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
+
+  useEffect(() => {
+    const fetchSubscriptionDetails = async () => {
+      if (!token) return;
+      
+      try {
+        const response = await fetch('/api/subscriptions/current', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setSubscriptionDetails(data);
+        }
+      } catch (error) {
+        console.error('Error fetching subscription details:', error);
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+
+    fetchSubscriptionDetails();
+  }, [token]);
 
   const handlePayment = async (plan) => {
+    
     let amount;
     switch (plan) {
       case 'monthly':
@@ -40,6 +70,51 @@ const SubscriptionPage = () => {
 
       if (data.valid) {
         const transactionId = data.transactionid;
+
+        // Create transaction in our backend before redirecting
+        try {
+          const requestBody = {
+            subscriptionType: plan,
+            amount: parseFloat(amount),
+            transactionId: transactionId
+          };
+          
+          console.log('Sending request to create transaction:', requestBody);
+          console.log('Using token:', token ? 'Token present' : 'No token');
+          
+          const apiResponse = await fetch('/api/subscriptions/create-transaction', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          if (!apiResponse.ok) {
+            const errorData = await apiResponse.json();
+            console.error('Failed to create transaction record:', errorData.message);
+            console.error('Response status:', apiResponse.status);
+            console.error('Response details:', errorData);
+            
+            // Handle specific case where user already has subscription
+            if (apiResponse.status === 400 && errorData.subscriptionDetails) {
+              alert(`You already have an active subscription! 
+Subscription Type: ${errorData.subscriptionDetails.subscriptionType}
+Valid Until: ${new Date(errorData.subscriptionDetails.endDate).toLocaleDateString()}`);
+              // Refresh subscription details
+              window.location.reload();
+            } else {
+              alert(`Failed to initialize payment: ${errorData.message}`);
+            }
+            return; // Stop the process if we can't record the transaction
+          }
+        } catch (error) {
+          console.error('Error creating transaction record:', error);
+          alert('An error occurred while initializing payment. Please try again.');
+          return;
+        }
+
         const redirectURL = encodeURIComponent(`${window.location.origin}/payment-confirmation?transactionId=${transactionId}`);
         const gatewayURL = `https://tpg-six.vercel.app/gateway?transactionid=${transactionId}&redirectURL=${redirectURL}`;
         window.location.href = gatewayURL; // Redirect to the payment gateway
@@ -54,25 +129,102 @@ const SubscriptionPage = () => {
   };
 
   return (
-    <div className="subscription-container">
-      <h1>Choose Your Subscription Plan</h1>
-      <div className="subscription-options">
-        <div className="subscription-plan">
-          <h2>Monthly</h2>
-          <p className="price">$9.99/month</p>
-          <button onClick={() => handlePayment('monthly')}>Continue to Payment</button>
+    <div className={`subscription-container ${isDarkMode ? 'dark-mode' : ''}`}>
+      {loadingSubscription ? (
+        <div className="loading-message">
+          <h1>Loading...</h1>
+          <p>Loading subscription details...</p>
         </div>
-        <div className="subscription-plan">
-          <h2>Yearly</h2>
-          <p className="price">$99.99/year</p>
-          <button onClick={() => handlePayment('yearly')}>Continue to Payment</button>
-        </div>
-        <div className="subscription-plan">
-          <h2>Lifetime</h2>
-          <p className="price">$299.99</p>
-          <button onClick={() => handlePayment('lifetime')}>Continue to Payment</button>
-        </div>
-      </div>
+      ) : (
+        <>
+          {subscriptionDetails && subscriptionDetails.hasSubscription ? (
+            <>
+              <h1>Your Subscription</h1>
+              <div className="subscription-message">
+                <h2>Active Subscription</h2>
+                <p>You already have an active subscription. Thank you for your continued support!</p>
+                
+                <div className="subscription-details">
+                  <div className="detail-item">
+                    <strong>Subscription Type:</strong> {subscriptionDetails.subscriptionType}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Transaction ID:</strong> {subscriptionDetails.transactionId}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Purchased On:</strong> {subscriptionDetails.purchasedOn ? new Date(subscriptionDetails.purchasedOn).toLocaleDateString() : 'N/A'}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Valid Until:</strong> {subscriptionDetails.endDate ? new Date(subscriptionDetails.endDate).toLocaleDateString() : 'N/A'}
+                  </div>
+                </div>
+                
+                <div className="subscription-actions">
+                  <button onClick={() => navigate('/')} className="home-button">
+                    Go to Homepage
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : subscriptionDetails && subscriptionDetails.isExpired ? (
+            <>
+              <h1>Renew Your Subscription</h1>
+              <div className="subscription-message expired">
+                <h2>Subscription Expired</h2>
+                <p>Your subscription has expired. Please renew to continue enjoying premium features.</p>
+                
+                <div className="subscription-details">
+                  <div className="detail-item">
+                    <strong>Previous Subscription:</strong> {subscriptionDetails.subscriptionType}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Expired On:</strong> {subscriptionDetails.endDate ? new Date(subscriptionDetails.endDate).toLocaleDateString() : 'N/A'}
+                  </div>
+                </div>
+                
+                <div className="subscription-options">
+                  <div className="subscription-plan">
+                    <h2>Monthly</h2>
+                    <p className="price">$9.99/month</p>
+                    <button onClick={() => handlePayment('monthly')}>Renew Monthly</button>
+                  </div>
+                  <div className="subscription-plan">
+                    <h2>Yearly</h2>
+                    <p className="price">$99.99/year</p>
+                    <button onClick={() => handlePayment('yearly')}>Renew Yearly</button>
+                  </div>
+                  <div className="subscription-plan">
+                    <h2>Lifetime</h2>
+                    <p className="price">$299.99</p>
+                    <button onClick={() => handlePayment('lifetime')}>Upgrade to Lifetime</button>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <h1>Choose Your Subscription Plan</h1>
+              <div className="subscription-options">
+                <div className="subscription-plan">
+                  <h2>Monthly</h2>
+                  <p className="price">$9.99/month</p>
+                  <button onClick={() => handlePayment('monthly')}>Continue to Payment</button>
+                </div>
+                <div className="subscription-plan">
+                  <h2>Yearly</h2>
+                  <p className="price">$99.99/year</p>
+                  <button onClick={() => handlePayment('yearly')}>Continue to Payment</button>
+                </div>
+                <div className="subscription-plan">
+                  <h2>Lifetime</h2>
+                  <p className="price">$299.99</p>
+                  <button onClick={() => handlePayment('lifetime')}>Continue to Payment</button>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 };

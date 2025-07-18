@@ -23,10 +23,32 @@ class User {
 
     static async findById(userId) {
         const result = await pool.query(
-            `SELECT user_id, username, email, display_name, profile_bio, TO_CHAR(created_at, 'DD Mon YYYY') AS created_at
-, is_admin, subscription_status
+            `SELECT user_id, username, email, display_name, profile_bio, TO_CHAR(created_at, 'DD Mon YYYY') AS created_at, is_admin, subscription_status
              FROM users
              WHERE user_id = $1`,
+            [userId]
+        );
+        return result.rows[0];
+    }
+
+    static async findByIdWithSubscription(userId) {
+        const result = await pool.query(
+            `SELECT 
+                u.user_id, 
+                u.username, 
+                u.email, 
+                u.display_name, 
+                u.profile_bio, 
+                TO_CHAR(u.created_at, 'DD Mon YYYY') AS created_at,
+                u.is_admin, 
+                u.subscription_status,
+                u.subscription_end_date,
+                th.subscription_type,
+                th.transaction_id,
+                th.completed_on AS subscription_purchased_on
+             FROM users u
+             LEFT JOIN transaction_history th ON u.active_transaction_id = th.transaction_history_id
+             WHERE u.user_id = $1`,
             [userId]
         );
         return result.rows[0];

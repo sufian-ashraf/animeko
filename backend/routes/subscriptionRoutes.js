@@ -1,4 +1,3 @@
-
 import express from 'express';
 const router = express.Router();
 import Subscription from '../models/Subscription.js';
