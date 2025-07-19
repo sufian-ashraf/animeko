@@ -31,7 +31,7 @@ class Anime {
 
             if (title) {
                 params.push(`%${title}%`, `%${title}%`);
-                query += ` AND ( title ILIKE ${paramCount++} OR alternative_title ILIKE ${paramCount++} )`;
+                query += ` AND ( title ILIKE $${paramCount++} OR alternative_title ILIKE $${paramCount++} )`;
             }
 
             if (genre) {
@@ -40,7 +40,7 @@ class Anime {
                     SELECT 1 FROM anime_genre ag
                     JOIN genre g ON ag.genre_id = g.genre_id
                     WHERE ag.anime_id = a.anime_id
-                    AND g.name LIKE ${paramCount++}
+                    AND g.name LIKE $${paramCount++}
                 )`;
             }
 
@@ -48,9 +48,9 @@ class Anime {
                 const parsedYear = parseInt(year, 10);
                 if (!isNaN(parsedYear)) {
                     params.push(parsedYear);
-                    query += ` AND EXTRACT(YEAR FROM a.release_date) = ${paramCount++}`;
+                    query += ` AND EXTRACT(YEAR FROM a.release_date) = $${paramCount++}`;
                 } else {
-                    console.warn(`Invalid year provided: ${year}. Skipping year filter.`);
+                    // skip year filter if not a valid integer
                 }
             }
 

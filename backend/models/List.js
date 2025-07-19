@@ -1,6 +1,35 @@
 import pool from '../db.js';
 
 class List {
+    // Search lists by name/title (partial match)
+    static async getAll({ name } = {}) {
+        let query = `
+            SELECT 
+                l.id,
+                l.title,
+                l.created_at,
+                u.username as owner_username,
+                u.user_id as owner_id,
+                COALESCE(li.item_count, 0) as item_count
+            FROM lists l
+            JOIN users u ON l.user_id = u.user_id
+            LEFT JOIN (
+                SELECT list_id, COUNT(*) as item_count 
+                FROM list_items 
+                GROUP BY list_id
+            ) li ON l.id = li.list_id
+            WHERE 1=1
+        `;
+        const params = [];
+        let paramCount = 1;
+        if (name) {
+            query += ` AND l.title ILIKE $${paramCount++}`;
+            params.push(`%${name}%`);
+        }
+        query += ' ORDER BY l.created_at DESC';
+        const result = await pool.query(query, params);
+        return result.rows;
+    }
     static async getListsByUserId(userId) {
         const result = await pool.query(
             `SELECT 

@@ -1,7 +1,26 @@
+
 import pool from '../db.js';
 import bcrypt from 'bcrypt';
 
 class User {
+    // Search users by username (partial match)
+    static async getAll({ username } = {}) {
+        let query = `
+            SELECT user_id as id, username, display_name, email, is_admin
+            FROM users
+            WHERE 1=1
+        `;
+        const params = [];
+        let paramCount = 1;
+        if (username) {
+            query += ` AND username ILIKE $${paramCount++}`;
+            params.push(`%${username}%`);
+        }
+        query += ' ORDER BY username';
+        const result = await pool.query(query, params);
+        return result.rows;
+    }
+
     static async create({ username, email, password, display_name, isAdmin = false }) {
         const saltRounds = 10;
         const password_hash = await bcrypt.hash(password, saltRounds);

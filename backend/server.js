@@ -18,11 +18,13 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import listRoutes from './routes/listRoutes.js';
 import characterRoutes from "./routes/characterRoutes.js";
 import VARoutes from "./routes/VARoutes.js";
+
 import animeLibraryRoutes from "./routes/animeLibraryRoutes.js";
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import premiumRoutes from './routes/premiumRoutes.js';
 import episodeRoutes from './routes/episodeRoutes.js';
 import subscriptionExpiryJob from './cron/subscriptionExpiryJob.js';
+import searchRoutes from './routes/searchRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -38,6 +40,9 @@ const corsOptions = {
     credentials: true,
 };
 app.use(cors(corsOptions));
+
+// Register search route
+app.use('/api/search', searchRoutes);
 
 // Handle preflight requests
 //app.options('*', cors(corsOptions));

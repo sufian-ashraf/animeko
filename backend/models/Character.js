@@ -1,8 +1,8 @@
 import pool from '../db.js';
 
 class Character {
-    static async getAll() {
-        const result = await pool.query(`
+    static async getAll({ name } = {}) {
+        let query = `
             SELECT 
                 c.character_id as "id",
                 c.name,
@@ -15,8 +15,16 @@ class Character {
             LEFT JOIN media m ON c.character_id = m.entity_id 
                              AND m.entity_type = 'character' 
                              AND m.media_type = 'image'
-            ORDER BY c.name
-        `);
+            WHERE 1=1
+        `;
+        const params = [];
+        let paramCount = 1;
+        if (name) {
+            query += ` AND c.name ILIKE $${paramCount++}`;
+            params.push(`%${name}%`);
+        }
+        query += ' ORDER BY c.name';
+        const result = await pool.query(query, params);
         return result.rows;
     }
 

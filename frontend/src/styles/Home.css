@@ -1,3 +1,114 @@
+/* Simple-card styles with dark mode support */
+
+.simple-card {
+  background: #fff;
+  color: #23272f;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 1.2rem 1rem;
+  margin: 0.5rem;
+  transition: background 0.2s, color 0.2s;
+}
+
+.simple-card h4 {
+  margin: 0.5rem 0 0.2rem 0;
+  font-size: 1.1rem;
+}
+
+.simple-card p {
+  margin: 0.2rem 0;
+  font-size: 0.97rem;
+}
+
+body.dark-mode .simple-card,
+[data-theme="dark"] .simple-card {
+  background: #23272f;
+  color: #f1f1f1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+body.dark-mode .simple-card h4,
+[data-theme="dark"] .simple-card h4 {
+  color: #ffffff;
+}
+
+body.dark-mode .simple-card p,
+[data-theme="dark"] .simple-card p {
+  color: #e0e0e0;
+}
+
+.simple-card {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 1.2rem 1rem 1rem 1rem;
+  margin: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 180px;
+  max-width: 220px;
+  transition: box-shadow 0.2s, background 0.2s, color 0.2s;
+  color: #222;
+}
+.simple-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+}
+
+@media (prefers-color-scheme: dark) {
+  .simple-card {
+    background: #23272f;
+    color: #e5e7eb;
+  }
+  /* No border on hover in dark mode */
+}
+/* Search type dropdown styling */
+.search-type-dropdown {
+  background: var(--card-bg, #fff);
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.4em 1.2em 0.4em 0.7em;
+  font-size: 1rem;
+  color: #222;
+  margin-right: 0.7em;
+  outline: none;
+  transition: border-color 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+.search-type-dropdown:focus, .search-type-dropdown:hover {
+  border-color: #a5b4fc;
+}
+
+body.dark-mode .search-type-dropdown,
+[data-theme="dark"] .search-type-dropdown {
+  background: #23272f;
+  color: #e5e7eb;
+  border: 1.5px solid #374151;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+body.dark-mode .search-type-dropdown:focus,
+body.dark-mode .search-type-dropdown:hover,
+[data-theme="dark"] .search-type-dropdown:focus,
+[data-theme="dark"] .search-type-dropdown:hover {
+  border-color: #a5b4fc;
+}
+/* Simple card for search results (character, va, user) */
+
+.simple-card {
+  background: var(--card-bg, #fff);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 1.2rem 1rem 1rem 1rem;
+  margin: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 180px;
+  max-width: 220px;
+  transition: box-shadow 0.2s;
+  color: #222;
+}
+.simple-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+}
 /* Home.css */
 
 .home-page {
@@ -80,11 +191,16 @@
     border-radius: 5px;
     cursor: pointer;
     font-size: 1rem;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-}
-
-.sort-controls-container button:hover {
+  .simple-card {
+    background: #23272f;
+    color: #e5e7eb;
+  }
+  .simple-card h4 {
+    color: #a5b4fc;
+  }
+  .simple-card p {
+    color: #e5e7eb;
+  }
     background-color: #5a6cdb;
 }
 

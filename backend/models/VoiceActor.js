@@ -1,8 +1,8 @@
 import pool from '../db.js';
 
 class VoiceActor {
-    static async getAll() {
-        const result = await pool.query(`
+    static async getAll({ name } = {}) {
+        let query = `
             SELECT 
                 v.voice_actor_id as "id",
                 v.name,
@@ -13,8 +13,16 @@ class VoiceActor {
             LEFT JOIN media m ON v.voice_actor_id = m.entity_id 
                              AND m.entity_type = 'voice_actor' 
                              AND m.media_type = 'image'
-            ORDER BY v.name
-        `);
+            WHERE 1=1
+        `;
+        const params = [];
+        let paramCount = 1;
+        if (name) {
+            query += ` AND v.name ILIKE $${paramCount++}`;
+            params.push(`%${name}%`);
+        }
+        query += ' ORDER BY v.name';
+        const result = await pool.query(query, params);
         return result.rows;
     }
 

@@ -10,6 +10,7 @@ function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchTitle, setSearchTitle] = useState("");
+  const [searchType, setSearchType] = useState("anime"); // New state for search type
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -36,9 +37,27 @@ function Navigation() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchTitle.trim()) {
-      navigate(
-        `/search-results?title=${encodeURIComponent(searchTitle.trim())}`
-      );
+      let query = '';
+      switch (searchType) {
+        case 'anime':
+          query = `title=${encodeURIComponent(searchTitle.trim())}`;
+          break;
+        case 'character':
+          query = `name=${encodeURIComponent(searchTitle.trim())}`;
+          break;
+        case 'va':
+          query = `name=${encodeURIComponent(searchTitle.trim())}`;
+          break;
+        case 'user':
+          query = `username=${encodeURIComponent(searchTitle.trim())}`;
+          break;
+        case 'list':
+          query = `name=${encodeURIComponent(searchTitle.trim())}`;
+          break;
+        default:
+          query = `title=${encodeURIComponent(searchTitle.trim())}`;
+      }
+      navigate(`/search-results?type=${searchType}&${query}`);
       setSearchTitle("");
       setMenuOpen(false);
     }
@@ -76,12 +95,25 @@ function Navigation() {
         {!isAdmin && (
           <div className="nav-center">
             <form onSubmit={handleSearch} className="search-bar">
+              <select
+                value={searchType}
+                onChange={(e) => setSearchType(e.target.value)}
+                className="search-type-dropdown"
+                aria-label="Select search type"
+                style={{ marginRight: '8px', padding: '4px' }}
+              >
+                <option value="anime">Anime</option>
+                <option value="character">Character</option>
+                <option value="va">Voice Actor</option>
+                <option value="user">User</option>
+                <option value="list">List</option>
+              </select>
               <input
                 type="text"
-                placeholder="Search anime..."
+                placeholder={`Search ${searchType}...`}
                 value={searchTitle}
                 onChange={(e) => setSearchTitle(e.target.value)}
-                aria-label="Search anime by title"
+                aria-label={`Search ${searchType} by name`}
               />
               <button type="submit">Search</button>
             </form>

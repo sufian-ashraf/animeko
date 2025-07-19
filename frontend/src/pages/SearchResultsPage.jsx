@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import AnimeCard from '../components/AnimeCard';
+import ListCard from '../components/ListCard';
 import '../styles/Home.css'; // Reusing Home.css for now, can create a specific one later
 
+
 function SearchResultsPage() {
-    const [animeList, setAnimeList] = useState([]);
+    const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const location = useLocation();
-    const [sortField, setSortField] = useState('name'); // Actual sort field, triggers fetch
-    const [sortOrder, setSortOrder] = useState('asc'); // Actual sort order, triggers fetch
-    const [pendingSortField, setPendingSortField] = useState('name'); // For dropdown selection
-    const [pendingSortOrder, setPendingSortOrder] = useState('asc'); // For dropdown selection
+    const [sortField, setSortField] = useState('name');
+    const [sortOrder, setSortOrder] = useState('asc');
+    const [pendingSortField, setPendingSortField] = useState('name');
+    const [pendingSortOrder, setPendingSortOrder] = useState('asc');
+
+    // Get search type from query string
+    const queryParams = new URLSearchParams(location.search);
+    const type = queryParams.get('type') || 'anime';
 
     const handleApplySort = () => {
         setSortField(pendingSortField);
@@ -22,55 +28,123 @@ function SearchResultsPage() {
         const fetchSearchResults = async () => {
             setLoading(true);
             setError(null);
-            const queryParams = new URLSearchParams(location.search);
-            const title = queryParams.get('title') || '';
-            const genre = queryParams.get('genre') || '';
-            const year = queryParams.get('year') || '';
-
-            const filteredCriteria = {};
-            if (title) filteredCriteria.title = title;
-            if (genre) filteredCriteria.genre = genre;
-            if (year) filteredCriteria.year = year;
-
-            const queryString = new URLSearchParams(filteredCriteria).toString();
-
+            // Build query string for /api/search
+            const params = new URLSearchParams(location.search);
+            // Only add sort for anime
+            if (type === 'anime') {
+                params.set('sortField', sortField);
+                params.set('sortOrder', sortOrder);
+            } else {
+                params.delete('sortField');
+                params.delete('sortOrder');
+            }
             try {
-                const response = await fetch(`/api/animes?${queryString}&sortField=${sortField}&sortOrder=${sortOrder}`);
+                const response = await fetch(`/api/search?${params.toString()}`);
                 if (!response.ok) throw new Error(`Status ${response.status}`);
                 const data = await response.json();
-                setAnimeList(data);
+                setResults(data);
             } catch (err) {
                 setError(`Failed to fetch search results: ${err.message}`);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchSearchResults();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.search, sortField, sortOrder]);
+
+    // Renderers for each type
+    const renderResults = () => {
+        if (type === 'anime') {
+            return (
+                <div className="anime-grid">
+                    {results.map(anime => (
+                        <AnimeCard key={anime.id} anime={anime} />
+                    ))}
+                </div>
+            );
+        }
+        if (type === 'list') {
+            return (
+                <div className="anime-grid">
+                    {results.map(list => (
+                        <ListCard key={list.id} list={list} />
+                    ))}
+                </div>
+            );
+        }
+        if (type === 'character') {
+            return (
+                <div className="anime-grid">
+                    {results.map(char => (
+                        <div key={char.id} className="simple-card">
+                            <div style={{textAlign:'center'}}>
+                                <img src={char.imageUrl || '/src/images/image_not_available.jpg'} alt={char.name} style={{width:'100px',height:'100px',objectFit:'cover',borderRadius:'50%'}} />
+                            </div>
+                            <h4>{char.name}</h4>
+                            {char.vaName && <p>VA: {char.vaName}</p>}
+                            {char.description && <p>{char.description}</p>}
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+        if (type === 'va') {
+            return (
+                <div className="anime-grid">
+                    {results.map(va => (
+                        <div key={va.id} className="simple-card">
+                            <div style={{textAlign:'center'}}>
+                                <img src={va.imageUrl || '/src/images/image_not_available.jpg'} alt={va.name} style={{width:'100px',height:'100px',objectFit:'cover',borderRadius:'50%'}} />
+                            </div>
+                            <h4>{va.name}</h4>
+                            {va.nationality && <p>{va.nationality}</p>}
+                            {va.birthDate && <p>Born: {va.birthDate}</p>}
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+        if (type === 'user') {
+            return (
+                <div className="anime-grid">
+                    {results.map(user => (
+                        <div key={user.id} className="simple-card">
+                            <h4>{user.username}</h4>
+                            {user.display_name && <p>Display: {user.display_name}</p>}
+                            {user.email && <p>Email: {user.email}</p>}
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+        return null;
+    };
 
     return (
         <div className="home-page"> {/* Reusing home-page class for styling */}
             <section className="results-section">
                 <h3>Search Results</h3>
-                <div className="sort-controls-container">
-                    <div className="sort-controls">
-                        <label htmlFor="sortField">Sort by:</label>
-                        <select id="sortField" value={pendingSortField} onChange={(e) => setPendingSortField(e.target.value)}>
-                            <option value="name">Name</option>
-                            <option value="rating">Rating</option>
-                            <option value="release_date">Release Date</option>
-                            <option value="rank">Rank</option>
-                        </select>
-
-                        <label htmlFor="sortOrder">Order:</label>
-                        <select id="sortOrder" value={pendingSortOrder} onChange={(e) => setPendingSortOrder(e.target.value)}>
-                            <option value="asc">Ascending</option>
-                            <option value="desc">Descending</option>
-                        </select>
+                {/* Only show sort controls for anime */}
+                {type === 'anime' && (
+                    <div className="sort-controls-container">
+                        <div className="sort-controls">
+                            <label htmlFor="sortField">Sort by:</label>
+                            <select id="sortField" value={pendingSortField} onChange={(e) => setPendingSortField(e.target.value)}>
+                                <option value="name">Name</option>
+                                <option value="rating">Rating</option>
+                                <option value="release_date">Release Date</option>
+                                <option value="rank">Rank</option>
+                            </select>
+                            <label htmlFor="sortOrder">Order:</label>
+                            <select id="sortOrder" value={pendingSortOrder} onChange={(e) => setPendingSortOrder(e.target.value)}>
+                                <option value="asc">Ascending</option>
+                                <option value="desc">Descending</option>
+                            </select>
+                        </div>
+                        <button onClick={handleApplySort}>Apply</button>
                     </div>
-                    <button onClick={handleApplySort}>Apply</button>
-                </div>
+                )}
                 {loading && (
                     <div className="spinner-container">
                         <div className="spinner"></div>
@@ -78,15 +152,10 @@ function SearchResultsPage() {
                     </div>
                 )}
                 {error && <p className="error-message">{error}</p>}
-                {!loading && !error && animeList.length === 0 && (
-                    <p className="no-results">No anime found for your search criteria.</p>
+                {!loading && !error && results.length === 0 && (
+                    <p className="no-results">No results found for your search criteria.</p>
                 )}
-
-                <div className="anime-grid">
-                    {animeList.map(anime => (
-                        <AnimeCard key={anime.id} anime={anime} />
-                    ))}
-                </div>
+                {renderResults()}
             </section>
         </div>
     );
