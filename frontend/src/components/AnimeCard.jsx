@@ -109,8 +109,9 @@ function AnimeCard({ anime, initialFavoriteStatus = false }) {
                 />
                 <h3 className="anime-card-title">{anime.title}</h3>
                 <div className="anime-card-info">
+                    <p className="anime-card-episodes">Episodes: {anime.episodes || 'Unknown'}</p>
                     <p className="anime-card-genre">Genre: {anime.genre || 'Not specified'}</p>
-                    <p className="anime-card-year">Year: {anime.year || 'Unknown'}</p>
+                    <p className="anime-card-season">Season: {anime.season || 'Unknown'}</p>
                 </div>
             </Link>
             

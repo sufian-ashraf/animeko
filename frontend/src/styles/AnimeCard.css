@@ -48,7 +48,7 @@
     color: #666;
 }
 
-.anime-card-genre, .anime-card-year {
+.anime-card-genre, .anime-card-episodes, .anime-card-season {
     margin: 0;
     line-height: 1.4;
 }

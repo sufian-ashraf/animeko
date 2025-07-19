@@ -12,12 +12,14 @@ class Anime {
                     a.company_id,
                     a.rating,
                     a.rank,
+                    a.episodes,
+                    a.season,
                     m.url AS "imageUrl",
                     (SELECT STRING_AGG(g.name, ', ')
                      FROM anime_genre ag
                      JOIN genre g ON ag.genre_id = g.genre_id
                      WHERE ag.anime_id = a.anime_id) AS genre,
-                    EXTRACT(YEAR FROM a.release_date) AS year,
+                     EXTRACT(YEAR FROM a.release_date) AS year,
                     a.synopsis AS description
                 FROM anime a
                 LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'image'
@@ -29,7 +31,7 @@ class Anime {
 
             if (title) {
                 params.push(`%${title}%`, `%${title}%`);
-                query += ` AND ( title ILIKE $${paramCount++} OR alternative_title ILIKE $${paramCount++} )`;
+                query += ` AND ( title ILIKE ${paramCount++} OR alternative_title ILIKE ${paramCount++} )`;
             }
 
             if (genre) {
@@ -38,7 +40,7 @@ class Anime {
                     SELECT 1 FROM anime_genre ag
                     JOIN genre g ON ag.genre_id = g.genre_id
                     WHERE ag.anime_id = a.anime_id
-                    AND g.name LIKE $${paramCount++}
+                    AND g.name LIKE ${paramCount++}
                 )`;
             }
 
@@ -46,7 +48,7 @@ class Anime {
                 const parsedYear = parseInt(year, 10);
                 if (!isNaN(parsedYear)) {
                     params.push(parsedYear);
-                    query += ` AND EXTRACT(YEAR FROM a.release_date) = $${paramCount++}`;
+                    query += ` AND EXTRACT(YEAR FROM a.release_date) = ${paramCount++}`;
                 } else {
                     console.warn(`Invalid year provided: ${year}. Skipping year filter.`);
                 }
