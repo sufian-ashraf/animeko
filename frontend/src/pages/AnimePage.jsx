@@ -58,6 +58,14 @@ export default function AnimePage() {
         }
     });
 
+    // Episodes state
+    const [episodesList, setEpisodesList] = useState([]);
+    const [episodesLoading, setEpisodesLoading] = useState(false);
+    const [episodesError, setEpisodesError] = useState(null);
+
+    // Tab state
+    const [activeTab, setActiveTab] = useState('details'); // 'details' or 'episodes'
+
     // Debug: Log auth status
     useEffect(() => {
         console.log('User auth status:', { user, hasToken: !!token });
@@ -431,6 +439,35 @@ export default function AnimePage() {
             });
     }, [animeId, user]);
 
+    // ───────────────────────────────────────────────────
+    // 5) Fetch episodes (only when episodes tab is active)
+    // ───────────────────────────────────────────────────
+    useEffect(() => {
+        // Only fetch episodes when the episodes tab is active
+        if (activeTab !== 'episodes') return;
+        
+        setEpisodesLoading(true);
+        setEpisodesError(null);
+        
+        fetch(`/api/episodes/anime/${animeId}`)
+            .then((r) => {
+                if (!r.ok) throw new Error(`Status ${r.status}`);
+                return r.json();
+            })
+            .then((episodesData) => {
+                const arr = Array.isArray(episodesData) ? episodesData : [];
+                setEpisodesList(arr);
+            })
+            .catch((err) => {
+                console.error('Fetch episodes error:', err);
+                setEpisodesError('Failed to load episodes');
+                setEpisodesList([]);
+            })
+            .finally(() => {
+                setEpisodesLoading(false);
+            });
+    }, [animeId, activeTab]);
+
     // Handle star‐click & comment change
     const handleStarClick = (starIndex) => {
         setReviewForm((form) => ({...form, rating: starIndex}));
@@ -500,7 +537,37 @@ export default function AnimePage() {
                         <p>Loading anime...</p>
                     </div>;
 
-    const {title, synopsis, company, genres = [], cast = []} = anime;
+    const {title, alternative_title, synopsis, company, genres = [], cast = [], episodes, season, release_date} = anime;
+
+    // Format release date
+    const formatReleaseDate = (dateString) => {
+        if (!dateString) return null;
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric'
+        });
+    };
+
+    // Format episode duration from seconds to minutes:seconds
+    const formatDuration = (seconds) => {
+        if (!seconds) return 'N/A';
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+
+    // Format air date for episodes
+    const formatAirDate = (dateString) => {
+        if (!dateString) return 'TBA';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    };
 
     return (<div className="anime-page">
         {/* ───── Header Card ──────────────── */}
@@ -593,6 +660,32 @@ export default function AnimePage() {
                 </div>
                 {/* ─────────────────────────────────────────── */}
 
+                {/* Alternative Title */}
+                {alternative_title && (
+                    <p className="anime-alt-title">
+                        <strong>Alternative Title:</strong> {alternative_title}
+                    </p>
+                )}
+
+                {/* Anime Details Row */}
+                <div className="anime-details-row">
+                    {episodes && (
+                        <div className="anime-detail-item">
+                            <strong>Episodes:</strong> {episodes}
+                        </div>
+                    )}
+                    {season && (
+                        <div className="anime-detail-item">
+                            <strong>Season:</strong> {season}
+                        </div>
+                    )}
+                    {release_date && (
+                        <div className="anime-detail-item">
+                            <strong>Release Date:</strong> {formatReleaseDate(release_date)}
+                        </div>
+                    )}
+                </div>
+
                 {synopsis && <p className="anime-desc">{synopsis}</p>}
 
                 {company && (<p className="anime-company">
@@ -614,147 +707,215 @@ export default function AnimePage() {
             </div>
         </div>
 
-        {/* ───────── Cast Grid ─────────── (unchanged) */}
-        <h3 className="cast-heading">Cast &amp; Voice Actors</h3>
-        {cast.length > 0 ? (<div className="cast-grid">
-            {cast.map(({characterId, characterName, vaId, vaName, characterImageUrl, vaImageUrl}) => (
-                <div key={characterId} className="cast-card">
-                    <div className="character-thumb-container">
-                        <img
-                            src={characterImageUrl || placeholder}
-                            alt={characterName}
-                            className="character-thumb"
-                            onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = placeholder;
-                            }}
-                        />
-                    </div>
-                    <div className="cast-info">
-                        <Link to={`/character/${characterId}`} className="link">
-                            <strong>{characterName}</strong>
-                        </Link>
-                        {vaName && (
-                            <div className="va-info">
-                                <span>voiced by</span>
-                                <Link to={`/va/${vaId}`} className="va-link">
-                                    <div className="va-thumb-container">
-                                        <img
-                                            src={vaImageUrl || placeholder}
-                                            alt={vaName}
-                                            className="va-thumb"
-                                            onError={(e) => {
-                                                e.target.onerror = null;
-                                                e.target.src = placeholder;
-                                            }}
-                                        />
-                                    </div>
-                                    <span>{vaName}</span>
-                                </Link>
-                            </div>
-                        )}
-                    </div>
-                </div>))}
-        </div>) : (<p className="no-cast">No cast information available.</p>)}
-
-        {/* ──────── Lists Section ──────── */}
-        <div className="anime-section">
-            <h3>Appears in {containingLists?.pagination?.totalItems || 0} List{containingLists?.pagination?.totalItems !== 1 ? 's' : ''}</h3>
-            {!containingLists ? (
-                <div className="loading">Loading lists...</div>
-            ) : containingLists.loading && containingLists.pagination?.currentPage === 1 ? (
-                <div className="loading">Loading lists...</div>
-            ) : containingLists.error ? (
-                <div className="error">{containingLists.error}</div>
-            ) : containingLists.data?.length > 0 ? (
-                <>
-                    <div className="lists-grid">
-                        {containingLists.data.map((list) => (
-                            <ListCard key={list.id} list={list} />
-                        ))}
-                    </div>
-                    {containingLists.pagination.currentPage < containingLists.pagination.totalPages && (
-                        <button 
-                            className="load-more-btn"
-                            onClick={handleLoadMore}
-                            disabled={containingLists.loading}
-                        >
-                            {containingLists.loading ? 'Loading...' : 'Load More'}
-                        </button>
-                    )}
-                </>
-            ) : (
-                <div className="no-lists">This anime doesn't appear in any lists yet.</div>
-            )}
+        {/* ──────── Tab Navigation ──────── */}
+        <div className="anime-tabs">
+            <div className="tab-nav">
+                <button 
+                    className={`tab-btn ${activeTab === 'details' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('details')}
+                >
+                    Details
+                </button>
+                <button 
+                    className={`tab-btn ${activeTab === 'episodes' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('episodes')}
+                >
+                    Episodes
+                </button>
+            </div>
         </div>
 
-        {/* ───────────── Reviews Section ───────────────── */}
-        <section className="reviews-section">
-            <h3>Reviews</h3>
+        {/* ──────── Tab Content ──────── */}
+        <div className="tab-content">
+            {activeTab === 'details' && (
+                <div className="details-tab">
+                    {/* ───────── Cast Grid ─────────── */}
+                    <h3 className="cast-heading">Cast &amp; Voice Actors</h3>
+                    {cast.length > 0 ? (<div className="cast-grid">
+                        {cast.map(({characterId, characterName, vaId, vaName, characterImageUrl, vaImageUrl}) => (
+                            <div key={characterId} className="cast-card">
+                                <div className="character-thumb-container">
+                                    <img
+                                        src={characterImageUrl || placeholder}
+                                        alt={characterName}
+                                        className="character-thumb"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = placeholder;
+                                        }}
+                                    />
+                                </div>
+                                <div className="cast-info">
+                                    <Link to={`/character/${characterId}`} className="link">
+                                        <strong>{characterName}</strong>
+                                    </Link>
+                                    {vaName && (
+                                        <div className="va-info">
+                                            <span>voiced by</span>
+                                            <Link to={`/va/${vaId}`} className="va-link">
+                                                <div className="va-thumb-container">
+                                                    <img
+                                                        src={vaImageUrl || placeholder}
+                                                        alt={vaName}
+                                                        className="va-thumb"
+                                                        onError={(e) => {
+                                                            e.target.onerror = null;
+                                                            e.target.src = placeholder;
+                                                        }}
+                                                    />
+                                                </div>
+                                                <span>{vaName}</span>
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>))}
+                    </div>) : (<p className="no-cast">No cast information available.</p>)}
 
-            {/* Your Review Form */}
-            <div className="your-review-form">
-                <h4>Your Review</h4>
-                {user ? (
-                    <form onSubmit={handleSubmitReview}>
-                        <div className="star-selection">
-                            {[1, 2, 3, 4, 5].map((i) => (<span
-                                key={i}
-                                className={i <= reviewForm.rating ? 'star selected' : 'star'}
-                                onClick={() => handleStarClick(i)}
-                            >
-                                ★
-                            </span>))}
-                        </div>
-                        <label>
-                            Comment:
-                            <textarea
-                                name="content"
-                                rows="4"
-                                value={reviewForm.content}
-                                onChange={handleReviewChange}
-                                disabled={reviewLoading}
-                            />
-                        </label>
-                        {reviewError && <div className="review-error">{reviewError}</div>}
-                        <button type="submit" disabled={reviewLoading}>
-                            {userReview ? 'Update Review' : 'Submit Review'}
-                        </button>
-                    </form>
-                ) : (
-                    <div className="login-prompt">
-                        <Link to="/login">Log in</Link> to submit reviews and ratings.
+                    {/* ──────── Lists Section ──────── */}
+                    <div className="anime-section">
+                        <h3>Appears in {containingLists?.pagination?.totalItems || 0} List{containingLists?.pagination?.totalItems !== 1 ? 's' : ''}</h3>
+                        {!containingLists ? (
+                            <div className="loading">Loading lists...</div>
+                        ) : containingLists.loading && containingLists.pagination?.currentPage === 1 ? (
+                            <div className="loading">Loading lists...</div>
+                        ) : containingLists.error ? (
+                            <div className="error">{containingLists.error}</div>
+                        ) : containingLists.data?.length > 0 ? (
+                            <>
+                                <div className="lists-grid">
+                                    {containingLists.data.map((list) => (
+                                        <ListCard key={list.id} list={list} />
+                                    ))}
+                                </div>
+                                {containingLists.pagination.currentPage < containingLists.pagination.totalPages && (
+                                    <button 
+                                        className="load-more-btn"
+                                        onClick={handleLoadMore}
+                                        disabled={containingLists.loading}
+                                    >
+                                        {containingLists.loading ? 'Loading...' : 'Load More'}
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <div className="no-lists">This anime doesn't appear in any lists yet.</div>
+                        )}
                     </div>
-                )}
-            </div>
 
-            {/* All Reviews List */}
-            <div className="all-reviews-list">
-                <h4>All Reviews</h4>
-                {reviews.length === 0 ? (
-                    <p className="no-reviews">No reviews yet. Be the first!</p>) : (reviews.map((r) => (
-                    <div key={r.review_id} className="review-card">
-                        <div className="reviewer-info">
-                            <img
-                                src={r.avatarUrl || placeholder}
-                                alt={`${r.username} avatar`}
-                                className="reviewer-avatar"
-                            />
-                            <span className="reviewer-name">{r.username}</span>
-                            <span className="review-timestamp">
-                    {new Date(r.created_at).toLocaleString()}
-                  </span>
+                    {/* ───────────── Reviews Section ───────────────── */}
+                    <section className="reviews-section">
+                        <h3>Reviews</h3>
+
+                        {/* Your Review Form */}
+                        <div className="your-review-form">
+                            <h4>Your Review</h4>
+                            {user ? (
+                                <form onSubmit={handleSubmitReview}>
+                                    <div className="star-selection">
+                                        {[1, 2, 3, 4, 5].map((i) => (<span
+                                            key={i}
+                                            className={i <= reviewForm.rating ? 'star selected' : 'star'}
+                                            onClick={() => handleStarClick(i)}
+                                        >
+                                            ★
+                                        </span>))}
+                                    </div>
+                                    <label>
+                                        Comment:
+                                        <textarea
+                                            name="content"
+                                            rows="4"
+                                            value={reviewForm.content}
+                                            onChange={handleReviewChange}
+                                            disabled={reviewLoading}
+                                        />
+                                    </label>
+                                    {reviewError && <div className="review-error">{reviewError}</div>}
+                                    <button type="submit" disabled={reviewLoading}>
+                                        {userReview ? 'Update Review' : 'Submit Review'}
+                                    </button>
+                                </form>
+                            ) : (
+                                <div className="login-prompt">
+                                    <Link to="/login">Log in</Link> to submit reviews and ratings.
+                                </div>
+                            )}
                         </div>
-                        <div className="review-body">
-                  <span className="review-rating">
-                    {Array.from({length: r.rating}, (_, idx) => (<span key={idx}>★</span>))}
-                      {Array.from({length: 5 - r.rating}, (_, idx) => (<span key={idx}>☆</span>))}
-                  </span>
-                            <p className="review-content">{r.content}</p>
+
+                        {/* All Reviews List */}
+                        <div className="all-reviews-list">
+                            <h4>All Reviews</h4>
+                            {reviews.length === 0 ? (
+                                <p className="no-reviews">No reviews yet. Be the first!</p>) : (reviews.map((r) => (
+                                <div key={r.review_id} className="review-card">
+                                    <div className="reviewer-info">
+                                        <img
+                                            src={r.avatarUrl || placeholder}
+                                            alt={`${r.username} avatar`}
+                                            className="reviewer-avatar"
+                                        />
+                                        <span className="reviewer-name">{r.username}</span>
+                                        <span className="review-timestamp">
+                                {new Date(r.created_at).toLocaleString()}
+                              </span>
+                                    </div>
+                                    <div className="review-body">
+                              <span className="review-rating">
+                                {Array.from({length: r.rating}, (_, idx) => (<span key={idx}>★</span>))}
+                                  {Array.from({length: 5 - r.rating}, (_, idx) => (<span key={idx}>☆</span>))}
+                              </span>
+                                        <p className="review-content">{r.content}</p>
+                                    </div>
+                                </div>)))}
                         </div>
-                    </div>)))}
-            </div>
-        </section>
+                    </section>
+                </div>
+            )}
+
+            {activeTab === 'episodes' && (
+                <div className="episodes-tab">
+                    {/* ──────── Episodes Section ──────── */}
+                    <h3 className="episodes-heading">Episodes ({episodesList.length})</h3>
+                    {episodesLoading ? (
+                        <div className="loading">Loading episodes...</div>
+                    ) : episodesError ? (
+                        <div className="error">{episodesError}</div>
+                    ) : episodesList.length > 0 ? (
+                        <div className="episodes-grid">
+                            {episodesList.map((episode) => (
+                                <div key={episode.episode_id} className="episode-card">
+                                    <div className="episode-header">
+                                        <span className="episode-number">Episode {episode.episode_number}</span>
+                                        {episode.premium_only && user && user.subscription_status && (
+                                            <span className="premium-indicator">PRO</span>
+                                        )}
+                                    </div>
+                                    {episode.title && (
+                                        <h4 className="episode-title">{episode.title}</h4>
+                                    )}
+                                    <div className="episode-details">
+                                        <div className="episode-detail">
+                                            <span className="detail-label">Duration:</span>
+                                            <span className="detail-value">{formatDuration(episode.duration_seconds)}</span>
+                                        </div>
+                                        <div className="episode-detail">
+                                            <span className="detail-label">Air Date:</span>
+                                            <span className="detail-value">{formatAirDate(episode.air_date)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="no-episodes">
+                            <p>No episodes available for this anime yet.</p>
+                            <p>Check back later for updates!</p>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
     </div>
   );
 }

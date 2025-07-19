@@ -21,6 +21,7 @@ import VARoutes from "./routes/VARoutes.js";
 import animeLibraryRoutes from "./routes/animeLibraryRoutes.js";
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import premiumRoutes from './routes/premiumRoutes.js';
+import episodeRoutes from './routes/episodeRoutes.js';
 import subscriptionExpiryJob from './cron/subscriptionExpiryJob.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -57,6 +58,7 @@ app.use('/api', VARoutes);
 app.use('/api/anime-library', animeLibraryRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api', premiumRoutes);
+app.use('/api/episodes', episodeRoutes);
 
 // Test database connection
     pool.connect()

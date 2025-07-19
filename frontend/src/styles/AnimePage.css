@@ -46,6 +46,83 @@
     margin: 0.5rem 0;
 }
 
+/* Alternative title styling */
+.anime-alt-title {
+    margin: 0.5rem 0;
+    font-style: italic;
+    color: #666;
+}
+
+/* Anime details row - for episodes, season, release date */
+.anime-details-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin: 1rem 0;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 3px solid #61dafb;
+}
+
+.anime-detail-item {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.anime-detail-item strong {
+    color: #333;
+    margin-right: 0.25rem;
+}
+
+/* Tab System */
+.anime-tabs {
+    max-width: 800px;
+    width: 100%;
+    margin: 2rem auto 0;
+}
+
+.tab-nav {
+    display: flex;
+    border-bottom: 2px solid #e1e4e8;
+    margin-bottom: 2rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.tab-btn:hover {
+    color: #61dafb;
+    background: #f8f9fa;
+}
+
+.tab-btn.active {
+    color: #61dafb;
+    border-bottom-color: #61dafb;
+    background: #f8fdff;
+}
+
+.tab-content {
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.details-tab,
+.episodes-tab {
+    width: 100%;
+}
+
 /* Cast grid */
 .cast-heading {
     align-self: flex-start;
@@ -54,6 +131,129 @@
     margin-left: calc((100% - 800px) / 2);
     font-size: 1.5rem;
     margin-bottom: 1rem;
+}
+
+/* Episodes section */
+.episodes-heading {
+    align-self: flex-start;
+    max-width: 800px;
+    width: 100%;
+    margin-left: calc((100% - 800px) / 2);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    margin-top: 2rem;
+}
+
+.episodes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    max-width: 800px;
+    width: 100%;
+}
+
+.episode-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.episode-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.episode-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.episode-number {
+    font-weight: 600;
+    color: #61dafb;
+    font-size: 0.9rem;
+}
+
+.premium-indicator {
+    background: linear-gradient(135deg, #61dafb, #21a1f1);
+    color: #1a1a1a;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.episode-title {
+    margin: 0 0 0.75rem 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+    line-height: 1.3;
+}
+
+.episode-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.episode-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.detail-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #333;
+    font-weight: 400;
+}
+
+.no-episodes {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    background: #f8f9fa;
+    border-radius: 8px;
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.no-episodes p {
+    margin: 0.5rem 0;
+}
+
+.no-episodes p:first-child {
+    font-weight: 500;
+    color: #555;
+}
+
+/* Loading and error states for episodes */
+.episodes-heading + .loading,
+.episodes-heading + .error {
+    text-align: center;
+    padding: 2rem;
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.episodes-heading + .error {
+    color: #dc3545;
+    background: #f8d7da;
+    border-radius: 8px;
 }
 
 .cast-grid {
@@ -231,6 +431,85 @@
 
 .dark-mode .va-info {
     color: #bbb; /* Adjust va-info text color for dark mode */
+}
+
+/* Dark mode styles for new elements */
+.dark-mode .anime-alt-title {
+    color: #aaa;
+}
+
+.dark-mode .anime-details-row {
+    background: #2a2a2a;
+    border-left: 3px solid #61dafb;
+}
+
+.dark-mode .anime-detail-item {
+    color: #ccc;
+}
+
+.dark-mode .anime-detail-item strong {
+    color: #fff;
+}
+
+/* Dark mode styles for episodes */
+.dark-mode .episode-card {
+    background: #333;
+    color: #eee;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .episode-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .episode-title {
+    color: #fff;
+}
+
+.dark-mode .detail-label {
+    color: #bbb;
+}
+
+.dark-mode .detail-value {
+    color: #eee;
+}
+
+.dark-mode .no-episodes {
+    background: #2a2a2a;
+    color: #ccc;
+}
+
+.dark-mode .no-episodes p:first-child {
+    color: #fff;
+}
+
+/* Dark mode for episode loading/error states */
+.dark-mode .episodes-heading + .loading {
+    color: #ccc;
+}
+
+.dark-mode .episodes-heading + .error {
+    color: #f8d7da;
+    background: #5a1e2a;
+}
+
+/* Dark mode for tabs */
+.dark-mode .tab-nav {
+    border-bottom-color: #444;
+}
+
+.dark-mode .tab-btn {
+    color: #bbb;
+}
+
+.dark-mode .tab-btn:hover {
+    color: #61dafb;
+    background: #2a2a2a;
+}
+
+.dark-mode .tab-btn.active {
+    color: #61dafb;
+    background: #1a2832;
 }
 
 .anime-meta-header {
@@ -547,11 +826,69 @@
     .lists-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
+    
+    .episodes-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
 }
 
 @media (max-width: 600px) {
     .lists-grid {
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+    
+    /* Responsive styling for anime details */
+    .anime-details-row {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .anime-detail-item {
+        font-size: 0.85rem;
+    }
+    
+    /* Responsive styling for episodes */
+    .episodes-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .episodes-heading,
+    .cast-heading {
+        margin-left: 0;
+        font-size: 1.3rem;
+    }
+    
+    .episode-card {
+        padding: 0.75rem;
+    }
+    
+    .episode-title {
+        font-size: 0.9rem;
+    }
+    
+    .episode-detail {
+        font-size: 0.8rem;
+    }
+    
+    /* Responsive tabs */
+    .anime-tabs {
+        margin: 1rem auto 0;
+        padding: 0 1rem;
+    }
+    
+    .tab-nav {
+        margin-bottom: 1rem;
+    }
+    
+    .tab-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        flex: 1;
+        text-align: center;
+    }
+    
+    .tab-content {
+        padding: 0 1rem;
     }
 }
 
