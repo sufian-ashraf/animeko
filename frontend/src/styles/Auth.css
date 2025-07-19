@@ -100,6 +100,42 @@
     text-decoration: underline;
 }
 
+body.dark-mode .auth-container {
+    background-color: #1a1a1a;
+}
+
+body.dark-mode .auth-card {
+    background-color: #282c34;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .auth-card h2 {
+    color: #e0e0e0;
+}
+
+body.dark-mode .auth-form label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .auth-form input {
+    background-color: #3a3a3a;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .auth-form input:focus {
+    border-color: #61dafb;
+    box-shadow: 0 0 0 2px rgba(97, 218, 251, 0.2);
+}
+
+body.dark-mode .auth-link {
+    color: #e0e0e0;
+}
+
+body.dark-mode .auth-link a {
+    color: #61dafb;
+}
+
 .error-message {
     color: #d32f2f; /* A strong red for error messages */
     background-color: #ffebee; /* Light red background */

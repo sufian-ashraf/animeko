@@ -49,7 +49,12 @@ function Navigation() {
     <>
       <div className="nav-left">
         <Link to={isAdmin ? "/admin" : "/"} className="brand">
-          Animeko
+          <div className="brand-wrapper">
+            <span className="brand-text">AnimeKo</span>
+            {user && user.subscription_status === true && (
+              <span className="premium-badge">PRO</span>
+            )}
+          </div>
         </Link>
       </div>
 

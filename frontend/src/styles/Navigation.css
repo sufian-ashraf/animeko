@@ -60,6 +60,25 @@
     text-decoration: none;
 }
 
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.premium-badge {
+  background: linear-gradient(135deg, #61dafb, #21a1f1);
+  color: #1a1a1a;
+  font-size: 0.35em; /* Reduced from 0.5em to 0.35em */
+  padding: 1px 3px; /* Reduced padding further */
+  border-radius: 4px; /* Smaller border radius */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2px; /* Reduced letter spacing */
+  box-shadow: 0 1px 2px rgba(97, 218, 251, 0.2); /* Even subtler shadow */
+  border: 1px solid rgba(97, 218, 251, 0.4);
+}
+
 /* Main Navigation Links Container */
 .nav-main-links {
     display: flex;

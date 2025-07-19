@@ -205,3 +205,9 @@ body.dark-mode .sort-controls-container button {
 body.dark-mode .sort-controls-container button:hover {
     background-color: #5a63c7;
 }
+
+body.dark-mode .error-message {
+    color: #d32f2f; /* A strong red for error messages */
+    background-color: #ffffff; /* White background */
+    border-color: #ef9a9a; /* Slightly darker red border */
+}
