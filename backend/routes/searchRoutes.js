@@ -14,10 +14,23 @@ router.get('/', async (req, res) => {
     let results = [];
     switch (type) {
       case 'anime':
+        // Parse genres if provided as comma-separated string
+        let genres = null;
+        if (req.query.genres) {
+          genres = req.query.genres.split(',').map(g => g.trim()).filter(Boolean);
+        }
+        
         results = await Anime.getAll({
           title: req.query.title,
           genre: req.query.genre,
+          genres: genres,
           year: req.query.year,
+          releaseYearStart: req.query.releaseYearStart,
+          releaseYearEnd: req.query.releaseYearEnd,
+          episodeCountMin: req.query.episodeCountMin,
+          episodeCountMax: req.query.episodeCountMax,
+          ratingMin: req.query.ratingMin,
+          ratingMax: req.query.ratingMax,
           sortField: req.query.sortField,
           sortOrder: req.query.sortOrder,
         });

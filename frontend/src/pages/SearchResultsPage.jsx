@@ -126,6 +126,7 @@ function SearchResultsPage() {
         <div className="home-page"> {/* Reusing home-page class for styling */}
             <section className="results-section">
                 <h3>Search Results</h3>
+                
                 {/* Only show sort controls for anime */}
                 {type === 'anime' && (
                     <div className="sort-controls-container">

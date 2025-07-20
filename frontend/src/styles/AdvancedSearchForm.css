@@ -1,0 +1,441 @@
+/* AdvancedSearchForm Component Styles */
+
+.advanced-search-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid;
+  border-radius: 0.25rem;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.advanced-search-toggle.light-theme {
+  color: #495057;
+  border-color: #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.advanced-search-toggle.dark-theme {
+  color: #ecf0f1;
+  border-color: #34495e;
+  background-color: #2c3e50;
+}
+
+/* Advanced Search Form Styles */
+.advanced-search-form {
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  max-width: 600px; /* Limit width to prevent overly wide forms */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.advanced-search-form.light-theme {
+  border: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.advanced-search-form.dark-theme {
+  border: 1px solid #34495e;
+  background-color: #2c3e50;
+}
+
+/* Navbar specific styling */
+.advanced-search-form.navbar-variant {
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.advanced-search-form.navbar-variant.light-theme {
+  border: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.advanced-search-form.navbar-variant.dark-theme {
+  border: 1px solid #34495e;
+  background-color: #2c3e50;
+}
+
+/* Form Title */
+.advanced-search-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+}
+
+.advanced-search-title.navbar-variant {
+  font-size: 1rem;
+  text-align: center;
+}
+
+.advanced-search-title.light-theme {
+  color: #2c3e50;
+}
+
+.advanced-search-title.dark-theme {
+  color: #ecf0f1;
+}
+
+/* Form Groups */
+.advanced-search-form-group {
+  margin-bottom: 1rem;
+}
+
+.advanced-search-form-group.navbar-variant {
+  margin-bottom: 0.75rem;
+}
+
+.advanced-search-form-group.genre-group {
+  position: relative;
+}
+
+.advanced-search-form-group.genre-group.navbar-variant {
+  margin-bottom: 0.75rem;
+}
+
+/* Labels */
+.advanced-search-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.advanced-search-label.navbar-variant {
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.advanced-search-label.light-theme {
+  color: #495057;
+}
+
+.advanced-search-label.dark-theme {
+  color: #bdc3c7;
+}
+
+/* Genre Selection Styles */
+.advanced-search-genre-selector {
+  min-height: 38px;
+  border-radius: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  position: relative;
+}
+
+.advanced-search-genre-selector.navbar-variant {
+  min-height: 32px;
+  padding: 0.25rem 0.5rem;
+  gap: 3px;
+  font-size: 0.85rem;
+}
+
+.advanced-search-genre-selector.light-theme {
+  border: 1px solid #ced4da;
+  background-color: #fff;
+}
+
+.advanced-search-genre-selector.dark-theme {
+  border: 1px solid #34495e;
+  background-color: #34495e;
+}
+
+.advanced-search-genre-placeholder {
+  font-size: inherit;
+}
+
+.advanced-search-genre-placeholder.light-theme {
+  color: #6c757d;
+}
+
+.advanced-search-genre-placeholder.dark-theme {
+  color: #95a5a6;
+}
+
+/* Genre Tags */
+.advanced-search-genre-tag {
+  padding: 0.3em 0.6em;
+  border-radius: 0.25rem;
+  font-size: 0.85em;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+}
+
+.advanced-search-genre-tag.navbar-variant {
+  padding: 0.15rem 0.3rem;
+  border-radius: 0.2rem;
+  font-size: 0.75rem;
+  gap: 0.2rem;
+}
+
+.advanced-search-genre-tag.light-theme {
+  background-color: #e0f2f7;
+  color: #2c3e50;
+  border: 1px solid #a7d9ed;
+}
+
+.advanced-search-genre-tag.dark-theme {
+  background-color: #2980b9;
+  color: #ecf0f1;
+}
+
+/* Genre Dropdown */
+.advanced-search-genre-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  border-radius: 0.25rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.advanced-search-genre-dropdown.navbar-variant {
+  z-index: 1001;
+  max-height: 200px;
+}
+
+.advanced-search-genre-dropdown.light-theme {
+  background-color: #fff;
+  border: 1px solid #ced4da;
+}
+
+.advanced-search-genre-dropdown.dark-theme {
+  background-color: #34495e;
+  border: 1px solid #2c3e50;
+}
+
+/* Genre Search Input */
+.advanced-search-genre-search {
+  width: 100%;
+  padding: 0.375rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.advanced-search-genre-search.navbar-variant {
+  padding: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.advanced-search-genre-search.light-theme {
+  border: 1px solid #ced4da;
+  background-color: #fff;
+  color: #495057;
+}
+
+.advanced-search-genre-search.dark-theme {
+  border: 1px solid #2c3e50;
+  background-color: #2c3e50;
+  color: #ecf0f1;
+}
+
+/* Genre Options Container */
+.advanced-search-genre-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px;
+  position: relative;
+  z-index: 2;
+}
+
+.advanced-search-genre-options.navbar-variant {
+  gap: 0.2rem;
+}
+
+/* Genre Option Items */
+.advanced-search-genre-option {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  user-select: none;
+  border: 1px solid #dee2e6;
+}
+
+.advanced-search-genre-option.navbar-variant {
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.2rem;
+  font-size: 0.75rem;
+}
+
+.advanced-search-genre-option.selected.light-theme {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.advanced-search-genre-option.selected.dark-theme {
+  background-color: #2980b9;
+  color: #fff;
+}
+
+.advanced-search-genre-option.unselected.light-theme {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.advanced-search-genre-option.unselected.dark-theme {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+}
+
+/* Grid Layouts */
+.advanced-search-grid-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.advanced-search-grid-2.navbar-variant {
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.advanced-search-grid-2.last-row {
+  margin-bottom: 1.5rem;
+}
+
+.advanced-search-grid-2.last-row.navbar-variant {
+  margin-bottom: 1rem;
+}
+
+/* Input Fields */
+.advanced-search-input {
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+  box-sizing: border-box; /* Ensure padding is included in width calculation */
+  min-width: 0; /* Prevent overflow */
+}
+
+.advanced-search-input.navbar-variant {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.advanced-search-input.light-theme {
+  border: 1px solid #ced4da;
+  background-color: #fff;
+  color: #495057;
+}
+
+.advanced-search-input.dark-theme {
+  border: 1px solid #34495e;
+  background-color: #34495e;
+  color: #ecf0f1;
+}
+
+/* Input Groups */
+.advanced-search-input-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Prevent flex item from growing beyond container */
+}
+
+.advanced-search-input-group.navbar-variant {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Input Labels for Grid Items */
+.advanced-search-input-group .advanced-search-label {
+  font-size: 0.9rem;
+}
+
+.advanced-search-input-group.navbar-variant .advanced-search-label {
+  font-size: 0.8rem;
+}
+
+/* Action Buttons Container */
+.advanced-search-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.advanced-search-actions.navbar-variant {
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+/* Action Buttons */
+.advanced-search-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  border: none;
+}
+
+.advanced-search-btn.navbar-variant {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.advanced-search-btn-clear {
+  background-color: transparent;
+}
+
+.advanced-search-btn-clear.light-theme {
+  border: 1px solid #6c757d;
+  color: #6c757d;
+}
+
+.advanced-search-btn-clear.dark-theme {
+  border: 1px solid #95a5a6;
+  color: #95a5a6;
+}
+
+.advanced-search-btn-apply {
+  border: none;
+  color: #fff;
+}
+
+.advanced-search-btn-apply.light-theme {
+  background-color: #007bff;
+}
+
+.advanced-search-btn-apply.dark-theme {
+  background-color: #3498db;
+}
+
+/* Hover Effects */
+.advanced-search-btn:hover {
+  opacity: 0.8;
+}
+
+.advanced-search-genre-option:hover {
+  opacity: 0.8;
+}
+
+.advanced-search-genre-tag:hover {
+  opacity: 0.8;
+}

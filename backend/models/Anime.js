@@ -1,7 +1,7 @@
 import pool from '../db.js';
 
 class Anime {
-    static async getAll({ title, genre, year, sortField = 'name', sortOrder = 'asc' }) {
+    static async getAll({ title, genre, genres, year, releaseYearStart, releaseYearEnd, episodeCountMin, episodeCountMax, ratingMin, ratingMax, sortField = 'name', sortOrder = 'asc' }) {
         try {
             let query = `
                 SELECT 
@@ -34,7 +34,21 @@ class Anime {
                 query += ` AND ( title ILIKE $${paramCount++} OR alternative_title ILIKE $${paramCount++} )`;
             }
 
-            if (genre) {
+            // Handle multiple genres (advanced search)
+            if (genres && Array.isArray(genres) && genres.length > 0) {
+                const genreNames = genres.map(g => typeof g === 'string' ? g : g.name).filter(Boolean);
+                if (genreNames.length > 0) {
+                    const genrePlaceholders = genreNames.map(() => `$${paramCount++}`).join(',');
+                    params.push(...genreNames);
+                    query += ` AND EXISTS (
+                        SELECT 1 FROM anime_genre ag
+                        JOIN genre g ON ag.genre_id = g.genre_id
+                        WHERE ag.anime_id = a.anime_id
+                        AND g.name IN (${genrePlaceholders})
+                    )`;
+                }
+            } else if (genre) {
+                // Handle single genre (basic search)
                 params.push(`%${genre}%`);
                 query += ` AND EXISTS (
                     SELECT 1 FROM anime_genre ag
@@ -44,13 +58,63 @@ class Anime {
                 )`;
             }
 
-            if (year) {
+            // Release year range filters
+            if (releaseYearStart) {
+                const parsedYear = parseInt(releaseYearStart, 10);
+                if (!isNaN(parsedYear)) {
+                    params.push(parsedYear);
+                    query += ` AND EXTRACT(YEAR FROM a.release_date) >= $${paramCount++}`;
+                }
+            }
+
+            if (releaseYearEnd) {
+                const parsedYear = parseInt(releaseYearEnd, 10);
+                if (!isNaN(parsedYear)) {
+                    params.push(parsedYear);
+                    query += ` AND EXTRACT(YEAR FROM a.release_date) <= $${paramCount++}`;
+                }
+            }
+
+            // Single year filter (for backward compatibility)
+            if (year && !releaseYearStart && !releaseYearEnd) {
                 const parsedYear = parseInt(year, 10);
                 if (!isNaN(parsedYear)) {
                     params.push(parsedYear);
                     query += ` AND EXTRACT(YEAR FROM a.release_date) = $${paramCount++}`;
-                } else {
-                    // skip year filter if not a valid integer
+                }
+            }
+
+            // Episode count range filters
+            if (episodeCountMin) {
+                const parsedCount = parseInt(episodeCountMin, 10);
+                if (!isNaN(parsedCount)) {
+                    params.push(parsedCount);
+                    query += ` AND a.episodes >= $${paramCount++}`;
+                }
+            }
+
+            if (episodeCountMax) {
+                const parsedCount = parseInt(episodeCountMax, 10);
+                if (!isNaN(parsedCount)) {
+                    params.push(parsedCount);
+                    query += ` AND a.episodes <= $${paramCount++}`;
+                }
+            }
+
+            // Rating range filters
+            if (ratingMin) {
+                const parsedRating = parseFloat(ratingMin);
+                if (!isNaN(parsedRating)) {
+                    params.push(parsedRating);
+                    query += ` AND a.rating >= $${paramCount++}`;
+                }
+            }
+
+            if (ratingMax) {
+                const parsedRating = parseFloat(ratingMax);
+                if (!isNaN(parsedRating)) {
+                    params.push(parsedRating);
+                    query += ` AND a.rating <= $${paramCount++}`;
                 }
             }
 
