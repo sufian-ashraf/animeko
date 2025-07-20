@@ -13,9 +13,6 @@ router.post('/anime/:animeId/review', authenticate, async (req, res) => {
     const animeId = parseInt(req.params.animeId, 10);
     const {rating, content} = req.body;
 
-    if (!content || typeof content !== 'string') {
-        return res.status(400).json({message: 'Review content is required.'});
-    }
     if (!Number.isInteger(rating) || rating < 1 || rating > 10) {
         return res.status(400).json({message: 'Rating must be an integer between 1 and 10.'});
     }
@@ -60,6 +57,26 @@ router.get('/anime/:animeId/rating', async (req, res) => {
     } catch (err) {
         console.error('Error in GET /api/anime/:animeId/rating:', err);
         return res.status(500).json({message: 'Server error.'});
+    }
+});
+
+/**
+ * DELETE /api/anime/:animeId/review
+ * Deletes a user's review for a specific anime.
+ */
+router.delete('/anime/:animeId/review', authenticate, async (req, res) => {
+    const userId = req.user.id;
+    const animeId = parseInt(req.params.animeId, 10);
+
+    try {
+        const deleted = await Review.deleteUserReview({ userId, animeId });
+        if (!deleted) {
+            return res.status(404).json({ message: 'Review not found or not owned by user.' });
+        }
+        return res.json({ message: 'Review deleted successfully.' });
+    } catch (err) {
+        console.error('Error in DELETE /api/anime/:animeId/review:', err);
+        return res.status(500).json({ message: 'Server error.' });
     }
 });
 

@@ -164,14 +164,7 @@ body.dark-mode textarea {
     color: #e0e0e0;
 }
 
-body.dark-mode .your-review-form button {
-    background-color: #3a3a3a;
-    color: #e0e0e0;
-}
 
-body.dark-mode .your-review-form button:hover:not(:disabled) {
-    background-color: #555;
-}
 
 body.dark-mode .load-more-btn {
     background: #3a3a3a;

@@ -492,10 +492,6 @@ export default function AnimePage() {
             setReviewError('Rating must be between 1 and 5 stars.');
             return;
         }
-        if (!content.trim()) {
-            setReviewError('Review content cannot be empty.');
-            return;
-        }
 
         setReviewError('');
         setReviewLoading(true);
@@ -526,6 +522,50 @@ export default function AnimePage() {
         } catch (err) {
             console.error('Submit review error:', err);
             setReviewError(err.message || 'Failed to save review');
+        } finally {
+            setReviewLoading(false);
+        }
+    };
+
+    // Handle delete review
+    const handleDeleteReview = async () => {
+        if (!token || !userReview) {
+            setReviewError('You must be logged in and have a review to delete.');
+            return;
+        }
+
+        setReviewError('');
+        setReviewLoading(true);
+
+        try {
+            const res = await fetch(`/api/anime/${animeId}/review`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (!res.ok) {
+                const payload = await res.json();
+                throw new Error(payload.message || 'Failed to delete review');
+            }
+
+            setUserReview(null); // Clear user's review
+            setReviewForm({ rating: 0, content: '' }); // Reset form
+
+            // Re-fetch rating & rank
+            const ratingRes = await fetch(`/api/anime/${animeId}/rating`);
+            const ratingData = await ratingRes.json();
+            setAverageRating(ratingData.averageRating);
+            setRank(ratingData.rank);
+
+            // Re-fetch all reviews
+            const allRes = await fetch(`/api/anime/${animeId}/reviews`);
+            const allData = await allRes.json();
+            setReviews(Array.isArray(allData) ? allData : []);
+        } catch (err) {
+            console.error('Delete review error:', err);
+            setReviewError(err.message || 'Failed to delete review');
         } finally {
             setReviewLoading(false);
         }
@@ -835,6 +875,16 @@ export default function AnimePage() {
                                     <button type="submit" disabled={reviewLoading}>
                                         {userReview ? 'Update Review' : 'Submit Review'}
                                     </button>
+                                    {userReview && (
+                                        <button
+                                            type="button"
+                                            className="delete-review-btn"
+                                            onClick={handleDeleteReview}
+                                            disabled={reviewLoading}
+                                        >
+                                            Delete Review
+                                        </button>
+                                    )}
                                 </form>
                             ) : (
                                 <div className="login-prompt">

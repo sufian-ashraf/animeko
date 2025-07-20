@@ -86,6 +86,14 @@ class Review {
                                            WHERE review_id = $1`, [reviewId]);
         return result.rowCount > 0;
     }
+
+    static async deleteUserReview({ userId, animeId }) {
+        const result = await pool.query(`DELETE
+                                           FROM review
+                                           WHERE user_id = $1
+                                             AND anime_id = $2`, [userId, animeId]);
+        return result.rowCount > 0;
+    }
 }
 
 export default Review;
