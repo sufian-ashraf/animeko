@@ -86,7 +86,7 @@ CREATE TABLE anime
     rating            FLOAT,
     rank              INTEGER,
     company_id        INTEGER,
-    trailer_url VARCHAR(255)
+    trailer_url_yt_id VARCHAR(20)
 );
 
 CREATE TABLE characters
