@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import placeholder from '../images/image_not_available.jpg';
 import ListCard from '../components/ListCard';
+import TrailerModal from '../components/TrailerModal';
 import '../styles/AnimePage.css';
 
 const roundToHalf = (num) => Math.round(num * 2) / 2;
@@ -65,6 +66,8 @@ export default function AnimePage() {
 
     // Tab state
     const [activeTab, setActiveTab] = useState('details'); // 'details' or 'episodes'
+    const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+
 
     // Debug: Log auth status
     useEffect(() => {
@@ -577,7 +580,7 @@ export default function AnimePage() {
                         <p>Loading anime...</p>
                     </div>;
 
-    const {title, alternative_title, synopsis, company, genres = [], cast = [], episodes, season, release_date} = anime;
+    const {title, alternative_title, synopsis, company, genres = [], cast = [], episodes, season, release_date, trailer_url_yt_id} = anime;
 
     // Format release date
     const formatReleaseDate = (dateString) => {
@@ -727,6 +730,14 @@ export default function AnimePage() {
                 </div>
 
                 {synopsis && <p className="anime-desc">{synopsis}</p>}
+
+                {trailer_url_yt_id ? (
+                    <button onClick={() => setIsTrailerOpen(true)} className="watch-trailer-btn">
+                        Watch Trailer
+                    </button>
+                ) : (
+                    <p className="no-trailer">Trailer not available</p>
+                )}
 
                 {company && (<p className="anime-company">
                     <strong>Company:</strong>{' '}
@@ -966,6 +977,9 @@ export default function AnimePage() {
                 </div>
             )}
         </div>
+        {isTrailerOpen && (
+            <TrailerModal videoId={trailer_url_yt_id} onClose={() => setIsTrailerOpen(false)} />
+        )}
     </div>
   );
 }

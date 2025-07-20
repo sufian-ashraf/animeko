@@ -165,6 +165,7 @@ class Anime {
                    a.episodes,
                    a.season,
                    a.release_date,
+                   a.trailer_url_yt_id,
                    m.url AS "imageUrl"
             FROM anime a
             LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'image'
