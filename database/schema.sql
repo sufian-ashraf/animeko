@@ -85,7 +85,8 @@ CREATE TABLE anime
     synopsis          TEXT,
     rating            FLOAT,
     rank              INTEGER,
-    company_id        INTEGER
+    company_id        INTEGER,
+    trailer_url VARCHAR(255)
 );
 
 CREATE TABLE characters
