@@ -97,8 +97,8 @@ export default function VAPage() {
                 />
             </div>
             <div className="va-info">
-                <div className="va-info-header">
-                    <h2 className="va-name">{name}</h2>
+                <div className="va-info-header spaced-header">
+                    <h2 className="va-name wrap-name">{name}</h2>
                     <button
                         className={`favorite-btn ${isFavorite ? 'favorited' : ''}`}
                         onClick={toggleFavorite}
@@ -114,7 +114,7 @@ export default function VAPage() {
 
         <h3 className="va-roles-heading">Roles</h3>
         {roles.length > 0 ? (<div className="va-roles-grid">
-            {roles.map(({animeId, animeTitle, characterId, characterName, animeImageUrl}) => (
+            {roles.map(({animeId, animeTitle, characterId, characterName, animeImageUrl, characterImageUrl}) => (
                 <div key={`${animeId}-${characterId}`} className="va-role-card">
                     <Link to={`/anime/${animeId}`} className="role-anime-link">
                         <div className="role-anime-image">
@@ -129,12 +129,24 @@ export default function VAPage() {
                         </div>
                         <strong>{animeTitle}</strong>
                     </Link>
-                    <p>
-                        voiced{' '}
-                        <Link to={`/character/${characterId}`} className="role-char-link">
-                            {characterName}
+                    <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.3em', marginTop: '0.7em'}}>
+                        
+                        <Link to={`/character/${characterId}`} className="role-char-link" style={{display: 'flex', alignItems: 'center', gap: '0.5em', marginTop: '0.2em'}}>
+                            <span className="va-thumb-container" style={{width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                <img
+                                    src={characterImageUrl || placeholder}
+                                    alt={characterName}
+                                    className="va-thumb"
+                                    style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%'}}
+                                    onError={e => {
+                                        e.target.onerror = null;
+                                        e.target.src = placeholder;
+                                    }}
+                                />
+                            </span>
+                            <span>{characterName}</span>
                         </Link>
-                    </p>
+                    </div>
                 </div>))}
         </div>) : (<p className="no-roles">No roles found for this actor.</p>)}
     </div>);

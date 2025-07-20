@@ -1,3 +1,25 @@
+/* Ensure name and favorite button are spaced and favorite is always at right */
+.spaced-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.wrap-name {
+  flex: 1 1 0;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+
+.favorite-btn {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-left: 1rem;
+}
 .va-page {
     padding: 2rem;
     display: flex;

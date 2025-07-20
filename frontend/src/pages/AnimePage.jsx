@@ -774,11 +774,11 @@ export default function AnimePage() {
                     {cast.length > 0 ? (<div className="cast-grid">
                         {cast.map(({characterId, characterName, vaId, vaName, characterImageUrl, vaImageUrl}) => (
                             <div key={characterId} className="cast-card">
-                                <div className="character-thumb-container">
+                                <div style={{ textAlign: 'center' }}>
                                     <img
                                         src={characterImageUrl || placeholder}
                                         alt={characterName}
-                                        className="character-thumb"
+                                        style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '50%' }}
                                         onError={(e) => {
                                             e.target.onerror = null;
                                             e.target.src = placeholder;

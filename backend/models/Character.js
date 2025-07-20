@@ -9,12 +9,16 @@ class Character {
                 c.description,
                 c.voice_actor_id as "vaId",
                 va.name as "vaName",
-                m.url as "imageUrl"
+                m.url as "imageUrl",
+                va_media.url as va_image_url
             FROM characters c
             LEFT JOIN voice_actor va ON c.voice_actor_id = va.voice_actor_id
             LEFT JOIN media m ON c.character_id = m.entity_id 
                              AND m.entity_type = 'character' 
                              AND m.media_type = 'image'
+            LEFT JOIN media va_media ON va.voice_actor_id = va_media.entity_id
+                                    AND va_media.entity_type = 'voice_actor'
+                                    AND va_media.media_type = 'image'
             WHERE 1=1
         `;
         const params = [];
@@ -29,31 +33,30 @@ class Character {
     }
 
     static async getById(charId) {
-        // 1) Basic character info
-        const charResult = await pool.query(`SELECT c.character_id   AS id,
-                                                    c.name,
-                                                    c.description,
-                                                    c.voice_actor_id AS "vaId",
-                                                    m.url AS "imageUrl"
-                                             FROM characters c
-                                             LEFT JOIN media m ON c.character_id = m.entity_id 
-                                                              AND m.entity_type = 'character' 
-                                                              AND m.media_type = 'image'
-                                             WHERE c.character_id = $1`, [charId]);
+
+        // 1) Basic character info + VA image
+        const charResult = await pool.query(`
+            SELECT c.character_id   AS id,
+                   c.name,
+                   c.description,
+                   c.voice_actor_id AS "vaId",
+                   m.url AS "imageUrl",
+                   va.name AS "vaName",
+                   va_media.url AS va_image_url
+            FROM characters c
+            LEFT JOIN voice_actor va ON c.voice_actor_id = va.voice_actor_id
+            LEFT JOIN media m ON c.character_id = m.entity_id 
+                             AND m.entity_type = 'character' 
+                             AND m.media_type = 'image'
+            LEFT JOIN media va_media ON va.voice_actor_id = va_media.entity_id
+                                    AND va_media.entity_type = 'voice_actor'
+                                    AND va_media.media_type = 'image'
+            WHERE c.character_id = $1
+        `, [charId]);
         if (charResult.rows.length === 0) {
             return null;
         }
         const character = charResult.rows[0];
-
-        // 2) Voice actor info (if any)
-        if (character.vaId) {
-            const vaRes = await pool.query(`SELECT voice_actor_id AS id, name
-                                            FROM voice_actor
-                                            WHERE voice_actor_id = $1`, [character.vaId]);
-            if (vaRes.rows.length) {
-                character.vaName = vaRes.rows[0].name;
-            }
-        }
 
         // 3) Anime list via anime_character join
         const animeListRes = await pool.query(`SELECT a.anime_id AS "animeId",

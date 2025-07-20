@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import AnimeCard from '../components/AnimeCard';
 import ListCard from '../components/ListCard';
+import CastCard from '../components/CastCard';
 import '../styles/Home.css'; // Reusing Home.css for now, can create a specific one later
 
 
@@ -77,14 +78,15 @@ function SearchResultsPage() {
             return (
                 <div className="anime-grid">
                     {results.map(char => (
-                        <div key={char.id} className="simple-card">
-                            <div style={{textAlign:'center'}}>
-                                <img src={char.imageUrl || '/src/images/image_not_available.jpg'} alt={char.name} style={{width:'100px',height:'100px',objectFit:'cover',borderRadius:'50%'}} />
-                            </div>
-                            <h4>{char.name}</h4>
-                            {char.vaName && <p>VA: {char.vaName}</p>}
-                            {char.description && <p>{char.description}</p>}
-                        </div>
+                        <CastCard
+                            key={char.id}
+                            characterId={char.id}
+                            name={char.name}
+                            imageUrl={char.imageUrl}
+                            vaName={char.vaName}
+                            vaId={char.vaId}
+                            va_image_url={char.va_image_url}
+                        />
                     ))}
                 </div>
             );
@@ -97,9 +99,9 @@ function SearchResultsPage() {
                             <div style={{textAlign:'center'}}>
                                 <img src={va.imageUrl || '/src/images/image_not_available.jpg'} alt={va.name} style={{width:'100px',height:'100px',objectFit:'cover',borderRadius:'50%'}} />
                             </div>
-                            <h4>{va.name}</h4>
-                            {va.nationality && <p>{va.nationality}</p>}
-                            {va.birthDate && <p>Born: {va.birthDate}</p>}
+                            <h4>
+                                <a href={`/va/${va.id}`} className="va-link">{va.name}</a>
+                            </h4>
                         </div>
                     ))}
                 </div>
@@ -112,7 +114,6 @@ function SearchResultsPage() {
                         <div key={user.id} className="simple-card">
                             <h4>{user.username}</h4>
                             {user.display_name && <p>Display: {user.display_name}</p>}
-                            {user.email && <p>Email: {user.email}</p>}
                         </div>
                     ))}
                 </div>

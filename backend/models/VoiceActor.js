@@ -54,13 +54,17 @@ class VoiceActor {
                 a.title as "animeTitle",
                 m.url as "animeImageUrl",
                 c.character_id as "characterId",
-                c.name as "characterName"
+                c.name as "characterName",
+                cm.url as "characterImageUrl"
              FROM anime_character ac
              JOIN anime a ON a.anime_id = ac.anime_id
              JOIN characters c ON c.character_id = ac.character_id
              LEFT JOIN media m ON a.anime_id = m.entity_id 
                               AND m.entity_type = 'anime' 
                               AND m.media_type = 'image'
+             LEFT JOIN media cm ON c.character_id = cm.entity_id
+                                 AND cm.entity_type = 'character'
+                                 AND cm.media_type = 'image'
              WHERE c.voice_actor_id = $1`,
             [vaId]
         );

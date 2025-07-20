@@ -87,8 +87,8 @@ export default function CharacterPage() {
                 />
             </div>
             <div className="character-meta">
-                <div className="character-meta-header">
-                    <h2 className="character-name">{name}</h2>
+                <div className="character-meta-header spaced-header">
+                    <h2 className="character-name wrap-name">{name}</h2>
                     <button
                         className={`favorite-btn ${isFavorite ? 'favorited' : ''}`}
                         onClick={toggleFavorite}
@@ -100,9 +100,28 @@ export default function CharacterPage() {
                 </div>
                 {description && <p className="character-desc">{description}</p>}
                 <p className="character-va">
-                    <strong>Voice Actor:</strong>{' '}
-                    {vaId ? <Link to={`/va/${vaId}`} className="va-link">{vaName}</Link> :
-                        <span className="va-unknown">Unknown</span>}
+                    <span className="va-info" style={{display: 'flex', alignItems: 'flex-start', gap: '0.5em'}}>
+                      <span>voiced by</span>
+                      {vaId ? (
+                        <Link to={`/va/${vaId}`} className="va-link" style={{display: 'flex', alignItems: 'center', gap: '0.5em'}}>
+                          <span className="va-thumb-container" style={{width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <img
+                              src={char.va_image_url || placeholder}
+                              alt={vaName}
+                              className="va-thumb"
+                              style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%'}}
+                              onError={e => {
+                                e.target.onerror = null;
+                                e.target.src = placeholder;
+                              }}
+                            />
+                          </span>
+                          <span>{vaName}</span>
+                        </Link>
+                      ) : (
+                        <span className="va-unknown">Unknown</span>
+                      )}
+                    </span>
                 </p>
             </div>
         </div>
