@@ -29,6 +29,7 @@ class Character {
         }
         query += ' ORDER BY c.name';
         const result = await pool.query(query, params);
+        
         return result.rows;
     }
 
@@ -71,53 +72,179 @@ class Character {
         return character;
     }
 
-    static async create({ name, description, voiceActorId }) {
-        if (!name || typeof name !== 'string' || name.trim() === '') {
-            throw new Error('Character name is required');
+    static async getCharacterWithAnimes(charId) {
+        // Get basic character info
+        const charResult = await pool.query(`
+            SELECT c.character_id   AS id,
+                   c.name,
+                   c.description,
+                   c.voice_actor_id AS "vaId",
+                   m.url AS "imageUrl",
+                   va.name AS "vaName",
+                   va_media.url AS va_image_url
+            FROM characters c
+            LEFT JOIN voice_actor va ON c.voice_actor_id = va.voice_actor_id
+            LEFT JOIN media m ON c.character_id = m.entity_id 
+                             AND m.entity_type = 'character' 
+                             AND m.media_type = 'image'
+            LEFT JOIN media va_media ON va.voice_actor_id = va_media.entity_id
+                                    AND va_media.entity_type = 'voice_actor'
+                                    AND va_media.media_type = 'image'
+            WHERE c.character_id = $1
+        `, [charId]);
+        
+        if (charResult.rows.length === 0) {
+            return null;
         }
+        
+        const character = charResult.rows[0];
 
-        const result = await pool.query(
-            `INSERT INTO characters (name, description, voice_actor_id)
-             VALUES ($1, $2, $3)
-             RETURNING 
-                character_id as id,
-                name,
-                description,
-                voice_actor_id as "vaId"`,
-            [
-                name.trim(),
-                description?.trim() || null,
-                voiceActorId || null
-            ]
+        // Get associated animes
+        const animeResult = await pool.query(
+            `SELECT a.anime_id as id, a.anime_id as anime_id, a.title 
+             FROM anime a
+             JOIN anime_character ac ON a.anime_id = ac.anime_id
+             WHERE ac.character_id = $1`,
+            [charId]
         );
-        return result.rows[0];
+        character.animes = animeResult.rows;
+
+        return character;
     }
 
-    static async update(charId, { name, description, voiceActorId }) {
+    static async create({ name, description, voiceActorId, animes = [] }) {
         if (!name || typeof name !== 'string' || name.trim() === '') {
             throw new Error('Character name is required');
         }
 
-        const result = await pool.query(
-            `UPDATE characters 
-             SET 
-                name = COALESCE($1, name),
-                description = $2,
-                voice_actor_id = $3
-             WHERE character_id = $4
-             RETURNING 
-                character_id as id,
-                name,
-                description,
-                voice_actor_id as "vaId"`,
-            [
-                name?.trim(),
-                description?.trim() || null,
-                voiceActorId || null,
-                charId
-            ]
-        );
-        return result.rows[0];
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            const result = await client.query(
+                `INSERT INTO characters (name, description, voice_actor_id)
+                 VALUES ($1, $2, $3)
+                 RETURNING 
+                    character_id as id,
+                    name,
+                    description,
+                    voice_actor_id as "vaId"`,
+                [
+                    name.trim(),
+                    description?.trim() || null,
+                    voiceActorId || null
+                ]
+            );
+
+            const newCharacter = result.rows[0];
+
+            // Add anime associations if provided
+            if (Array.isArray(animes) && animes.length > 0) {
+                for (const anime of animes) {
+                    if (anime.anime_id || anime.id) {
+                        await client.query(
+                            'INSERT INTO anime_character (anime_id, character_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+                            [anime.anime_id || anime.id, newCharacter.id, 'main'] // Default role
+                        );
+                    }
+                }
+
+                // Fetch the animes to include in the response
+                const animeResult = await client.query(
+                    `SELECT a.anime_id as id, a.title 
+                     FROM anime a
+                     JOIN anime_character ac ON a.anime_id = ac.anime_id
+                     WHERE ac.character_id = $1`,
+                    [newCharacter.id]
+                );
+                newCharacter.animes = animeResult.rows;
+            } else {
+                newCharacter.animes = [];
+            }
+
+            await client.query('COMMIT');
+            return newCharacter;
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+
+    static async update(charId, { name, description, voiceActorId, animes = [] }) {
+        if (!name || typeof name !== 'string' || name.trim() === '') {
+            throw new Error('Character name is required');
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            const result = await client.query(
+                `UPDATE characters 
+                 SET 
+                    name = COALESCE($1, name),
+                    description = $2,
+                    voice_actor_id = $3
+                 WHERE character_id = $4
+                 RETURNING 
+                    character_id as id,
+                    name,
+                    description,
+                    voice_actor_id as "vaId"`,
+                [
+                    name?.trim(),
+                    description?.trim() || null,
+                    voiceActorId || null,
+                    charId
+                ]
+            );
+
+            if (result.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return null;
+            }
+
+            // Update anime associations if animes are provided
+            if (Array.isArray(animes) && animes.length > 0) {
+                // First, remove all existing anime associations
+                await client.query(
+                    'DELETE FROM anime_character WHERE character_id = $1',
+                    [charId]
+                );
+
+                // Then add the new ones
+                for (const anime of animes) {
+                    if (anime.anime_id || anime.id) {
+                        await client.query(
+                            'INSERT INTO anime_character (anime_id, character_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+                            [anime.anime_id || anime.id, charId, 'main'] // Default role
+                        );
+                    }
+                }
+            }
+
+            // Fetch the updated character with animes
+            const updatedCharacter = result.rows[0];
+            const animeResult = await client.query(
+                `SELECT a.anime_id as id, a.title 
+                 FROM anime a
+                 JOIN anime_character ac ON a.anime_id = ac.anime_id
+                 WHERE ac.character_id = $1`,
+                [charId]
+            );
+            
+            updatedCharacter.animes = animeResult.rows;
+            
+            await client.query('COMMIT');
+            return updatedCharacter;
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
     }
 
     static async delete(charId) {

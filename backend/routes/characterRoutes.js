@@ -48,12 +48,39 @@ router.get('/characters/:charId', async (req, res) => {
 });
 
 /**
+ * @route   GET /api/characters/:charId/details
+ * @desc    Get single character with their anime associations (for editing)
+ * @access  Private/Admin
+ */
+router.get('/characters/:charId/details', authenticate, authorizeAdmin, async (req, res) => {
+    const { charId } = req.params;
+    const id = parseInt(charId, 10);
+    
+    if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid character ID format' });
+    }
+
+    try {
+        const character = await Character.getCharacterWithAnimes(id);
+
+        if (!character) {
+            return res.status(404).json({ message: 'Character not found' });
+        }
+
+        res.json(character);
+    } catch (err) {
+        console.error('Error fetching character details:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
  * @route   POST /api/characters
  * @desc    Create new character
  * @access  Private/Admin
  */
 router.post('/characters', authenticate, authorizeAdmin, async (req, res) => {
-    const { name, description, voiceActorId } = req.body;
+    const { name, description, voiceActorId, animes } = req.body;
 
     // Input validation
     if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -64,7 +91,8 @@ router.post('/characters', authenticate, authorizeAdmin, async (req, res) => {
         const newCharacter = await Character.create({ 
             name, 
             description, 
-            voiceActorId: voiceActorId || null 
+            voiceActorId: voiceActorId || null,
+            animes: animes || []
         });
         res.status(201).json(newCharacter);
     } catch (err) {
@@ -84,7 +112,7 @@ router.post('/characters', authenticate, authorizeAdmin, async (req, res) => {
 router.put('/characters/:charId', authenticate, authorizeAdmin, async (req, res) => {
     const { charId } = req.params;
     const id = parseInt(charId, 10);
-    const { name, description, voiceActorId } = req.body;
+    const { name, description, voiceActorId, animes } = req.body;
 
     if (isNaN(id)) {
         return res.status(400).json({ message: 'Invalid character ID format' });
@@ -99,7 +127,8 @@ router.put('/characters/:charId', authenticate, authorizeAdmin, async (req, res)
         const updatedCharacter = await Character.update(id, { 
             name, 
             description, 
-            voiceActorId: voiceActorId || null 
+            voiceActorId: voiceActorId || null,
+            animes: animes || []
         });
 
         if (!updatedCharacter) {

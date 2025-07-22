@@ -1,16 +1,19 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { X } from 'react-feather';
+import '../../styles/AdminDropdown.css';
 
 const CharactersTab = ({ searchQuery }) => {
     const { token } = useAuth();
+    const { isDarkMode } = useTheme();
     const [characters, setCharacters] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        voiceActorId: '',
-        animeId: ''
+        voiceActorId: ''
     });
     const [editingId, setEditingId] = useState(null);
     const [voiceActors, setVoiceActors] = useState([]);
@@ -20,8 +23,10 @@ const CharactersTab = ({ searchQuery }) => {
     
     // Anime dropdown state
     const [animeList, setAnimeList] = useState([]);
+    const [selectedAnimes, setSelectedAnimes] = useState([]);
     const [animeSearch, setAnimeSearch] = useState('');
     const [isAnimeDropdownOpen, setIsAnimeDropdownOpen] = useState(false);
+    const [loadingCharacterDetails, setLoadingCharacterDetails] = useState(false);
     const animeDropdownRef = useRef(null);
 
     useEffect(() => {
@@ -46,7 +51,7 @@ const CharactersTab = ({ searchQuery }) => {
     
     const fetchAnimeList = async () => {
         try {
-            const response = await fetch('/api/animes');
+            const response = await fetch('http://localhost:5000/api/animes');
             if (response.ok) {
                 const data = await response.json();
                 setAnimeList(Array.isArray(data) ? data : []);
@@ -56,10 +61,39 @@ const CharactersTab = ({ searchQuery }) => {
         }
     };
 
+    const toggleAnime = (anime) => {
+        setSelectedAnimes(prev => {
+            const animeId = anime.anime_id || anime.id;
+            const exists = prev.some(a => (a.anime_id || a.id) === animeId);
+            if (exists) {
+                return prev.filter(a => (a.anime_id || a.id) !== animeId);
+            } else {
+                return [...prev, {
+                    anime_id: animeId,
+                    id: animeId,
+                    title: anime.title
+                }];
+            }
+        });
+    };
+    
+    const removeAnime = (animeId) => {
+        setSelectedAnimes(prev => prev.filter(a => (a.anime_id || a.id) !== animeId));
+    };
+    
+    // Initialize selected animes when editing
+    const initializeSelectedAnimes = useCallback((character) => {
+        if (character.animes) {
+            setSelectedAnimes(character.animes);
+        } else {
+            setSelectedAnimes([]);
+        }
+    }, []);
+
     const fetchCharacters = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/characters', {
+            const response = await fetch('http://localhost:5000/api/characters', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -85,7 +119,7 @@ const CharactersTab = ({ searchQuery }) => {
 
     const fetchVoiceActors = async () => {
         try {
-            const response = await fetch('/api/voice-actors', {
+            const response = await fetch('http://localhost:5000/api/voice-actors', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -130,8 +164,8 @@ const CharactersTab = ({ searchQuery }) => {
         }
 
         const url = editingId
-            ? `/api/characters/${editingId}`
-            : '/api/characters';
+            ? `http://localhost:5000/api/characters/${editingId}`
+            : 'http://localhost:5000/api/characters';
         const method = editingId ? 'PUT' : 'POST';
 
         try {
@@ -145,7 +179,11 @@ const CharactersTab = ({ searchQuery }) => {
                     name: formData.name.trim(),
                     description: formData.description.trim() || null,
                     voiceActorId: formData.voiceActorId || null,
-                    animeId: formData.animeId || null
+                    animes: selectedAnimes.map(a => ({
+                        anime_id: a.anime_id || a.id,
+                        id: a.anime_id || a.id,
+                        title: a.title
+                    }))
                 })
             });
 
@@ -163,7 +201,7 @@ const CharactersTab = ({ searchQuery }) => {
         }
     };
 
-    const handleEdit = (character) => {
+    const handleEdit = async (character) => {
         if (!character) {
             showError('No character data provided');
             return;
@@ -177,18 +215,41 @@ const CharactersTab = ({ searchQuery }) => {
         }
         
         try {
+            setLoadingCharacterDetails(true);
+            
             // Scroll to top of the page
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Set basic form data immediately
             setFormData({
                 name: character.name || '',
                 description: character.description || '',
-                voiceActorId: character.vaId || '',
-                animeId: character.animeId || ''
+                voiceActorId: character.vaId || ''
             });
             setEditingId(charId);
+            
+            // Fetch detailed character data with anime associations
+            const response = await fetch(`http://localhost:5000/api/characters/${charId}/details`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch character details');
+            }
+            
+            const detailedCharacter = await response.json();
+            
+            // Initialize selected animes with the fetched data
+            initializeSelectedAnimes(detailedCharacter);
+            
         } catch (err) {
-            console.error('Error formatting character data:', err);
-            showError('Error loading character data');
+            console.error('Error loading character details:', err);
+            showError('Error loading character details');
+        } finally {
+            setLoadingCharacterDetails(false);
         }
     };
 
@@ -207,7 +268,7 @@ const CharactersTab = ({ searchQuery }) => {
             }
 
             setLoading(true);
-            const response = await fetch(`/api/characters/${charId}`, {
+            const response = await fetch(`http://localhost:5000/api/characters/${charId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -239,6 +300,7 @@ const CharactersTab = ({ searchQuery }) => {
             description: '',
             voiceActorId: ''
         });
+        setSelectedAnimes([]);
         setEditingId(null);
         setError('');
     };
@@ -282,69 +344,112 @@ const CharactersTab = ({ searchQuery }) => {
                         />
                     </div>
                     <div className="form-group" ref={animeDropdownRef}>
-                        <label>Anime</label>
-                        <div className="dropdown">
+                        <label>Animes</label>
+                        {loadingCharacterDetails ? (
+                            <div className="form-control" style={{ 
+                                padding: '8px 12px', 
+                                color: '#6c757d', 
+                                fontStyle: 'italic' 
+                            }}>
+                                Loading anime associations...
+                            </div>
+                        ) : (
+                            <div className="admin-dropdown">
                             <div 
-                                className="form-control" 
-                                style={{ cursor: 'pointer' }}
-                                onClick={() => {
+                                className={`admin-dropdown-trigger ${selectedAnimes.length === 0 ? 'empty' : ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
                                     setIsAnimeDropdownOpen(!isAnimeDropdownOpen);
                                     setAnimeSearch('');
                                 }}
                             >
-                                {animeList.find(a => a.id == formData.animeId)?.title || 'Select an anime'}
+                                {selectedAnimes.length === 0 ? (
+                                    <span className="text-muted">Select animes</span>
+                                ) : (
+                                    selectedAnimes.map(anime => (
+                                        <span 
+                                            key={anime.anime_id || anime.id}
+                                            className={`admin-badge ${isDarkMode ? 'dark-mode' : 'light-mode'}`}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeAnime(anime.anime_id || anime.id);
+                                            }}
+                                        >
+                                            {anime.title}
+                                            <X size={14} className="admin-badge-remove" />
+                                        </span>
+                                    ))
+                                )}
                             </div>
                             {isAnimeDropdownOpen && (
-                                <div className="dropdown-menu show" style={{ width: '100%', padding: '0.5rem' }}>
+                                <div className="admin-dropdown-menu">
                                     <input
                                         type="text"
-                                        className="form-control form-control-sm mb-2"
-                                        placeholder="Search anime..."
+                                        className="admin-dropdown-search"
+                                        placeholder="Search animes..."
                                         value={animeSearch}
                                         onChange={(e) => setAnimeSearch(e.target.value)}
                                         autoFocus
                                         onClick={(e) => e.stopPropagation()}
                                     />
-                                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                                        {animeList
-                                            .filter(anime => 
+                                    <div 
+                                        className="admin-dropdown-content"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <div className="admin-selection-grid">
+                                            {animeList
+                                                .filter(anime => 
+                                                    !animeSearch || 
+                                                    (anime.title && anime.title.toLowerCase().includes(animeSearch.toLowerCase()))
+                                                )
+                                                .map(anime => {
+                                                    const isSelected = selectedAnimes.some(
+                                                        a => (a.anime_id || a.id) === (anime.anime_id || anime.id)
+                                                    );
+                                                    return (
+                                                        <div 
+                                                            key={anime.anime_id || anime.id}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                toggleAnime(anime);
+                                                            }}
+                                                            onMouseDown={(e) => e.preventDefault()}
+                                                            className={`admin-selection-item ${isSelected ? 'selected' : ''}`}
+                                                        >
+                                                            <span className="admin-selection-item-text">{anime.title}</span>
+                                                            <input 
+                                                                type="checkbox" 
+                                                                className="admin-selection-checkbox"
+                                                                checked={isSelected}
+                                                                onChange={(e) => {
+                                                                    e.stopPropagation();
+                                                                    toggleAnime(anime);
+                                                                }}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            />
+                                                        </div>
+                                                    );
+                                                })
+                                            }
+                                            {animeList.filter(anime => 
                                                 !animeSearch || 
                                                 (anime.title && anime.title.toLowerCase().includes(animeSearch.toLowerCase()))
-                                            )
-                                            .map(anime => (
-                                                <button
-                                                    key={anime.id || anime.anime_id}
-                                                    className="dropdown-item"
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setFormData(prev => ({
-                                                            ...prev, 
-                                                            animeId: anime.id || anime.anime_id
-                                                        }));
-                                                        setIsAnimeDropdownOpen(false);
-                                                    }}
-                                                >
-                                                    {anime.title}
-                                                </button>
-                                            ))
-                                        }
-                                        {animeList.filter(anime => 
-                                            !animeSearch || 
-                                            (anime.title && anime.title.toLowerCase().includes(animeSearch.toLowerCase()))
-                                        ).length === 0 && (
-                                            <div className="dropdown-item text-muted">No anime found</div>
-                                        )}
+                                            ).length === 0 && (
+                                                <div className="admin-dropdown-empty">No animes found</div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             )}
                         </div>
+                        )}
                     </div>
                     <div className="form-group" ref={vaDropdownRef}>
                         <label>Voice Actor</label>
-                        <div className="dropdown">
+                        <div className="admin-dropdown">
                             <div 
-                                className="form-control" 
+                                className="admin-dropdown-trigger"
                                 style={{ cursor: 'pointer' }}
                                 onClick={() => {
                                     setIsVaDropdownOpen(!isVaDropdownOpen);
@@ -354,17 +459,17 @@ const CharactersTab = ({ searchQuery }) => {
                                 {voiceActors.find(va => va.id == formData.voiceActorId || va.voice_actor_id == formData.voiceActorId)?.name || 'Select a voice actor'}
                             </div>
                             {isVaDropdownOpen && (
-                                <div className="dropdown-menu show" style={{ width: '100%', padding: '0.5rem' }}>
+                                <div className="admin-dropdown-menu">
                                     <input
                                         type="text"
-                                        className="form-control form-control-sm mb-2"
+                                        className="admin-dropdown-search"
                                         placeholder="Search voice actors..."
                                         value={voiceActorSearch}
                                         onChange={(e) => setVoiceActorSearch(e.target.value)}
                                         autoFocus
                                         onClick={(e) => e.stopPropagation()}
                                     />
-                                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                    <div className="admin-dropdown-content">
                                         {voiceActors
                                             .filter(va => 
                                                 !voiceActorSearch || 
@@ -373,7 +478,7 @@ const CharactersTab = ({ searchQuery }) => {
                                             .map(va => (
                                                 <button
                                                     key={va.id || va.voice_actor_id}
-                                                    className="dropdown-item"
+                                                    className="admin-dropdown-item"
                                                     type="button"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -392,14 +497,13 @@ const CharactersTab = ({ searchQuery }) => {
                                             !voiceActorSearch || 
                                             (va.name && va.name.toLowerCase().includes(voiceActorSearch.toLowerCase()))
                                         ).length === 0 && (
-                                            <div className="dropdown-item text-muted">No voice actors found</div>
+                                            <div className="admin-dropdown-empty">No voice actors found</div>
                                         )}
                                     </div>
                                 </div>
                             )}
                         </div>
                     </div>
-                    <style jsx>{"\n                        .dropdown {\n                            position: relative;\n                        }\n                        .dropdown-menu {\n                            position: absolute;\n                            top: 100%;\n                            left: 0;\n                            z-index: 1000;\n                            background: white;\n                            border: 1px solid #ced4da;\n                            border-radius: 0.25rem;\n                            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);\n                            width: 100%;\n                        }\n                        .dropdown-item {\n                            display: block;\n                            width: 100%;\n                            padding: 0.25rem 1.5rem;\n                            clear: both;\n                            font-weight: 400;\n                            color: #212529;\n                            text-align: inherit;\n                            white-space: nowrap;\n                            background-color: transparent;\n                            border: 0;\n                            text-align: left;\n                        }\n                        .dropdown-item:hover {\n                            background-color: #f8f9fa;\n                            color: #16181b;\n                            text-decoration: none;\n                        }\n                        .dropdown-item:active {\n                            background-color: #e9ecef;\n                        }\n                    "}</style>
                     <div className="form-actions">
                         <button type="submit" className="btn btn-primary" disabled={loading}>
                             {editingId ? 'Update' : 'Add'} Character
@@ -418,7 +522,7 @@ const CharactersTab = ({ searchQuery }) => {
                 {filteredCharacters.length === 0 ? (
                     <p>No characters found.</p>
                 ) : (
-                    <div className="admin-table">
+                    <div className="admin-table character-table">
                         <div className="table-header">
                             <div className="col-name">Name</div>
                             <div className="col-description">Description</div>

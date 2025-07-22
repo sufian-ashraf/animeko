@@ -20,7 +20,7 @@ class Anime {
                      JOIN genre g ON ag.genre_id = g.genre_id
                      WHERE ag.anime_id = a.anime_id) AS genre,
                      EXTRACT(YEAR FROM a.release_date) AS year,
-                    a.synopsis AS description
+                    a.synopsis AS synopsis
                 FROM anime a
                 LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'image'
                 WHERE 1=1
