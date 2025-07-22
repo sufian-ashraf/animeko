@@ -21,7 +21,7 @@ export default function Profile() {
     // Profile‐edit state (own profile only)
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
-        display_name: '', profile_bio: '',
+        display_name: '', profile_bio: '', profile_picture_url: ''
     });
     const [loadingEdit, setLoadingEdit] = useState(false);
     const [editError, setEditError] = useState('');
@@ -34,7 +34,7 @@ export default function Profile() {
     useEffect(() => {
         if (profileUser && isOwnProfile) {
             setFormData({
-                display_name: profileUser.display_name || '', profile_bio: profileUser.profile_bio || '',
+                display_name: profileUser.display_name || '', profile_bio: profileUser.profile_bio || '', profile_picture_url: profileUser.profile_picture_url || ''
             });
         }
     }, [profileUser, isOwnProfile]);
@@ -128,8 +128,11 @@ export default function Profile() {
         try {
             setLoadingEdit(true);
             await updateProfile(formData);
+
             setEditMessage('Profile updated successfully');
             setIsEditing(false);
+            // Re-fetch profile data to ensure the latest profile picture URL is displayed
+            fetchProfileData();
         } catch (err) {
             setEditError(err.message || 'Failed to update profile');
         } finally {
@@ -221,6 +224,15 @@ export default function Profile() {
                                 value={formData.profile_bio}
                                 onChange={handleChange}
                                 rows="3"
+                                disabled={loadingEdit}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Profile Picture URL</label>
+                            <input
+                                name="profile_picture_url"
+                                value={formData.profile_picture_url}
+                                onChange={handleChange}
                                 disabled={loadingEdit}
                             />
                         </div>

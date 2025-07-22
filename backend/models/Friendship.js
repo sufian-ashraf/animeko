@@ -24,11 +24,18 @@ class Friendship {
     }
 
     static async getIncomingRequests(userId) {
-        const result = await pool.query(`SELECT f.requester_id AS user_id, u.username, u.display_name
-                                         FROM friendship f
-                                                  JOIN users u ON u.user_id = f.requester_id
-                                         WHERE f.addressee_id = $1
-                                           AND f.status = 'pending'`, [userId]);
+        const result = await pool.query(`
+            SELECT f.requester_id AS user_id, 
+                   u.username, 
+                   u.display_name,
+                   m.url AS profile_picture_url
+            FROM friendship f
+            JOIN users u ON u.user_id = f.requester_id
+            LEFT JOIN media m ON u.user_id = m.entity_id 
+                              AND m.entity_type = 'user' 
+                              AND m.media_type = 'image'
+            WHERE f.addressee_id = $1
+              AND f.status = 'pending'`, [userId]);
         return result.rows;
     }
 
@@ -45,15 +52,22 @@ class Friendship {
     }
 
     static async getFriends(userId) {
-        const result = await pool.query(`SELECT u.user_id, u.username, u.display_name
-                                         FROM friendship f
-                                                  JOIN users u ON (u.user_id = CASE
-                                                                                   WHEN f.requester_id = $1
-                                                                                       THEN f.addressee_id
-                                                                                   ELSE f.requester_id
-                                             END)
-                                         WHERE (f.requester_id = $1 OR f.addressee_id = $1)
-                                           AND f.status = 'accepted'`, [userId]);
+        const result = await pool.query(`
+            SELECT u.user_id, 
+                   u.username, 
+                   u.display_name,
+                   m.url AS profile_picture_url
+            FROM friendship f
+            JOIN users u ON (u.user_id = CASE
+                                           WHEN f.requester_id = $1
+                                               THEN f.addressee_id
+                                           ELSE f.requester_id
+                         END)
+            LEFT JOIN media m ON u.user_id = m.entity_id 
+                              AND m.entity_type = 'user' 
+                              AND m.media_type = 'image'
+            WHERE (f.requester_id = $1 OR f.addressee_id = $1)
+              AND f.status = 'accepted'`, [userId]);
         return result.rows;
     }
 
@@ -73,11 +87,17 @@ class Friendship {
         const q = `%${searchTerm}%`;
 
         const exactMatch = await pool.query(
-            `SELECT user_id, username, display_name
-             FROM users 
-             WHERE username = $1 
-               AND user_id != $2
-               AND is_admin = false  -- Exclude admin accounts
+            `SELECT u.user_id, 
+                    u.username, 
+                    u.display_name,
+                    m.url AS profile_picture_url
+             FROM users u
+             LEFT JOIN media m ON u.user_id = m.entity_id 
+                               AND m.entity_type = 'user' 
+                               AND m.media_type = 'image'
+             WHERE u.username = $1 
+               AND u.user_id != $2
+               AND u.is_admin = false  -- Exclude admin accounts
              LIMIT 1`,
             [searchTerm, currentUserId]
         );
@@ -109,6 +129,7 @@ class Friendship {
                 u.user_id,
                 u.username,
                 u.display_name,
+                m.url AS profile_picture_url,
                 CASE
                     WHEN f.status = 'accepted' THEN 'friend'
                     WHEN f.status = 'pending' AND f.requester_id = $2 THEN 'request_sent'
@@ -116,6 +137,9 @@ class Friendship {
                     ELSE 'none'
                 END as friendship_status
             FROM users u
+            LEFT JOIN media m ON u.user_id = m.entity_id 
+                              AND m.entity_type = 'user' 
+                              AND m.media_type = 'image'
             LEFT JOIN friendship f ON (
                 (f.requester_id = u.user_id AND f.addressee_id = $2) OR
                 (f.addressee_id = u.user_id AND f.requester_id = $2)

@@ -289,7 +289,7 @@ export default function MyFriends() {
                             <div key={request.user_id} className="friend-request">
                                 <div className="request-info">
                                     <img
-                                        src={request.profile_picture_url || placeholderImg}
+                                        src={request.profile_picture_url || defaultAvatar}
                                         alt={request.display_name || 'User'}
                                         className="friend-avatar"
                                     />
@@ -328,7 +328,7 @@ export default function MyFriends() {
                             <div key={friend.user_id} className="friend-card">
                                 <div className="friend-avatar-container">
                                     <img
-                                        src={friend.profile_picture_url || placeholderImg}
+                                        src={friend.profile_picture_url || defaultAvatar}
                                         alt={friend.display_name || 'Friend'}
                                         className="friend-avatar"
                                     />

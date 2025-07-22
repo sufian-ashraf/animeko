@@ -42,9 +42,10 @@ class User {
 
     static async findById(userId) {
         const result = await pool.query(
-            `SELECT user_id, username, email, display_name, profile_bio, TO_CHAR(created_at, 'DD Mon YYYY') AS created_at, is_admin, subscription_status
-             FROM users
-             WHERE user_id = $1`,
+            `SELECT u.user_id, u.username, u.email, u.display_name, u.profile_bio, TO_CHAR(u.created_at, 'DD Mon YYYY') AS created_at, u.is_admin, u.subscription_status, m.url AS profile_picture_url
+             FROM users u
+             LEFT JOIN media m ON u.user_id = m.entity_id AND m.entity_type = 'user' AND m.media_type = 'image'
+             WHERE u.user_id = $1`,
             [userId]
         );
         return result.rows[0];
@@ -73,12 +74,58 @@ class User {
         return result.rows[0];
     }
 
-    static async updateProfile(userId, { display_name, profile_bio }) {
-        const result = await pool.query(
-            'UPDATE users SET display_name = $1, profile_bio = $2 WHERE user_id = $3 RETURNING user_id, username, email, display_name, profile_bio',
-            [display_name, profile_bio, userId]
-        );
-        return result.rows[0];
+    static async updateProfile(userId, { display_name, profile_bio, profile_picture_url }) {
+        // Start a transaction
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // 1. Update users table for display_name and profile_bio
+            const userUpdateResult = await client.query(
+                'UPDATE users SET display_name = $1, profile_bio = $2 WHERE user_id = $3 RETURNING user_id, username, email, display_name, profile_bio',
+                [display_name, profile_bio, userId]
+            );
+
+            // 2. Handle profile picture URL in media table
+            if (profile_picture_url !== undefined) { // Only update if provided in the payload
+                const existingMedia = await client.query(
+                    'SELECT media_id FROM media WHERE entity_type = $1 AND entity_id = $2 AND media_type = $3',
+                    ['user', userId, 'image']
+                );
+
+                if (profile_picture_url) { // If a URL is provided, insert or update
+                    if (existingMedia.rows.length > 0) {
+                        await client.query(
+                            'UPDATE media SET url = $1, uploaded_at = NOW() WHERE media_id = $2',
+                            [profile_picture_url, existingMedia.rows[0].media_id]
+                        );
+                    } else {
+                        await client.query(
+                            'INSERT INTO media (url, entity_type, entity_id, media_type) VALUES ($1, $2, $3, $4)',
+                            [profile_picture_url, 'user', userId, 'image']
+                        );
+                    }
+                } else { // If URL is empty/null, delete existing profile picture
+                    if (existingMedia.rows.length > 0) {
+                        await client.query(
+                            'DELETE FROM media WHERE media_id = $1',
+                            [existingMedia.rows[0].media_id]
+                        );
+                    }
+                }
+            }
+
+            await client.query('COMMIT');
+
+            // Fetch and return the updated user data including the profile picture URL
+            return this.findById(userId);
+
+        } catch (e) {
+            await client.query('ROLLBACK');
+            throw e;
+        } finally {
+            client.release();
+        }
     }
 
     static async delete(userId) {

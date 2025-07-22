@@ -913,7 +913,7 @@ export default function AnimePage() {
                                 <div key={r.review_id} className="review-card">
                                     <div className="reviewer-info">
                                         <img
-                                            src={r.avatarUrl || defaultAvatar}
+                                            src={r.avatar_url || defaultAvatar}
                                             alt={`${r.username} avatar`}
                                             className="reviewer-avatar"
                                         />

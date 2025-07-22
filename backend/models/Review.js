@@ -36,25 +36,17 @@ class Review {
             SELECT r.review_id,
                    r.user_id,
                    u.display_name AS username,
-                   m_avatar.url   AS avatarUrl,
+                   m.url AS avatar_url,
                    r.content,
                    r.rating,
                    r.created_at
             FROM review AS r
-
                      LEFT JOIN users AS u
                                ON r.user_id = u.user_id
-
-                     LEFT JOIN LATERAL (
-                SELECT url
-                FROM media
-                WHERE entity_type = 'user'
-                  AND entity_id = u.user_id
-                ORDER BY uploaded_at DESC
-                    LIMIT 1
-      ) AS m_avatar
-            ON TRUE
-
+                     LEFT JOIN media AS m 
+                               ON u.user_id = m.entity_id 
+                               AND m.entity_type = 'user' 
+                               AND m.media_type = 'image'
             WHERE r.anime_id = $1
             ORDER BY r.created_at DESC
         `, [animeId]);
