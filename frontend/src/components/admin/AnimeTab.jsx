@@ -11,11 +11,16 @@ const AnimeTab = ({searchQuery}) => {
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         title: '',
+        alternative_title: '',
         synopsis: '',
         release_date: '',
+        episodes: '',
+        season: '',
+        trailer_url_yt_id: '',
         company_id: ''
     });
     const [editingId, setEditingId] = useState(null);
+    const [loadingAnimeDetails, setLoadingAnimeDetails] = useState(false);
     const [companies, setCompanies] = useState([]);
     const [companySearch, setCompanySearch] = useState('');
     const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
@@ -105,57 +110,20 @@ const AnimeTab = ({searchQuery}) => {
     const fetchAnime = async () => {
         try {
             console.log('Fetching anime list...');
-            const response = await fetch('http://localhost:5000/api/animes');
+            const response = await fetch('http://localhost:5000/api/animes/admin', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error('Failed to fetch anime list: ' + errorText);
             }
             const data = await response.json();
             console.log(data);
-
             
-            
-            // Log the first anime to see the data structure
-            if (Array.isArray(data) && data.length > 0) {
-                console.log('Sample anime data:', {
-                    id: data[0].id,
-                    anime_id: data[0].anime_id,
-                    title: data[0].title,
-                    release_date: data[0].release_date,
-                    company_id: data[0].company_id,
-                    raw_data: data[0]
-                });
-            }
-            
-            // Format the data with consistent fields
-            const formattedData = Array.isArray(data) ? data.map(anime => {
-                // Parse the release date if it exists
-                let releaseDate = null;
-                if (anime.release_date) {
-                    try {
-                        // Handle case where release_date might be a string or Date object
-                        const date = new Date(anime.release_date);
-                        releaseDate = isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
-                    } catch (e) {
-                        console.error('Error parsing release date:', e);
-                    }
-                }
-                
-                return {
-                    ...anime,
-                    anime_id: anime.anime_id || anime.id,
-                    id: anime.anime_id || anime.id,
-                    release_date: releaseDate,
-                    company_id: anime.company_id || anime.companyId || null
-                };
-            }) : [];
-            
-            console.log('Anime data loaded:', { 
-                count: formattedData.length,
-                hasReleaseDates: formattedData.some(a => a.release_date),
-                hasCompanyIds: formattedData.some(a => a.company_id)
-            });
-            setAnimeList(formattedData);
+            setAnimeList(Array.isArray(data) ? data : []);
         } catch (err) {
             setError(err.message || 'Failed to fetch anime list');
             console.error('Fetch error:', err);
@@ -236,12 +204,16 @@ const AnimeTab = ({searchQuery}) => {
                 : 'http://localhost:5000/api/animes';
             const method = editingId ? 'PUT' : 'POST';
 
-            // Prepare the request body with genres
+            // Prepare the request body with all fields and genres
             const requestBody = {
                 title: formData.title,
                 synopsis: formData.synopsis,
                 release_date: formData.release_date || null,
                 company_id: formData.company_id || null,
+                alternative_title: formData.alternative_title || null,
+                season: formData.season || null,
+                episodes: formData.episodes ? parseInt(formData.episodes) : null,
+                trailer_url_yt_id: formData.trailer_url_yt_id || null,
                 genres: selectedGenres.map(g => ({
                     genre_id: g.genre_id || g.id,
                     name: g.name
@@ -273,7 +245,7 @@ const AnimeTab = ({searchQuery}) => {
         }
     };
 
-    const handleEdit = (anime) => {
+    const handleEdit = async (anime) => {
         if (!anime) return;
 
         // Use either anime_id or id, whichever is available
@@ -283,19 +255,60 @@ const AnimeTab = ({searchQuery}) => {
             return;
         }
 
-        // Scroll to top of the page
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        try {
+            setLoadingAnimeDetails(true);
 
-        setFormData({
-            title: anime.title || '',
-            synopsis: anime.synopsis || '',
-            release_date: anime.release_date ? anime.release_date.split('T')[0] : '',
-            company_id: anime.company_id ? String(anime.company_id) : ''
-        });
-        
-        // Initialize selected genres
-        initializeSelectedGenres(anime);
-        setEditingId(animeId);
+            // Scroll to top of the page
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Set basic form data immediately
+            setFormData({
+                title: anime.title || '',
+                alternative_title: '',
+                synopsis: '',
+                release_date: '',
+                episodes: '',
+                season: anime.season || '',
+                trailer_url_yt_id: '',
+                company_id: anime.company_id ? String(anime.company_id) : ''
+            });
+            setEditingId(animeId);
+
+            // Fetch detailed anime data
+            const response = await fetch(`http://localhost:5000/api/animes/${animeId}/details`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch anime details');
+            }
+
+            const detailedAnime = await response.json();
+
+            // Update form data with detailed information
+            setFormData({
+                title: detailedAnime.title || '',
+                alternative_title: detailedAnime.alternative_title || '',
+                synopsis: detailedAnime.synopsis || '',
+                release_date: detailedAnime.release_date ? detailedAnime.release_date.split('T')[0] : '',
+                episodes: detailedAnime.episodes ? String(detailedAnime.episodes) : '',
+                season: detailedAnime.season || '',
+                trailer_url_yt_id: detailedAnime.trailer_url_yt_id || '',
+                company_id: detailedAnime.company_id ? String(detailedAnime.company_id) : ''
+            });
+
+            // Initialize selected genres
+            initializeSelectedGenres(detailedAnime);
+
+        } catch (err) {
+            console.error('Error loading anime details:', err);
+            showError('Error loading anime details');
+        } finally {
+            setLoadingAnimeDetails(false);
+        }
     };
 
     const handleDelete = async (id) => {
@@ -343,10 +356,15 @@ const AnimeTab = ({searchQuery}) => {
             title: '',
             synopsis: '',
             release_date: '',
-            company_id: ''
+            company_id: '',
+            alternative_title: '',
+            season: '',
+            episodes: '',
+            trailer_url_yt_id: ''
         });
         setEditingId(null);
         setError('');
+        setSelectedGenres([]);
     };
 
     const filteredAnime = animeList.filter(anime =>
@@ -385,6 +403,49 @@ const AnimeTab = ({searchQuery}) => {
                             value={formData.synopsis}
                             onChange={handleInputChange}
                             rows="4"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Alternative Title</label>
+                        <input
+                            type="text"
+                            name="alternative_title"
+                            className="form-control"
+                            value={formData.alternative_title}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Episodes</label>
+                        <input
+                            type="number"
+                            name="episodes"
+                            className="form-control"
+                            value={formData.episodes}
+                            onChange={handleInputChange}
+                            min="1"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Season</label>
+                        <input
+                            type="text"
+                            name="season"
+                            className="form-control"
+                            value={formData.season}
+                            onChange={handleInputChange}
+                            placeholder="e.g., Fall 2023, Winter 2024"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>YouTube Trailer ID</label>
+                        <input
+                            type="text"
+                            name="trailer_url_yt_id"
+                            className="form-control"
+                            value={formData.trailer_url_yt_id}
+                            onChange={handleInputChange}
+                            placeholder="e.g., dQw4w9WgXcQ"
                         />
                     </div>
                     <div className="form-group">
@@ -658,58 +719,18 @@ const AnimeTab = ({searchQuery}) => {
                     <div className="admin-table">
                         <div className="table-header">
                             <div className="col-title">Title</div>
-                            <div className="col-release">Release Date</div>
+                            <div className="col-season">Season</div>
                             <div className="col-company">Company</div>
                             <div className="col-actions">Actions</div>
                         </div>
                         {filteredAnime.map(anime => (
                             <div key={anime.anime_id} className="table-row">
                                 <div className="col-title">{anime.title}</div>
-                                <div className="col-release">
-                                    {(() => {
-                                        if (!anime.release_date) return 'N/A';
-                                        try {
-                                            const date = new Date(anime.release_date);
-                                            return !isNaN(date.getTime()) 
-                                                ? date.toLocaleDateString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    timeZone: 'UTC'
-                                                })
-                                                : 'Invalid Date';
-                                        } catch (e) {
-                                            console.error('Error formatting date:', e);
-                                            return 'Date Error';
-                                        }
-                                    })()}
+                                <div className="col-season">
+                                    {anime.season || 'N/A'}
                                 </div>
                                 <div className="col-company">
-                                    {(() => {
-                                        if (!anime.company_id) {
-                                            console.log(`Anime ${anime.id} has no company_id`);
-                                            return 'N/A';
-                                        }
-                                        
-                                        // Log the company ID we're looking for
-                                        console.log(`Looking for company with ID: ${anime.company_id} (Type: ${typeof anime.company_id})`);
-                                        
-                                        // Try to find the company by both id and company_id
-                                        const company = companies.find(c => {
-                                            const match = c.id === anime.company_id || c.company_id === anime.company_id;
-                                            if (match) {
-                                                console.log('Found matching company:', c);
-                                            }
-                                            return match;
-                                        });
-                                        
-                                        if (!company) {
-                                            console.log('No company found for ID:', anime.company_id);
-                                            console.log('Available company IDs:', companies.map(c => c.id || c.company_id));
-                                        }
-                                        
-                                        return company?.name || `Company ID: ${anime.company_id}`;
-                                    })()}
+                                    {anime.company_name || 'Unknown'}
                                 </div>
                                 <div className="col-actions">
                                     <button

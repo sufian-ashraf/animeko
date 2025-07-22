@@ -155,6 +155,62 @@ class Anime {
         }
     }
 
+    static async getAllForAdmin() {
+        try {
+            let query = `
+                SELECT 
+                    a.anime_id AS id,
+                    a.title,
+                    a.season,
+                    a.company_id,
+                    c.name AS company_name
+                FROM anime a
+                LEFT JOIN company c ON a.company_id = c.company_id
+                ORDER BY a.title
+            `;
+
+            const result = await pool.query(query);
+            return result.rows;
+        } catch (error) {
+            console.error("Error in Anime.getAllForAdmin:", error);
+            throw new Error("Database query failed");
+        }
+    }
+
+    static async getByIdForAdmin(animeId) {
+        const animeResult = await pool.query(`
+            SELECT a.anime_id AS id,
+                   a.title,
+                   a.alternative_title,
+                   a.synopsis,
+                   a.company_id,
+                   a.episodes,
+                   a.season,
+                   a.release_date,
+                   a.trailer_url_yt_id,
+                   m.url AS "imageUrl"
+            FROM anime a
+            LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'image'
+            WHERE a.anime_id = $1`, [animeId]);
+
+        if (animeResult.rows.length === 0) {
+            return null;
+        }
+
+        const anime = animeResult.rows[0];
+
+        // Get genres
+        const genreResult = await pool.query(`
+            SELECT g.genre_id AS id, g.genre_id, g.name
+            FROM genre g
+            JOIN anime_genre ag ON g.genre_id = ag.genre_id
+            WHERE ag.anime_id = $1`, [animeId]);
+
+        anime.genres = genreResult.rows;
+
+        return anime;
+    }
+
     static async getById(animeId) {
         const animeResult = await pool.query(`
             SELECT a.anime_id AS id,
@@ -219,20 +275,22 @@ class Anime {
         return anime;
     }
 
-    static async create({ title, synopsis, release_date, company_id, genres = [] }) {
+    static async create({ title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, genres = [] }) {
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
             
             const releaseDate = !release_date || release_date === '' ? null : release_date;
             const companyId = !company_id || company_id === '' ? null : company_id;
+            const episodeCount = episodes && episodes !== '' ? parseInt(episodes, 10) : null;
+            const trailerYtId = !trailer_url_yt_id || trailer_url_yt_id === '' ? null : trailer_url_yt_id;
 
             // Create the anime
             const result = await client.query(
-                `INSERT INTO anime (title, synopsis, release_date, company_id)
-                 VALUES ($1, $2, $3, $4)
+                `INSERT INTO anime (title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                  RETURNING *`,
-                [title, synopsis, releaseDate, companyId]
+                [title, alternative_title || null, synopsis, releaseDate, companyId, episodeCount, season || null, trailerYtId]
             );
 
             const newAnime = result.rows[0];
@@ -271,24 +329,30 @@ class Anime {
         }
     }
 
-    static async update(animeId, { title, synopsis, release_date, company_id, genres = [] }) {
+    static async update(animeId, { title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, genres = [] }) {
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
             
             const releaseDate = !release_date || release_date === '' ? null : release_date;
             const companyId = !company_id || company_id === '' ? null : company_id;
+            const episodeCount = episodes && episodes !== '' ? parseInt(episodes, 10) : null;
+            const trailerYtId = !trailer_url_yt_id || trailer_url_yt_id === '' ? null : trailer_url_yt_id;
 
             // Update anime details
             const result = await client.query(
                 `UPDATE anime
-                 SET title        = COALESCE($1, title),
-                     synopsis     = COALESCE($2, synopsis),
-                     release_date = COALESCE($3, release_date),
-                     company_id   = COALESCE($4, company_id)
-                 WHERE anime_id = $5 
+                 SET title            = COALESCE($1, title),
+                     alternative_title = COALESCE($2, alternative_title),
+                     synopsis         = COALESCE($3, synopsis),
+                     release_date     = COALESCE($4, release_date),
+                     company_id       = COALESCE($5, company_id),
+                     episodes         = COALESCE($6, episodes),
+                     season           = COALESCE($7, season),
+                     trailer_url_yt_id = COALESCE($8, trailer_url_yt_id)
+                 WHERE anime_id = $9 
                  RETURNING *`,
-                [title, synopsis, releaseDate, companyId, animeId]
+                [title, alternative_title, synopsis, releaseDate, companyId, episodeCount, season, trailerYtId, animeId]
             );
 
             if (result.rows.length === 0) {

@@ -23,6 +23,46 @@ router.get('/animes', async (req, res, next) => {
 });
 
 /**
+ * GET /api/animes/admin
+ * Returns a simplified list of anime for admin management (fast loading)
+ */
+router.get('/animes/admin', authenticate, authorizeAdmin, async (req, res) => {
+    try {
+        const animes = await Anime.getAllForAdmin();
+        res.json(animes);
+    } catch (err) {
+        console.error('Error fetching anime for admin:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * GET /api/animes/:animeId/details
+ * Returns full anime details for admin editing
+ */
+router.get('/animes/:animeId/details', authenticate, authorizeAdmin, async (req, res) => {
+    const { animeId } = req.params;
+    const id = parseInt(animeId, 10);
+    
+    if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid anime ID format' });
+    }
+
+    try {
+        const anime = await Anime.getByIdForAdmin(id);
+
+        if (!anime) {
+            return res.status(404).json({ message: 'Anime not found' });
+        }
+
+        res.json(anime);
+    } catch (err) {
+        console.error('Error fetching anime details:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
  * GET /api/anime/:animeId
  * Returns full anime info + its cast (character + VA)
  */
