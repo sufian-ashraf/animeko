@@ -51,6 +51,21 @@ router.get('/friends/requests', authenticate, async (req, res) => {
 });
 
 /**
+ * List sent friend requests
+ * GET /api/friends/requests/sent
+ */
+router.get('/friends/requests/sent', authenticate, async (req, res) => {
+    const me = req.user.user_id;
+    try {
+        const requests = await Friendship.getSentRequests(me);
+        res.json(requests);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({message: 'Server error'});
+    }
+});
+
+/**
  * Accept or reject a friend request
  * POST /api/friends/requests/:requesterId/:action
  * action = accept|reject
@@ -199,6 +214,26 @@ router.delete('/friends/:friendId', authenticate, async (req, res) => {
     } catch (err) {
         console.error('Unfriend error:', err);
         return res.status(500).json({message: 'Server error'});
+    }
+});
+
+/**
+ * Cancel a pending friend request
+ * DELETE /api/friends/requests/:addresseeId
+ */
+router.delete('/friends/requests/:addresseeId', authenticate, async (req, res) => {
+    const requesterId = req.user.user_id;
+    const addresseeId = parseInt(req.params.addresseeId, 10);
+
+    try {
+        const canceled = await Friendship.cancelFriendRequest({ requesterId, addresseeId });
+        if (!canceled) {
+            return res.status(404).json({ message: 'Pending friend request not found' });
+        }
+        res.json({ message: 'Friend request canceled successfully' });
+    } catch (err) {
+        console.error('Cancel friend request error:', err);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 

@@ -11,6 +11,7 @@ export default function MyFriends() {
     
     // Friend request and friends state
     const [incoming, setIncoming] = useState([]);
+    const [sentRequests, setSentRequests] = useState([]);
     const [friends, setFriends] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -27,25 +28,31 @@ export default function MyFriends() {
                 setLoading(true);
                 setError('');
 
-                const [incomingRes, friendsRes] = await Promise.all([
+                const [incomingRes, friendsRes, sentRes] = await Promise.all([
                     fetch('/api/friends/requests', {
                         headers: { 'Authorization': `Bearer ${token}` }
                     }),
                     fetch('/api/friends', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch('/api/friends/requests/sent', {
                         headers: { 'Authorization': `Bearer ${token}` }
                     })
                 ]);
 
                 if (!incomingRes.ok) throw new Error('Failed to load friend requests');
                 if (!friendsRes.ok) throw new Error('Failed to load friends list');
+                if (!sentRes.ok) throw new Error('Failed to load sent requests');
 
-                const [incomingData, friendsData] = await Promise.all([
+                const [incomingData, friendsData, sentData] = await Promise.all([
                     incomingRes.json(),
-                    friendsRes.json()
+                    friendsRes.json(),
+                    sentRes.json()
                 ]);
 
                 setIncoming(Array.isArray(incomingData) ? incomingData : []);
                 setFriends(Array.isArray(friendsData) ? friendsData : []);
+                setSentRequests(Array.isArray(sentData) ? sentData : []);
             } catch (err) {
                 console.error('Error fetching friend data:', err);
                 setError(err.message || 'Failed to load friend data');
@@ -176,7 +183,6 @@ export default function MyFriends() {
                 )
             );
 
-            setSearchQuery('');
             setSendMessage('Friend request sent!');
             setTimeout(() => setSendMessage(''), 3000);
         } catch (error) {
@@ -228,13 +234,60 @@ export default function MyFriends() {
         }
     };
 
+    // Cancel friend request
+    const cancelFriendRequest = async (addresseeId) => {
+        if (!window.confirm('Are you sure you want to cancel this friend request?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/friends/requests/${addresseeId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            const responseData = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(responseData.message || `Server responded with ${response.status}`);
+            }
+
+            // Update UI to reflect cancellation
+            setSearchResults(prev => 
+                prev.map(user => 
+                    user.user_id === addresseeId 
+                        ? { ...user, friendship_status: 'none' } 
+                        : user
+                )
+            );
+            setSentRequests(prev => prev.filter(request => request.user_id !== addresseeId));
+            setSendMessage('Friend request canceled successfully!');
+            setTimeout(() => setSendMessage(''), 3000);
+
+        } catch (error) {
+            console.error('Error canceling friend request:', error);
+            setError(error.message || 'Failed to cancel friend request');
+        }
+    };
+
     // Get appropriate button for search result user
     const getButtonForUser = (searchUser) => {
         switch (searchUser.friendship_status) {
             case 'friend':
                 return <span className="status-badge friend">Friends</span>;
             case 'request_sent':
-                return <span className="status-badge pending">Request Sent</span>;
+                return (
+                    <button
+                        className="btn-small reject" // Using reject style for cancel
+                        onClick={() => cancelFriendRequest(searchUser.user_id)}
+                    >
+                        Cancel Request
+                    </button>
+                );
             case 'request_received':
                 return (
                     <div>
@@ -283,7 +336,7 @@ export default function MyFriends() {
             {/* Incoming Friend Requests */}
             <section className="friend-requests">
                 <h2>Incoming Friend Requests</h2>
-                <div className="scroll-box">
+                <div className="scroll-box incoming-requests-grid">
                     {incoming.length > 0 ? (
                         incoming.map((request) => (
                             <div key={request.user_id} className="friend-request">
@@ -293,9 +346,14 @@ export default function MyFriends() {
                                         alt={request.display_name || 'User'}
                                         className="friend-avatar"
                                     />
-                                    <span>
-                                        {request.display_name} (@{request.username})
-                                    </span>
+                                    <div>
+                                        <div className="user-name">
+                                            {request.display_name}
+                                        </div>
+                                        <div className="user-username">
+                                            @{request.username}
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="request-actions">
                                     <button
@@ -315,6 +373,44 @@ export default function MyFriends() {
                         ))
                     ) : (
                         <p>No pending friend requests</p>
+                    )}
+                </div>
+            </section>
+
+            {/* Sent Friend Requests */}
+            <section className="friend-requests">
+                <h2>Sent Friend Requests</h2>
+                <div className="scroll-box sent-requests-grid">
+                    {sentRequests.length > 0 ? (
+                        sentRequests.map((request) => (
+                            <div key={request.user_id} className="friend-request">
+                                <div className="request-info">
+                                    <img
+                                        src={request.profile_picture_url || defaultAvatar}
+                                        alt={request.display_name || 'User'}
+                                        className="friend-avatar"
+                                    />
+                                    <div>
+                                        <div className="user-name">
+                                            {request.display_name}
+                                        </div>
+                                        <div className="user-username">
+                                            @{request.username}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="request-actions">
+                                    <button
+                                        className="btn-small reject"
+                                        onClick={() => cancelFriendRequest(request.user_id)}
+                                    >
+                                        Cancel Request
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No sent friend requests</p>
                     )}
                 </div>
             </section>
@@ -365,6 +461,10 @@ export default function MyFriends() {
                     {sendMessage && <div className="success-message">{sendMessage}</div>}
                 </div>
                 
+                {searchQuery && searchResults.length === 0 && (
+                    <p className="no-results-message">No users found matching your search.</p>
+                )}
+
                 {searchResults.length > 0 && (
                     <div className="search-results">
                         {searchResults.map((user) => (

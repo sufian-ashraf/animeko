@@ -39,6 +39,22 @@ class Friendship {
         return result.rows;
     }
 
+    static async getSentRequests(userId) {
+        const result = await pool.query(`
+            SELECT f.addressee_id AS user_id, 
+                   u.username, 
+                   u.display_name,
+                   m.url AS profile_picture_url
+            FROM friendship f
+            JOIN users u ON u.user_id = f.addressee_id
+            LEFT JOIN media m ON u.user_id = m.entity_id 
+                              AND m.entity_type = 'user' 
+                              AND m.media_type = 'image'
+            WHERE f.requester_id = $1
+              AND f.status = 'pending'`, [userId]);
+        return result.rows;
+    }
+
     static async updateFriendRequest({ requesterId, addresseeId, action }) {
         const newStatus = action === 'accept' ? 'accepted' : 'rejected';
         const result = await pool.query(`UPDATE friendship
@@ -178,6 +194,15 @@ class Friendship {
             [reqId, addId]
         );
         return { message: 'Friendship removed' };
+    }
+
+    static async cancelFriendRequest({ requesterId, addresseeId }) {
+        const result = await pool.query(
+            `DELETE FROM friendship
+             WHERE requester_id = $1 AND addressee_id = $2 AND status = 'pending'`,
+            [requesterId, addresseeId]
+        );
+        return result.rowCount > 0;
     }
 }
 
