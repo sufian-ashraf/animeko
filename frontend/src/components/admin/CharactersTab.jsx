@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { X } from 'react-feather';
 import '../../styles/AdminDropdown.css';
+import '../../styles/AnimeImageInput.css';
 
 const CharactersTab = ({ searchQuery }) => {
     const { token } = useAuth();
@@ -13,9 +14,12 @@ const CharactersTab = ({ searchQuery }) => {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        voiceActorId: ''
+        voiceActorId: '',
+        image_url: ''
     });
     const [editingId, setEditingId] = useState(null);
+    const [imageLoading, setImageLoading] = useState(false);
+    const [imageError, setImageError] = useState(false);
     const [voiceActors, setVoiceActors] = useState([]);
     const [voiceActorSearch, setVoiceActorSearch] = useState('');
     const [isVaDropdownOpen, setIsVaDropdownOpen] = useState(false);
@@ -143,6 +147,28 @@ const CharactersTab = ({ searchQuery }) => {
             ...prev,
             [name]: value
         }));
+        
+        // Reset image error when URL changes
+        if (name === 'image_url') {
+            setImageError(false);
+        }
+    };
+
+    const handleImageLoad = () => {
+        setImageLoading(false);
+        setImageError(false);
+    };
+
+    const handleImageError = () => {
+        setImageLoading(false);
+        setImageError(true);
+    };
+
+    const handleImageLoadStart = () => {
+        if (formData.image_url && formData.image_url.trim()) {
+            setImageLoading(true);
+            setImageError(false);
+        }
     };
 
     const showError = (message) => {
@@ -150,6 +176,15 @@ const CharactersTab = ({ searchQuery }) => {
         setTimeout(() => {
             setError('');
         }, 5000);
+    };
+
+    const showSuccess = (message) => {
+        setError(''); // Clear any existing errors
+        // Use error state for success message with different styling
+        setError(`SUCCESS: ${message}`);
+        setTimeout(() => {
+            setError('');
+        }, 3000);
     };
 
     const handleSubmit = async (e) => {
@@ -179,6 +214,7 @@ const CharactersTab = ({ searchQuery }) => {
                     name: formData.name.trim(),
                     description: formData.description.trim() || null,
                     voiceActorId: formData.voiceActorId || null,
+                    image_url: formData.image_url || null,
                     animes: selectedAnimes.map(a => ({
                         anime_id: a.anime_id || a.id,
                         id: a.anime_id || a.id,
@@ -193,7 +229,17 @@ const CharactersTab = ({ searchQuery }) => {
             }
 
             await fetchCharacters();
-            resetForm();
+            
+            // Show success message
+            const successMessage = editingId 
+                ? 'Character updated successfully!' 
+                : 'Character created successfully!';
+            showSuccess(successMessage);
+            
+            // Only reset form if creating new character (not editing)
+            if (!editingId) {
+                resetForm();
+            }
         } catch (err) {
             showError(err.message);
         } finally {
@@ -224,7 +270,8 @@ const CharactersTab = ({ searchQuery }) => {
             setFormData({
                 name: character.name || '',
                 description: character.description || '',
-                voiceActorId: character.vaId || ''
+                voiceActorId: character.vaId || '',
+                image_url: character.imageUrl || ''
             });
             setEditingId(charId);
             
@@ -298,11 +345,14 @@ const CharactersTab = ({ searchQuery }) => {
         setFormData({
             name: '',
             description: '',
-            voiceActorId: ''
+            voiceActorId: '',
+            image_url: ''
         });
         setSelectedAnimes([]);
         setEditingId(null);
         setError('');
+        setImageError(false);
+        setImageLoading(false);
     };
 
     const filteredCharacters = (characters || []).filter(char => {
@@ -318,32 +368,79 @@ const CharactersTab = ({ searchQuery }) => {
 
     return (
         <div className="admin-tab-content">
-            {error && <div className="alert alert-danger">{error}</div>}
+            {error && (
+                <div className={`alert ${error.startsWith('SUCCESS:') ? 'alert-success' : 'alert-danger'}`}>
+                    {error.startsWith('SUCCESS:') ? error.substring(8) : error}
+                </div>
+            )}
             <div className="admin-form-section">
                 <h2>{editingId ? 'Edit Character' : 'Add New Character'}</h2>
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>Name *</label>
-                        <input
-                            type="text"
-                            name="name"
-                            className="form-control"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            required
-                        />
+                    {/* Compact fields section with image preview */}
+                    <div className="row align-items-start">
+                        <div className="col-md-8">
+                            <div className="form-group">
+                                <label>Name *</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    className="form-control"
+                                    value={formData.name}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Description</label>
+                                <textarea
+                                    name="description"
+                                    className="form-control"
+                                    rows="3"
+                                    value={formData.description}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Image URL</label>
+                                <input
+                                    type="url"
+                                    name="image_url"
+                                    className="form-control"
+                                    value={formData.image_url}
+                                    onChange={handleInputChange}
+                                    placeholder="https://example.com/character-image.jpg"
+                                />
+                                <div className="anime-url-hint">
+                                    Paste a direct link to a character image (JPG, PNG, WEBP)
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-4">
+                            <div className="form-group">
+                                <label>Image Preview</label>
+                                <div className={`anime-image-preview-compact ${formData.image_url && formData.image_url.trim() && !imageError ? 'has-image' : ''} ${imageError ? 'has-error' : ''}`}>
+                                    {formData.image_url && formData.image_url.trim() ? (
+                                        imageLoading ? (
+                                            <div className="anime-image-loading">Loading image...</div>
+                                        ) : imageError ? (
+                                            <div className="anime-image-error">Failed to load image</div>
+                                        ) : (
+                                            <img
+                                                src={formData.image_url}
+                                                alt="Character preview"
+                                                onLoad={handleImageLoad}
+                                                onError={handleImageError}
+                                                onLoadStart={handleImageLoadStart}
+                                            />
+                                        )
+                                    ) : (
+                                        <div className="anime-image-placeholder">Preview will appear here</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="form-group">
-                        <label>Description</label>
-                        <textarea
-                            name="description"
-                            className="form-control"
-                            rows="3"
-                            value={formData.description}
-                            onChange={handleInputChange}
-                        />
-                    </div>
-                    <div className="form-group" ref={animeDropdownRef}>
+                    <div className="form-group" ref={animeDropdownRef} style={{ position: 'relative' }}>
                         <label>Animes</label>
                         {loadingCharacterDetails ? (
                             <div className="form-control" style={{ 
@@ -354,9 +451,19 @@ const CharactersTab = ({ searchQuery }) => {
                                 Loading anime associations...
                             </div>
                         ) : (
-                            <div className="admin-dropdown">
+                            <div className="dropdown" style={{ position: 'relative' }}>
                             <div 
-                                className={`admin-dropdown-trigger ${selectedAnimes.length === 0 ? 'empty' : ''}`}
+                                className="form-control" 
+                                style={{ 
+                                    minHeight: '38px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: '4px',
+                                    alignItems: 'center',
+                                    position: 'relative',
+                                    zIndex: 1
+                                }}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setIsAnimeDropdownOpen(!isAnimeDropdownOpen);
@@ -369,34 +476,66 @@ const CharactersTab = ({ searchQuery }) => {
                                     selectedAnimes.map(anime => (
                                         <span 
                                             key={anime.anime_id || anime.id}
-                                            className={`admin-badge ${isDarkMode ? 'dark-mode' : 'light-mode'}`}
+                                            className="badge me-1 d-inline-flex align-items-center"
+                                            style={{
+                                                cursor: 'pointer',
+                                                backgroundColor: isDarkMode ? '#34495e' : '#e0f2f7',
+                                                color: isDarkMode ? '#ecf0f1' : '#2c3e50',
+                                                padding: '0.3em 0.6em',
+                                                borderRadius: '0.25rem',
+                                                fontSize: '0.85em',
+                                                fontWeight: '500',
+                                                border: `1px solid ${isDarkMode ? '#2c3e50' : '#a7d9ed'}`,
+                                            }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 removeAnime(anime.anime_id || anime.id);
                                             }}
                                         >
                                             {anime.title}
-                                            <X size={14} className="admin-badge-remove" />
+                                            <X size={14} className="ms-1" />
                                         </span>
                                     ))
                                 )}
                             </div>
                             {isAnimeDropdownOpen && (
-                                <div className="admin-dropdown-menu">
+                                <div className="dropdown-menu show p-2" style={{ 
+                                    width: '100%', 
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: 0,
+                                    zIndex: 1000,
+                                    background: isDarkMode ? '#343a40' : 'white',
+                                    border: `1px solid ${isDarkMode ? '#495057' : '#ced4da'}`,
+                                    borderRadius: '0.25rem',
+                                    boxShadow: isDarkMode ? '0 0.5rem 1rem rgba(0, 0, 0, 0.3)' : '0 0.5rem 1rem rgba(0, 0, 0, 0.15)'
+                                }}>
                                     <input
                                         type="text"
-                                        className="admin-dropdown-search"
+                                        className="form-control form-control-sm mb-2"
                                         placeholder="Search animes..."
                                         value={animeSearch}
                                         onChange={(e) => setAnimeSearch(e.target.value)}
                                         autoFocus
                                         onClick={(e) => e.stopPropagation()}
+                                        style={{ width: '100%', boxSizing: 'border-box' }}
                                     />
                                     <div 
-                                        className="admin-dropdown-content"
+                                        style={{ 
+                                            maxHeight: '200px', 
+                                            overflowY: 'auto',
+                                            padding: '8px'
+                                        }}
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        <div className="admin-selection-grid">
+                                        <div style={{ 
+                                            display: 'flex', 
+                                            flexWrap: 'wrap', 
+                                            gap: '6px',
+                                            padding: '4px',
+                                            position: 'relative',
+                                            zIndex: 2
+                                        }}>
                                             {animeList
                                                 .filter(anime => 
                                                     !animeSearch || 
@@ -415,18 +554,37 @@ const CharactersTab = ({ searchQuery }) => {
                                                                 toggleAnime(anime);
                                                             }}
                                                             onMouseDown={(e) => e.preventDefault()}
-                                                            className={`admin-selection-item ${isSelected ? 'selected' : ''}`}
+                                                            style={{ 
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                padding: '2px 8px',
+                                                                borderRadius: '4px',
+                                                                backgroundColor: isSelected ? (isDarkMode ? '#495057' : '#e9ecef') : 'transparent',
+                                                                border: '1px solid #dee2e6',
+                                                                fontSize: '0.9rem',
+                                                                flexShrink: 0,
+                                                                userSelect: 'none'
+                                                            }}
                                                         >
-                                                            <span className="admin-selection-item-text">{anime.title}</span>
+                                                            <span style={{ marginRight: '6px' }}>
+                                                                {anime.title || anime.name || `Anime ${anime.id || anime.anime_id}` || 'Unknown'}
+                                                            </span>
                                                             <input 
                                                                 type="checkbox" 
-                                                                className="admin-selection-checkbox"
+                                                                className="form-check-input"
                                                                 checked={isSelected}
                                                                 onChange={(e) => {
                                                                     e.stopPropagation();
                                                                     toggleAnime(anime);
                                                                 }}
                                                                 onClick={(e) => e.stopPropagation()}
+                                                                style={{
+                                                                    width: '14px',
+                                                                    height: '14px',
+                                                                    margin: 0,
+                                                                    cursor: 'pointer'
+                                                                }}
                                                             />
                                                         </div>
                                                     );
@@ -436,7 +594,7 @@ const CharactersTab = ({ searchQuery }) => {
                                                 !animeSearch || 
                                                 (anime.title && anime.title.toLowerCase().includes(animeSearch.toLowerCase()))
                                             ).length === 0 && (
-                                                <div className="admin-dropdown-empty">No animes found</div>
+                                                <div className="text-muted" style={{ padding: '8px' }}>No animes found</div>
                                             )}
                                         </div>
                                     </div>

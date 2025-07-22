@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {useAuth} from '../../contexts/AuthContext';
+import '../../styles/AnimeImageInput.css';
 
 const VATab = ({searchQuery}) => {
     const {token} = useAuth();
@@ -9,9 +10,12 @@ const VATab = ({searchQuery}) => {
     const [formData, setFormData] = useState({
         name: '',
         birth_date: '',
-        nationality: ''
+        nationality: '',
+        image_url: ''
     });
     const [editingId, setEditingId] = useState(null);
+    const [imageLoading, setImageLoading] = useState(false);
+    const [imageError, setImageError] = useState(false);
 
     useEffect(() => {
         fetchVoiceActors();
@@ -20,7 +24,7 @@ const VATab = ({searchQuery}) => {
     const fetchVoiceActors = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/voice-actors', {
+            const response = await fetch('http://localhost:5000/api/voice-actors', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -54,6 +58,28 @@ const VATab = ({searchQuery}) => {
             ...prev,
             [name]: value
         }));
+        
+        // Reset image error when URL changes
+        if (name === 'image_url') {
+            setImageError(false);
+        }
+    };
+
+    const handleImageLoad = () => {
+        setImageLoading(false);
+        setImageError(false);
+    };
+
+    const handleImageError = () => {
+        setImageLoading(false);
+        setImageError(true);
+    };
+
+    const handleImageLoadStart = () => {
+        if (formData.image_url && formData.image_url.trim()) {
+            setImageLoading(true);
+            setImageError(false);
+        }
     };
 
     const showError = (message) => {
@@ -61,6 +87,15 @@ const VATab = ({searchQuery}) => {
         setTimeout(() => {
             setError('');
         }, 5000);
+    };
+
+    const showSuccess = (message) => {
+        setError(''); // Clear any existing errors
+        // Use error state for success message with different styling
+        setError(`SUCCESS: ${message}`);
+        setTimeout(() => {
+            setError('');
+        }, 3000);
     };
 
     const handleSubmit = async (e) => {
@@ -75,8 +110,8 @@ const VATab = ({searchQuery}) => {
         }
 
         const url = editingId
-            ? `/api/voice-actors/${editingId}`
-            : '/api/voice-actors';
+            ? `http://localhost:5000/api/voice-actors/${editingId}`
+            : 'http://localhost:5000/api/voice-actors';
         const method = editingId ? 'PUT' : 'POST';
 
         try {
@@ -89,7 +124,8 @@ const VATab = ({searchQuery}) => {
                 body: JSON.stringify({
                     name: formData.name.trim(),
                     birthDate: formData.birth_date || null,
-                    nationality: formData.nationality.trim() || null
+                    nationality: formData.nationality.trim() || null,
+                    image_url: formData.image_url || null
                 })
             });
 
@@ -99,7 +135,17 @@ const VATab = ({searchQuery}) => {
             }
 
             await fetchVoiceActors();
-            resetForm();
+            
+            // Show success message
+            const successMessage = editingId 
+                ? 'Voice actor updated successfully!' 
+                : 'Voice actor created successfully!';
+            showSuccess(successMessage);
+            
+            // Only reset form if creating new voice actor (not editing)
+            if (!editingId) {
+                resetForm();
+            }
         } catch (err) {
             showError(err.message);
         } finally {
@@ -137,7 +183,8 @@ const VATab = ({searchQuery}) => {
             setFormData({
                 name: va.name || '',
                 birth_date: formattedDate,
-                nationality: va.nationality || ''
+                nationality: va.nationality || '',
+                image_url: va.imageUrl || ''
             });
             setEditingId(vaId);
         } catch (err) {
@@ -161,7 +208,7 @@ const VATab = ({searchQuery}) => {
             }
 
             setLoading(true);
-            const response = await fetch(`/api/voice-actors/${vaId}`, {
+            const response = await fetch(`http://localhost:5000/api/voice-actors/${vaId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -191,10 +238,13 @@ const VATab = ({searchQuery}) => {
         setFormData({
             name: '',
             birth_date: '',
-            nationality: ''
+            nationality: '',
+            image_url: ''
         });
         setEditingId(null);
         setError('');
+        setImageError(false);
+        setImageLoading(false);
     };
 
     const filteredVAs = (voiceActors || []).filter(va => {
@@ -207,40 +257,93 @@ const VATab = ({searchQuery}) => {
 
     return (
         <div className="admin-tab-content">
-            {error && <div className="alert alert-danger">{error}</div>}
+            {error && (
+                <div className={`alert ${error.startsWith('SUCCESS:') ? 'alert-success' : 'alert-danger'}`}>
+                    {error.startsWith('SUCCESS:') ? error.substring(8) : error}
+                </div>
+            )}
             <div className="admin-form-section">
                 <h2>{editingId ? 'Edit Voice Actor' : 'Add New Voice Actor'}</h2>
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>Name *</label>
-                        <input
-                            type="text"
-                            name="name"
-                            className="form-control"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Birth Date</label>
-                        <input
-                            type="date"
-                            name="birth_date"
-                            className="form-control"
-                            value={formData.birth_date}
-                            onChange={handleInputChange}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Nationality</label>
-                        <input
-                            type="text"
-                            name="nationality"
-                            className="form-control"
-                            value={formData.nationality}
-                            onChange={handleInputChange}
-                        />
+                    {/* Compact fields section with image preview */}
+                    <div className="row align-items-start">
+                        <div className="col-md-8">
+                            <div className="form-group">
+                                <label>Name *</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    className="form-control"
+                                    value={formData.name}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                            <div className="row">
+                                <div className="col-md-6">
+                                    <div className="form-group">
+                                        <label>Birth Date</label>
+                                        <input
+                                            type="date"
+                                            name="birth_date"
+                                            className="form-control"
+                                            value={formData.birth_date}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="form-group">
+                                        <label>Nationality</label>
+                                        <input
+                                            type="text"
+                                            name="nationality"
+                                            className="form-control"
+                                            value={formData.nationality}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Image URL</label>
+                                <input
+                                    type="url"
+                                    name="image_url"
+                                    className="form-control"
+                                    value={formData.image_url}
+                                    onChange={handleInputChange}
+                                    placeholder="https://example.com/voice-actor-image.jpg"
+                                />
+                                <div className="anime-url-hint">
+                                    Paste a direct link to a voice actor image (JPG, PNG, WEBP)
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-4">
+                            <div className="form-group">
+                                <label>Image Preview</label>
+                                <div className={`anime-image-preview-compact ${formData.image_url && formData.image_url.trim() && !imageError ? 'has-image' : ''} ${imageError ? 'has-error' : ''}`}>
+                                    {formData.image_url && formData.image_url.trim() ? (
+                                        imageLoading ? (
+                                            <div className="anime-image-loading">Loading image...</div>
+                                        ) : imageError ? (
+                                            <div className="anime-image-error">Failed to load image</div>
+                                        ) : (
+                                            <img
+                                                src={formData.image_url}
+                                                alt="Voice Actor preview"
+                                                onLoad={handleImageLoad}
+                                                onError={handleImageError}
+                                                onLoadStart={handleImageLoadStart}
+                                            />
+                                        )
+                                    ) : (
+                                        <div className="anime-image-placeholder">Preview will appear here</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div className="form-actions">
                         <button type="submit" className="btn btn-primary" disabled={loading}>

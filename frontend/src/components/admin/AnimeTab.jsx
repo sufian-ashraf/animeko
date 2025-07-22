@@ -2,6 +2,8 @@ import React, {useEffect, useState, useRef, useCallback} from 'react';
 import {useAuth} from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { X } from 'react-feather'; // For the close icon in selected tags
+import '../../styles/AnimeImageInput.css';
+import '../../styles/AdminDropdowns.css';
 
 const AnimeTab = ({searchQuery}) => {
     const {token} = useAuth();
@@ -17,7 +19,8 @@ const AnimeTab = ({searchQuery}) => {
         episodes: '',
         season: '',
         trailer_url_yt_id: '',
-        company_id: ''
+        company_id: '',
+        image_url: ''
     });
     const [editingId, setEditingId] = useState(null);
     const [loadingAnimeDetails, setLoadingAnimeDetails] = useState(false);
@@ -28,6 +31,8 @@ const AnimeTab = ({searchQuery}) => {
     const [selectedGenres, setSelectedGenres] = useState([]);
     const [genreSearch, setGenreSearch] = useState('');
     const [isGenreDropdownOpen, setIsGenreDropdownOpen] = useState(false);
+    const [imageLoading, setImageLoading] = useState(false);
+    const [imageError, setImageError] = useState(false);
     const companyDropdownRef = useRef(null);
     const genreDropdownRef = useRef(null);
 
@@ -178,6 +183,28 @@ const AnimeTab = ({searchQuery}) => {
             ...prev,
             [name]: value
         }));
+        
+        // Reset image error when URL changes
+        if (name === 'image_url') {
+            setImageError(false);
+        }
+    };
+
+    const handleImageLoad = () => {
+        setImageLoading(false);
+        setImageError(false);
+    };
+
+    const handleImageError = () => {
+        setImageLoading(false);
+        setImageError(true);
+    };
+
+    const handleImageLoadStart = () => {
+        if (formData.image_url && formData.image_url.trim()) {
+            setImageLoading(true);
+            setImageError(false);
+        }
     };
 
     const showError = (message) => {
@@ -185,6 +212,15 @@ const AnimeTab = ({searchQuery}) => {
         setTimeout(() => {
             setError('');
         }, 5000);
+    };
+
+    const showSuccess = (message) => {
+        setError(''); // Clear any existing errors
+        // Use error state for success message with different styling
+        setError(`SUCCESS: ${message}`);
+        setTimeout(() => {
+            setError('');
+        }, 3000);
     };
 
     const handleSubmit = async (e) => {
@@ -214,6 +250,7 @@ const AnimeTab = ({searchQuery}) => {
                 season: formData.season || null,
                 episodes: formData.episodes ? parseInt(formData.episodes) : null,
                 trailer_url_yt_id: formData.trailer_url_yt_id || null,
+                image_url: formData.image_url || null,
                 genres: selectedGenres.map(g => ({
                     genre_id: g.genre_id || g.id,
                     name: g.name
@@ -237,7 +274,17 @@ const AnimeTab = ({searchQuery}) => {
             }
 
             await fetchAnime();
-            resetForm();
+            
+            // Show success message
+            const successMessage = editingId 
+                ? 'Anime updated successfully!' 
+                : 'Anime created successfully!';
+            showSuccess(successMessage);
+            
+            // Only reset form if creating new anime (not editing)
+            if (!editingId) {
+                resetForm();
+            }
         } catch (err) {
             showError(err.message);
         } finally {
@@ -270,7 +317,8 @@ const AnimeTab = ({searchQuery}) => {
                 episodes: '',
                 season: anime.season || '',
                 trailer_url_yt_id: '',
-                company_id: anime.company_id ? String(anime.company_id) : ''
+                company_id: anime.company_id ? String(anime.company_id) : '',
+                image_url: ''
             });
             setEditingId(animeId);
 
@@ -297,7 +345,8 @@ const AnimeTab = ({searchQuery}) => {
                 episodes: detailedAnime.episodes ? String(detailedAnime.episodes) : '',
                 season: detailedAnime.season || '',
                 trailer_url_yt_id: detailedAnime.trailer_url_yt_id || '',
-                company_id: detailedAnime.company_id ? String(detailedAnime.company_id) : ''
+                company_id: detailedAnime.company_id ? String(detailedAnime.company_id) : '',
+                image_url: detailedAnime.imageUrl || ''
             });
 
             // Initialize selected genres
@@ -360,11 +409,14 @@ const AnimeTab = ({searchQuery}) => {
             alternative_title: '',
             season: '',
             episodes: '',
-            trailer_url_yt_id: ''
+            trailer_url_yt_id: '',
+            image_url: ''
         });
         setEditingId(null);
         setError('');
         setSelectedGenres([]);
+        setImageError(false);
+        setImageLoading(false);
     };
 
     const filteredAnime = animeList.filter(anime =>
@@ -382,7 +434,11 @@ const AnimeTab = ({searchQuery}) => {
         <div className="admin-tab-content">
             <div className="admin-form-section">
                 <h2>{editingId ? 'Edit Anime' : 'Add New Anime'}</h2>
-                {error && <div className="alert alert-danger mt-2">{error}</div>}
+                {error && (
+                    <div className={`alert mt-2 ${error.startsWith('SUCCESS:') ? 'alert-success' : 'alert-danger'}`}>
+                        {error.startsWith('SUCCESS:') ? error.substring(8) : error}
+                    </div>
+                )}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Title *</label>
@@ -395,16 +451,7 @@ const AnimeTab = ({searchQuery}) => {
                             required
                         />
                     </div>
-                    <div className="form-group">
-                        <label>Synopsis</label>
-                        <textarea
-                            name="synopsis"
-                            className="form-control"
-                            value={formData.synopsis}
-                            onChange={handleInputChange}
-                            rows="4"
-                        />
-                    </div>
+
                     <div className="form-group">
                         <label>Alternative Title</label>
                         <input
@@ -415,55 +462,121 @@ const AnimeTab = ({searchQuery}) => {
                             onChange={handleInputChange}
                         />
                     </div>
+
                     <div className="form-group">
-                        <label>Episodes</label>
-                        <input
-                            type="number"
-                            name="episodes"
+                        <label>Synopsis</label>
+                        <textarea
+                            name="synopsis"
                             className="form-control"
-                            value={formData.episodes}
+                            value={formData.synopsis}
                             onChange={handleInputChange}
-                            min="1"
+                            rows="4"
                         />
                     </div>
-                    <div className="form-group">
-                        <label>Season</label>
-                        <input
-                            type="text"
-                            name="season"
-                            className="form-control"
-                            value={formData.season}
-                            onChange={handleInputChange}
-                            placeholder="e.g., Fall 2023, Winter 2024"
-                        />
+
+                    {/* Compact fields section with image preview */}
+                    <div className="row align-items-start">
+                        <div className="col-md-8">
+                            <div className="row">
+                                <div className="col-md-6">
+                                    <div className="form-group">
+                                        <label>Episodes</label>
+                                        <input
+                                            type="number"
+                                            name="episodes"
+                                            className="form-control"
+                                            value={formData.episodes}
+                                            onChange={handleInputChange}
+                                            min="1"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="form-group">
+                                        <label>Season</label>
+                                        <input
+                                            type="text"
+                                            name="season"
+                                            className="form-control"
+                                            value={formData.season}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g., Fall 2023, Winter 2024"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="row">
+                                <div className="col-md-6">
+                                    <div className="form-group">
+                                        <label>YouTube Trailer ID</label>
+                                        <input
+                                            type="text"
+                                            name="trailer_url_yt_id"
+                                            className="form-control"
+                                            value={formData.trailer_url_yt_id}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g., dQw4w9WgXcQ"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="form-group">
+                                        <label>Release Date</label>
+                                        <input
+                                            type="date"
+                                            name="release_date"
+                                            className="form-control"
+                                            value={formData.release_date}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Image URL</label>
+                                <input
+                                    type="url"
+                                    name="image_url"
+                                    className="form-control"
+                                    value={formData.image_url}
+                                    onChange={handleInputChange}
+                                    placeholder="https://example.com/anime-image.jpg"
+                                />
+                                <div className="anime-url-hint">
+                                    Paste a direct link to an anime poster image (JPG, PNG, WEBP)
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-4">
+                            <div className="form-group">
+                                <label>Image Preview</label>
+                                <div className={`anime-image-preview-compact ${formData.image_url && formData.image_url.trim() && !imageError ? 'has-image' : ''} ${imageError ? 'has-error' : ''}`}>
+                                    {formData.image_url && formData.image_url.trim() ? (
+                                        imageLoading ? (
+                                            <div className="anime-image-loading">Loading image...</div>
+                                        ) : imageError ? (
+                                            <div className="anime-image-error">Failed to load image</div>
+                                        ) : (
+                                            <img
+                                                src={formData.image_url}
+                                                alt="Anime preview"
+                                                onLoad={handleImageLoad}
+                                                onError={handleImageError}
+                                                onLoadStart={handleImageLoadStart}
+                                            />
+                                        )
+                                    ) : (
+                                        <div className="anime-image-placeholder">Preview will appear here</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="form-group">
-                        <label>YouTube Trailer ID</label>
-                        <input
-                            type="text"
-                            name="trailer_url_yt_id"
-                            className="form-control"
-                            value={formData.trailer_url_yt_id}
-                            onChange={handleInputChange}
-                            placeholder="e.g., dQw4w9WgXcQ"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Release Date</label>
-                        <input
-                            type="date"
-                            name="release_date"
-                            className="form-control"
-                            value={formData.release_date}
-                            onChange={handleInputChange}
-                        />
-                    </div>
-                    <div className="form-group" ref={companyDropdownRef}>
+                    <div className="form-group admin-dropdown-wrapper" ref={companyDropdownRef}>
                         <label>Production Company</label>
                         <div className="dropdown">
                             <div 
-                                className="form-control" 
-                                style={{ cursor: 'pointer' }}
+                                className={`form-control admin-dropdown-trigger ${isCompanyDropdownOpen ? 'open' : ''}`}
                                 onClick={() => {
                                     setIsCompanyDropdownOpen(!isCompanyDropdownOpen);
                                     setCompanySearch('');
@@ -472,26 +585,29 @@ const AnimeTab = ({searchQuery}) => {
                                 {companies.find(c => c.id == formData.company_id)?.name || 'Select a company'}
                             </div>
                             {isCompanyDropdownOpen && (
-                                <div className="dropdown-menu show" style={{ width: '100%', padding: '0.5rem' }}>
-                                    <input
-                                        type="text"
-                                        className="form-control form-control-sm mb-2"
-                                        placeholder="Search companies..."
-                                        value={companySearch}
-                                        onChange={(e) => setCompanySearch(e.target.value)}
-                                        autoFocus
-                                        onClick={(e) => e.stopPropagation()}
-                                    />
-                                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                <div className="admin-dropdown-menu">
+                                    <div className="admin-dropdown-search">
+                                        <input
+                                            type="text"
+                                            className="form-control form-control-sm"
+                                            placeholder="Search companies..."
+                                            value={companySearch}
+                                            onChange={(e) => setCompanySearch(e.target.value)}
+                                            autoFocus
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                    </div>
+                                    <div className="admin-dropdown-list">
                                         {companies
                                             .filter(company => 
                                                 !companySearch || 
                                                 (company.name && company.name.toLowerCase().includes(companySearch.toLowerCase()))
                                             )
                                             .map(company => (
-                                                <div
+                                                <button
                                                     key={company.id}
-                                                    className="dropdown-item"
+                                                    type="button"
+                                                    className="admin-dropdown-item"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setFormData(prev => ({
@@ -500,16 +616,15 @@ const AnimeTab = ({searchQuery}) => {
                                                         }));
                                                         setIsCompanyDropdownOpen(false);
                                                     }}
-                                                    style={{ cursor: 'pointer' }}
                                                 >
                                                     {company.name}
-                                                </div>
+                                                </button>
                                             ))}
                                         {companies.filter(company => 
                                             !companySearch || 
                                             (company.name && company.name.toLowerCase().includes(companySearch.toLowerCase()))
                                         ).length === 0 && (
-                                            <div className="dropdown-item text-muted">No companies found</div>
+                                            <div className="admin-dropdown-item no-results">No companies found</div>
                                         )}
                                     </div>
                                 </div>
@@ -530,6 +645,7 @@ const AnimeTab = ({searchQuery}) => {
                             border-radius: 0.25rem;
                             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
                             width: 100%;
+                            box-sizing: border-box;
                         }
                         .dropdown-item {
                             display: block;
@@ -553,8 +669,6 @@ const AnimeTab = ({searchQuery}) => {
                             background-color: #e9ecef;
                         }
                     `}</style>
-                    <div className="form-actions">
-                    </div>
                     
                     {/* Genre Selection */}
                     <div className="form-group" ref={genreDropdownRef}>
@@ -587,8 +701,8 @@ const AnimeTab = ({searchQuery}) => {
                                             className="badge me-1 d-inline-flex align-items-center"
                                             style={{
                                                 cursor: 'pointer',
-                                                backgroundColor: isDarkMode ? '#34495e' : '#e0f2f7', // Darker, muted blue for dark; very light blue for light
-                                                color: isDarkMode ? '#ecf0f1' : '#2c3e50', // Light text for dark; dark text for light
+                                                backgroundColor: isDarkMode ? '#34495e' : '#e0f2f7',
+                                                color: isDarkMode ? '#ecf0f1' : '#2c3e50',
                                                 padding: '0.3em 0.6em',
                                                 borderRadius: '0.25rem',
                                                 fontSize: '0.85em',
@@ -616,6 +730,7 @@ const AnimeTab = ({searchQuery}) => {
                                         onChange={(e) => setGenreSearch(e.target.value)}
                                         autoFocus
                                         onClick={(e) => e.stopPropagation()}
+                                        style={{ width: '100%', boxSizing: 'border-box' }}
                                     />
                                     <div 
                                         style={{ 

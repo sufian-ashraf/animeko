@@ -56,6 +56,15 @@ const CompanyTab = ({searchQuery}) => {
         }, 5000);
     };
 
+    const showSuccess = (message) => {
+        setError(''); // Clear any existing errors
+        // Use error state for success message with different styling
+        setError(`SUCCESS: ${message}`);
+        setTimeout(() => {
+            setError('');
+        }, 3000);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -94,7 +103,17 @@ const CompanyTab = ({searchQuery}) => {
             }
 
             await fetchCompanies();
-            resetForm();
+            
+            // Show success message
+            const successMessage = editingId 
+                ? 'Company updated successfully!' 
+                : 'Company created successfully!';
+            showSuccess(successMessage);
+            
+            // Only reset form if creating new company (not editing)
+            if (!editingId) {
+                resetForm();
+            }
         } catch (err) {
             showError(err.message);
         } finally {
@@ -174,7 +193,11 @@ const CompanyTab = ({searchQuery}) => {
 
     return (
         <div className="admin-tab-content">
-            {error && <div className="alert alert-danger">{error}</div>}
+            {error && (
+                <div className={`alert ${error.startsWith('SUCCESS:') ? 'alert-success' : 'alert-danger'}`}>
+                    {error.startsWith('SUCCESS:') ? error.substring(8) : error}
+                </div>
+            )}
             <div className="admin-form-section">
                 <h2>{editingId ? 'Edit Company' : 'Add New Company'}</h2>
                 <form onSubmit={handleSubmit}>

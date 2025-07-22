@@ -80,7 +80,7 @@ router.get('/characters/:charId/details', authenticate, authorizeAdmin, async (r
  * @access  Private/Admin
  */
 router.post('/characters', authenticate, authorizeAdmin, async (req, res) => {
-    const { name, description, voiceActorId, animes } = req.body;
+    const { name, description, voiceActorId, animes, image_url } = req.body;
 
     // Input validation
     if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -92,7 +92,8 @@ router.post('/characters', authenticate, authorizeAdmin, async (req, res) => {
             name, 
             description, 
             voiceActorId: voiceActorId || null,
-            animes: animes || []
+            animes: animes || [],
+            image_url
         });
         res.status(201).json(newCharacter);
     } catch (err) {
@@ -112,7 +113,7 @@ router.post('/characters', authenticate, authorizeAdmin, async (req, res) => {
 router.put('/characters/:charId', authenticate, authorizeAdmin, async (req, res) => {
     const { charId } = req.params;
     const id = parseInt(charId, 10);
-    const { name, description, voiceActorId, animes } = req.body;
+    const { name, description, voiceActorId, animes, image_url } = req.body;
 
     if (isNaN(id)) {
         return res.status(400).json({ message: 'Invalid character ID format' });
@@ -128,7 +129,8 @@ router.put('/characters/:charId', authenticate, authorizeAdmin, async (req, res)
             name, 
             description, 
             voiceActorId: voiceActorId || null,
-            animes: animes || []
+            animes: animes || [],
+            image_url
         });
 
         if (!updatedCharacter) {

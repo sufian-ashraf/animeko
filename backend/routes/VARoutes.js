@@ -53,7 +53,7 @@ router.get('/voice-actors/:vaId', async (req, res) => {
  * @access  Private/Admin
  */
 router.post('/voice-actors', authenticate, authorizeAdmin, async (req, res) => {
-    const { name, birthDate, nationality } = req.body;
+    const { name, birthDate, nationality, image_url } = req.body;
 
     // Input validation
     if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -61,7 +61,7 @@ router.post('/voice-actors', authenticate, authorizeAdmin, async (req, res) => {
     }
 
     try {
-        const newVA = await VoiceActor.create({ name, birthDate, nationality });
+        const newVA = await VoiceActor.create({ name, birthDate, nationality, image_url });
         res.status(201).json(newVA);
     } catch (err) {
         console.error('Error creating voice actor:', err);
@@ -80,7 +80,7 @@ router.post('/voice-actors', authenticate, authorizeAdmin, async (req, res) => {
 router.put('/voice-actors/:vaId', authenticate, authorizeAdmin, async (req, res) => {
     const { vaId } = req.params;
     const id = parseInt(vaId, 10);
-    const { name, birthDate, nationality } = req.body;
+    const { name, birthDate, nationality, image_url } = req.body;
 
     if (isNaN(id)) {
         return res.status(400).json({ message: 'Invalid voice actor ID format' });
@@ -92,7 +92,7 @@ router.put('/voice-actors/:vaId', authenticate, authorizeAdmin, async (req, res)
     }
 
     try {
-        const updatedVA = await VoiceActor.update(id, { name, birthDate, nationality });
+        const updatedVA = await VoiceActor.update(id, { name, birthDate, nationality, image_url });
 
         if (!updatedVA) {
             return res.status(404).json({ message: 'Voice actor not found' });

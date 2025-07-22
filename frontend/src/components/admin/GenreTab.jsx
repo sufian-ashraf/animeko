@@ -64,6 +64,15 @@ const GenreTab = ({searchQuery}) => {
         }, 5000);
     };
 
+    const showSuccess = (message) => {
+        setError(''); // Clear any existing errors
+        // Use error state for success message with different styling
+        setError(`SUCCESS: ${message}`);
+        setTimeout(() => {
+            setError('');
+        }, 3000);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         console.log('Form submission started', { formData, editingId });
@@ -113,8 +122,18 @@ const GenreTab = ({searchQuery}) => {
 
             console.log('Genre operation successful, refreshing list...');
             await fetchGenres();
-            resetForm();
-            console.log('Form reset and list refreshed');
+            
+            // Show success message
+            const successMessage = editingId 
+                ? 'Genre updated successfully!' 
+                : 'Genre created successfully!';
+            showSuccess(successMessage);
+            
+            // Only reset form if creating new genre (not editing)
+            if (!editingId) {
+                resetForm();
+            }
+            console.log('Form handled and list refreshed');
         } catch (err) {
             console.error('Error in handleSubmit:', err);
             showError(err.message || 'An error occurred');
@@ -219,7 +238,11 @@ const GenreTab = ({searchQuery}) => {
         <div className="admin-tab-content">
             <div className="admin-form-section">
                 <h2>{editingId ? 'Edit Genre' : 'Add New Genre'}</h2>
-                {error && <div className="alert alert-danger mt-2">{error}</div>}
+                {error && (
+                    <div className={`alert mt-2 ${error.startsWith('SUCCESS:') ? 'alert-success' : 'alert-danger'}`}>
+                        {error.startsWith('SUCCESS:') ? error.substring(8) : error}
+                    </div>
+                )}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Name *</label>

@@ -275,7 +275,7 @@ class Anime {
         return anime;
     }
 
-    static async create({ title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, genres = [] }) {
+    static async create({ title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, image_url, genres = [] }) {
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -294,6 +294,33 @@ class Anime {
             );
 
             const newAnime = result.rows[0];
+
+            // Handle image URL if provided
+            if (image_url && image_url.trim() !== '') {
+                // Check if media record exists
+                const existingMedia = await client.query(
+                    `SELECT media_id FROM media 
+                     WHERE entity_id = $1 AND entity_type = $2 AND media_type = $3`,
+                    [newAnime.anime_id, 'anime', 'image']
+                );
+
+                if (existingMedia.rows.length > 0) {
+                    // Update existing record
+                    await client.query(
+                        `UPDATE media SET url = $1 
+                         WHERE entity_id = $2 AND entity_type = $3 AND media_type = $4`,
+                        [image_url.trim(), newAnime.anime_id, 'anime', 'image']
+                    );
+                } else {
+                    // Insert new record
+                    await client.query(
+                        `INSERT INTO media (entity_id, entity_type, media_type, url)
+                         VALUES ($1, $2, $3, $4)`,
+                        [newAnime.anime_id, 'anime', 'image', image_url.trim()]
+                    );
+                }
+                newAnime.imageUrl = image_url.trim();
+            }
             
             // Add genre associations if provided
             if (Array.isArray(genres) && genres.length > 0) {
@@ -329,7 +356,7 @@ class Anime {
         }
     }
 
-    static async update(animeId, { title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, genres = [] }) {
+    static async update(animeId, { title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, image_url, genres = [] }) {
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -360,6 +387,51 @@ class Anime {
                 return null;
             }
 
+            const updatedAnime = result.rows[0];
+
+            // Handle image URL update
+            if (image_url !== undefined) {
+                if (image_url && image_url.trim() !== '') {
+                    // Check if media record exists
+                    const existingMedia = await client.query(
+                        `SELECT media_id FROM media 
+                         WHERE entity_id = $1 AND entity_type = $2 AND media_type = $3`,
+                        [animeId, 'anime', 'image']
+                    );
+
+                    if (existingMedia.rows.length > 0) {
+                        // Update existing record
+                        await client.query(
+                            `UPDATE media SET url = $1 
+                             WHERE entity_id = $2 AND entity_type = $3 AND media_type = $4`,
+                            [image_url.trim(), animeId, 'anime', 'image']
+                        );
+                    } else {
+                        // Insert new record
+                        await client.query(
+                            `INSERT INTO media (entity_id, entity_type, media_type, url)
+                             VALUES ($1, $2, $3, $4)`,
+                            [animeId, 'anime', 'image', image_url.trim()]
+                        );
+                    }
+                    updatedAnime.imageUrl = image_url.trim();
+                } else {
+                    // Remove the image if image_url is empty
+                    await client.query(
+                        'DELETE FROM media WHERE entity_id = $1 AND entity_type = $2 AND media_type = $3',
+                        [animeId, 'anime', 'image']
+                    );
+                    updatedAnime.imageUrl = null;
+                }
+            } else {
+                // If image_url is not provided, fetch existing image URL
+                const imageResult = await client.query(
+                    'SELECT url FROM media WHERE entity_id = $1 AND entity_type = $2 AND media_type = $3',
+                    [animeId, 'anime', 'image']
+                );
+                updatedAnime.imageUrl = imageResult.rows.length > 0 ? imageResult.rows[0].url : null;
+            }
+
             // Update genre associations if genres are provided
             if (Array.isArray(genres) && genres.length > 0) {
                 // First, remove all existing genre associations
@@ -380,7 +452,6 @@ class Anime {
             }
 
             // Fetch the updated anime with genres
-            const updatedAnime = result.rows[0];
             const genreResult = await client.query(
                 `SELECT g.genre_id as id, g.name 
                  FROM genre g

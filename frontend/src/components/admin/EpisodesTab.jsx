@@ -91,6 +91,15 @@ const EpisodesTab = ({ searchQuery }) => {
         setTimeout(() => setError(''), 5000);
     }, []);
 
+    const showSuccess = useCallback((message) => {
+        setError(''); // Clear any existing errors
+        // Use error state for success message with different styling
+        setError(`SUCCESS: ${message}`);
+        setTimeout(() => {
+            setError('');
+        }, 3000);
+    }, []);
+
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prev => ({
@@ -152,7 +161,17 @@ const EpisodesTab = ({ searchQuery }) => {
             }
 
             await fetchEpisodes();
-            resetForm();
+            
+            // Show success message
+            const successMessage = editingId 
+                ? 'Episode updated successfully!' 
+                : 'Episode created successfully!';
+            showSuccess(successMessage);
+            
+            // Only reset form if creating new episode (not editing)
+            if (!editingId) {
+                resetForm();
+            }
         } catch (err) {
             showError(err.message);
         } finally {
@@ -289,8 +308,8 @@ const EpisodesTab = ({ searchQuery }) => {
     return (
         <div className="admin-tab-content">
             {error && (
-                <div className="alert alert-error">
-                    {error}
+                <div className={`alert ${error.startsWith('SUCCESS:') ? 'alert-success' : 'alert-danger'}`}>
+                    {error.startsWith('SUCCESS:') ? error.substring(8) : error}
                 </div>
             )}
 

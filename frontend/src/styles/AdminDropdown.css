@@ -169,6 +169,7 @@
     user-select: none;
     transition: background-color 0.2s ease, border-color 0.2s ease;
     background-color: transparent;
+    color: #212529;
 }
 
 .admin-selection-item:hover {
@@ -198,6 +199,12 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 120px;
+    color: inherit;
+    font-size: inherit;
+}
+
+.dark-mode .admin-selection-item-text {
+    color: #e9ecef;
 }
 
 .admin-selection-checkbox {

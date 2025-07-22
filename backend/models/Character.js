@@ -112,7 +112,7 @@ class Character {
         return character;
     }
 
-    static async create({ name, description, voiceActorId, animes = [] }) {
+    static async create({ name, description, voiceActorId, animes = [], image_url }) {
         if (!name || typeof name !== 'string' || name.trim() === '') {
             throw new Error('Character name is required');
         }
@@ -137,6 +137,32 @@ class Character {
             );
 
             const newCharacter = result.rows[0];
+
+            // Handle image URL if provided
+            if (image_url && image_url.trim()) {
+                // Check if media record exists
+                const existingMedia = await client.query(
+                    `SELECT media_id FROM media 
+                     WHERE entity_id = $1 AND entity_type = $2 AND media_type = $3`,
+                    [newCharacter.id, 'character', 'image']
+                );
+
+                if (existingMedia.rows.length > 0) {
+                    // Update existing record
+                    await client.query(
+                        `UPDATE media SET url = $1 
+                         WHERE entity_id = $2 AND entity_type = $3 AND media_type = $4`,
+                        [image_url.trim(), newCharacter.id, 'character', 'image']
+                    );
+                } else {
+                    // Insert new record
+                    await client.query(
+                        `INSERT INTO media (entity_id, entity_type, media_type, url)
+                         VALUES ($1, $2, $3, $4)`,
+                        [newCharacter.id, 'character', 'image', image_url.trim()]
+                    );
+                }
+            }
 
             // Add anime associations if provided
             if (Array.isArray(animes) && animes.length > 0) {
@@ -172,7 +198,7 @@ class Character {
         }
     }
 
-    static async update(charId, { name, description, voiceActorId, animes = [] }) {
+    static async update(charId, { name, description, voiceActorId, animes = [], image_url }) {
         if (!name || typeof name !== 'string' || name.trim() === '') {
             throw new Error('Character name is required');
         }
@@ -206,6 +232,43 @@ class Character {
                 return null;
             }
 
+            const updatedCharacter = result.rows[0];
+
+            // Handle image URL update
+            if (image_url !== undefined) {
+                if (image_url && image_url.trim()) {
+                    // Check if media record exists
+                    const existingMedia = await client.query(
+                        `SELECT media_id FROM media 
+                         WHERE entity_id = $1 AND entity_type = $2 AND media_type = $3`,
+                        [charId, 'character', 'image']
+                    );
+
+                    if (existingMedia.rows.length > 0) {
+                        // Update existing record
+                        await client.query(
+                            `UPDATE media SET url = $1 
+                             WHERE entity_id = $2 AND entity_type = $3 AND media_type = $4`,
+                            [image_url.trim(), charId, 'character', 'image']
+                        );
+                    } else {
+                        // Insert new record
+                        await client.query(
+                            `INSERT INTO media (entity_id, entity_type, media_type, url)
+                             VALUES ($1, $2, $3, $4)`,
+                            [charId, 'character', 'image', image_url.trim()]
+                        );
+                    }
+                } else {
+                    // Remove image URL if empty string provided
+                    await client.query(
+                        `DELETE FROM media 
+                         WHERE entity_id = $1 AND entity_type = $2 AND media_type = $3`,
+                        [charId, 'character', 'image']
+                    );
+                }
+            }
+
             // Update anime associations if animes are provided
             if (Array.isArray(animes) && animes.length > 0) {
                 // First, remove all existing anime associations
@@ -226,7 +289,6 @@ class Character {
             }
 
             // Fetch the updated character with animes
-            const updatedCharacter = result.rows[0];
             const animeResult = await client.query(
                 `SELECT a.anime_id as id, a.title 
                  FROM anime a

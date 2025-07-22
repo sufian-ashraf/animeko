@@ -74,70 +74,164 @@ class VoiceActor {
         return va;
     }
 
-    static async create({ name, birthDate, nationality }) {
-        let formattedBirthDate = null;
-        if (birthDate) {
-            try {
-                const date = new Date(birthDate);
-                if (!isNaN(date.getTime())) {
-                    formattedBirthDate = date.toISOString().split('T')[0];
-                }
-            } catch (e) {
-                console.warn('Invalid birth date format, setting to null');
-            }
-        }
+    static async create({ name, birthDate, nationality, image_url }) {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
 
-        const result = await pool.query(
-            `INSERT INTO voice_actor 
-                (name, birth_date, nationality)
-             VALUES ($1, $2, $3)
-             RETURNING 
-                voice_actor_id as "id",
-                name,
-                birth_date as "birthDate",
-                nationality`,
-            [
-                name.trim(), 
-                formattedBirthDate, 
-                nationality?.trim() || null
-            ]
-        );
-        return result.rows[0];
+            let formattedBirthDate = null;
+            if (birthDate) {
+                try {
+                    const date = new Date(birthDate);
+                    if (!isNaN(date.getTime())) {
+                        formattedBirthDate = date.toISOString().split('T')[0];
+                    }
+                } catch (e) {
+                    console.warn('Invalid birth date format, setting to null');
+                }
+            }
+
+            const result = await client.query(
+                `INSERT INTO voice_actor 
+                    (name, birth_date, nationality)
+                 VALUES ($1, $2, $3)
+                 RETURNING 
+                    voice_actor_id as "id",
+                    name,
+                    birth_date as "birthDate",
+                    nationality`,
+                [
+                    name.trim(), 
+                    formattedBirthDate, 
+                    nationality?.trim() || null
+                ]
+            );
+
+            const voiceActor = result.rows[0];
+
+            // Handle image URL if provided
+            if (image_url && image_url.trim()) {
+                // Check if media record exists
+                const existingMedia = await client.query(
+                    `SELECT media_id FROM media 
+                     WHERE entity_id = $1 AND entity_type = $2 AND media_type = $3`,
+                    [voiceActor.id, 'voice_actor', 'image']
+                );
+
+                if (existingMedia.rows.length > 0) {
+                    // Update existing record
+                    await client.query(
+                        `UPDATE media SET url = $1 
+                         WHERE entity_id = $2 AND entity_type = $3 AND media_type = $4`,
+                        [image_url.trim(), voiceActor.id, 'voice_actor', 'image']
+                    );
+                } else {
+                    // Insert new record
+                    await client.query(
+                        `INSERT INTO media (entity_id, entity_type, media_type, url)
+                         VALUES ($1, $2, $3, $4)`,
+                        [voiceActor.id, 'voice_actor', 'image', image_url.trim()]
+                    );
+                }
+            }
+
+            await client.query('COMMIT');
+            return voiceActor;
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
     }
 
-    static async update(vaId, { name, birthDate, nationality }) {
-        let formattedBirthDate = null;
-        if (birthDate) {
-            try {
-                const date = new Date(birthDate);
-                if (!isNaN(date.getTime())) {
-                    formattedBirthDate = date.toISOString().split('T')[0];
-                }
-            } catch (e) {
-                console.warn('Invalid birth date format, setting to null');
-            }
-        }
+    static async update(vaId, { name, birthDate, nationality, image_url }) {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
 
-        const result = await pool.query(
-            `UPDATE voice_actor 
-             SET 
-                name = COALESCE($1, name),
-                birth_date = $2,
-                nationality = $3
-             WHERE voice_actor_id = $4
-             RETURNING 
-                voice_actor_id as "id",
-                name,
-                birth_date as "birthDate",
-                nationality`,
-            [
-                name?.trim(), 
-                formattedBirthDate, 
-                nationality?.trim() || null, 
-                vaId
-            ]
-        );
-        return result.rows[0];
+            let formattedBirthDate = null;
+            if (birthDate) {
+                try {
+                    const date = new Date(birthDate);
+                    if (!isNaN(date.getTime())) {
+                        formattedBirthDate = date.toISOString().split('T')[0];
+                    }
+                } catch (e) {
+                    console.warn('Invalid birth date format, setting to null');
+                }
+            }
+
+            const result = await client.query(
+                `UPDATE voice_actor 
+                 SET 
+                    name = COALESCE($1, name),
+                    birth_date = $2,
+                    nationality = $3
+                 WHERE voice_actor_id = $4
+                 RETURNING 
+                    voice_actor_id as "id",
+                    name,
+                    birth_date as "birthDate",
+                    nationality`,
+                [
+                    name?.trim(), 
+                    formattedBirthDate, 
+                    nationality?.trim() || null, 
+                    vaId
+                ]
+            );
+
+            if (result.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return null;
+            }
+
+            const voiceActor = result.rows[0];
+
+            // Handle image URL update
+            if (image_url !== undefined) {
+                if (image_url && image_url.trim()) {
+                    // Check if media record exists
+                    const existingMedia = await client.query(
+                        `SELECT media_id FROM media 
+                         WHERE entity_id = $1 AND entity_type = $2 AND media_type = $3`,
+                        [vaId, 'voice_actor', 'image']
+                    );
+
+                    if (existingMedia.rows.length > 0) {
+                        // Update existing record
+                        await client.query(
+                            `UPDATE media SET url = $1 
+                             WHERE entity_id = $2 AND entity_type = $3 AND media_type = $4`,
+                            [image_url.trim(), vaId, 'voice_actor', 'image']
+                        );
+                    } else {
+                        // Insert new record
+                        await client.query(
+                            `INSERT INTO media (entity_id, entity_type, media_type, url)
+                             VALUES ($1, $2, $3, $4)`,
+                            [vaId, 'voice_actor', 'image', image_url.trim()]
+                        );
+                    }
+                } else {
+                    // Remove image URL if empty string provided
+                    await client.query(
+                        `DELETE FROM media 
+                         WHERE entity_id = $1 AND entity_type = $2 AND media_type = $3`,
+                        [vaId, 'voice_actor', 'image']
+                    );
+                }
+            }
+
+            await client.query('COMMIT');
+            return voiceActor;
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
     }
 
     static async delete(vaId) {
