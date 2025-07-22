@@ -126,12 +126,36 @@
     margin-bottom: 20px;
 }
 
+
 .form-group label {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
     color: #495057;
     font-size: 14px;
+}
+
+/* Premium Only Checkbox Styling */
+.checkbox-label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-weight: 500;
+    font-size: 15px;
+    cursor: pointer;
+    margin-bottom: 0;
+    width: 100%;
+}
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #4a90e2;
+    margin-left: 28px;
+    vertical-align: middle;
+    cursor: pointer;
+}
+.dark-mode .checkbox-label input[type="checkbox"] {
+    accent-color: #5a9bd4;
 }
 
 /* Dark Mode - Form Labels */
@@ -421,6 +445,26 @@ textarea.form-control {
 .character-table .table-header,
 .character-table .table-row {
     grid-template-columns: 1.5fr 2fr 1.5fr 120px;
+}
+
+/* Episodes table specific layout (5 columns) */
+.episodes-table .table-header,
+.episodes-table .table-row {
+    grid-template-columns: 2fr 0.8fr 2fr 0.8fr 120px;
+}
+
+/* Episodes table column styles */
+.episodes-table .col-anime,
+.episodes-table .col-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.episodes-table .col-episode,
+.episodes-table .col-premium {
+    text-align: center;
 }
 
 /* Character table column overrides */

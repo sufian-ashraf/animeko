@@ -75,6 +75,7 @@
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
     font-size: 0.875rem;
+    box-sizing: border-box;
 }
 
 .dark-mode .admin-dropdown-search {

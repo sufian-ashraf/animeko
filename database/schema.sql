@@ -206,10 +206,9 @@ CREATE TABLE episode
     anime_id         INTEGER      NOT NULL,
     episode_number   INTEGER      NOT NULL,
     title            VARCHAR(255),
-    duration_seconds INTEGER      NOT NULL,
+    duration_seconds INTEGER,
     air_date         DATE,
-    video_url        VARCHAR(512) NOT NULL,
-    thumbnail_url    VARCHAR(512),
+    episode_url_yt_id        VARCHAR(512),
     premium_only     BOOLEAN DEFAULT FALSE
 );
 

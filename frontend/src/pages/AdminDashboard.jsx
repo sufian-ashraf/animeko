@@ -11,6 +11,7 @@ import GenreTab from '../components/admin/GenreTab';
 import CompanyTab from '../components/admin/CompanyTab';
 import VATab from '../components/admin/VATab';
 import CharactersTab from '../components/admin/CharactersTab';
+import EpisodesTab from '../components/admin/EpisodesTab';
 
 export default function AdminDashboard() {
     const {user} = useAuth();
@@ -37,6 +38,8 @@ export default function AdminDashboard() {
                 return <VATab searchQuery={searchQuery}/>;
             case 'characters':
                 return <CharactersTab searchQuery={searchQuery}/>;
+            case 'episodes':
+                return <EpisodesTab searchQuery={searchQuery}/>;
             default:
                 return <div>Select a tab to begin</div>;
         }
@@ -78,6 +81,12 @@ export default function AdminDashboard() {
                 >
                     Characters
                 </button>
+                <button
+                    className={`tab-btn ${activeTab === 'episodes' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('episodes')}
+                >
+                    Episodes
+                </button>
             </div>
 
             {/* Search Bar */}
@@ -85,7 +94,11 @@ export default function AdminDashboard() {
                 <input
                     type="text"
                     className="form-control"
-                    placeholder={`Search ${activeTab}...`}
+                    placeholder={
+                        activeTab === 'episodes'
+                            ? 'Search episodes by anime or title...'
+                            : `Search ${activeTab}...`
+                    }
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />

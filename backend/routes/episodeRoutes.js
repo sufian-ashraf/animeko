@@ -5,6 +5,37 @@ import authorizeAdmin from '../middlewares/authorizeAdmin.js';
 
 const router = express.Router();
 
+// Get all episodes for admin (with anime names for search)
+router.get('/admin', authenticate, authorizeAdmin, async (req, res) => {
+    try {
+        const episodes = await Episode.getAllForAdmin();
+        res.json(episodes);
+    } catch (error) {
+        console.error('Error fetching episodes for admin:', error);
+        res.status(500).json({ message: 'Failed to fetch episodes' });
+    }
+});
+
+// Get episode details for admin (for editing)
+router.get('/:id/details', authenticate, authorizeAdmin, async (req, res) => {
+    try {
+        const episodeId = parseInt(req.params.id);
+        if (isNaN(episodeId)) {
+            return res.status(400).json({ message: 'Invalid episode ID' });
+        }
+
+        const episode = await Episode.getByIdForAdmin(episodeId);
+        if (!episode) {
+            return res.status(404).json({ message: 'Episode not found' });
+        }
+
+        res.json(episode);
+    } catch (error) {
+        console.error('Error fetching episode details:', error);
+        res.status(500).json({ message: 'Failed to fetch episode details' });
+    }
+});
+
 // Get all episodes for a specific anime
 router.get('/anime/:animeId', async (req, res) => {
     try {
@@ -48,31 +79,29 @@ router.get('/:episodeId', async (req, res) => {
 router.post('/', authenticate, authorizeAdmin, async (req, res) => {
     try {
         const { 
-            animeId, 
-            episodeNumber, 
+            anime_id, 
+            episode_number, 
             title, 
-            durationSeconds, 
-            airDate, 
-            videoUrl, 
-            thumbnailUrl, 
-            premiumOnly 
+            duration_seconds, 
+            air_date, 
+            episode_url_yt_id, 
+            premium_only 
         } = req.body;
 
-        if (!animeId || !episodeNumber || !durationSeconds || !videoUrl) {
+        if (!anime_id || !episode_number) {
             return res.status(400).json({ 
-                message: 'Anime ID, episode number, duration, and video URL are required' 
+                message: 'Anime ID and episode number are required' 
             });
         }
 
         const newEpisode = await Episode.create({
-            animeId: parseInt(animeId),
-            episodeNumber: parseInt(episodeNumber),
+            animeId: parseInt(anime_id),
+            episodeNumber: parseInt(episode_number),
             title: title || null,
-            durationSeconds: parseInt(durationSeconds),
-            airDate: airDate || null,
-            videoUrl,
-            thumbnailUrl: thumbnailUrl || null,
-            premiumOnly: premiumOnly || false
+            durationSeconds: duration_seconds ? parseInt(duration_seconds) : null,
+            airDate: air_date || null,
+            episodeUrlYtId: episode_url_yt_id || null,
+            premiumOnly: premium_only || false
         });
 
         res.status(201).json(newEpisode);
@@ -80,6 +109,8 @@ router.post('/', authenticate, authorizeAdmin, async (req, res) => {
         console.error('Error creating episode:', error);
         if (error.code === '23505') { // Unique constraint violation
             res.status(409).json({ message: 'Episode number already exists for this anime' });
+        } else if (error.code === '23503') { // Foreign key constraint violation
+            res.status(400).json({ message: 'Invalid anime ID' });
         } else {
             res.status(500).json({ message: 'Failed to create episode' });
         }
@@ -91,13 +122,12 @@ router.put('/:episodeId', authenticate, authorizeAdmin, async (req, res) => {
     try {
         const { episodeId } = req.params;
         const { 
-            episodeNumber, 
+            episode_number, 
             title, 
-            durationSeconds, 
-            airDate, 
-            videoUrl, 
-            thumbnailUrl, 
-            premiumOnly 
+            duration_seconds, 
+            air_date, 
+            episode_url_yt_id, 
+            premium_only 
         } = req.body;
 
         if (!episodeId || isNaN(episodeId)) {
@@ -105,13 +135,12 @@ router.put('/:episodeId', authenticate, authorizeAdmin, async (req, res) => {
         }
 
         const updatedEpisode = await Episode.update(parseInt(episodeId), {
-            episodeNumber: episodeNumber ? parseInt(episodeNumber) : undefined,
+            episodeNumber: episode_number ? parseInt(episode_number) : undefined,
             title,
-            durationSeconds: durationSeconds ? parseInt(durationSeconds) : undefined,
-            airDate,
-            videoUrl,
-            thumbnailUrl,
-            premiumOnly
+            durationSeconds: duration_seconds ? parseInt(duration_seconds) : undefined,
+            airDate: air_date,
+            episodeUrlYtId: episode_url_yt_id,
+            premiumOnly: premium_only
         });
 
         if (!updatedEpisode) {
@@ -121,7 +150,11 @@ router.put('/:episodeId', authenticate, authorizeAdmin, async (req, res) => {
         res.json(updatedEpisode);
     } catch (error) {
         console.error('Error updating episode:', error);
-        res.status(500).json({ message: 'Failed to update episode' });
+        if (error.code === '23505') { // Unique constraint violation
+            res.status(409).json({ message: 'Episode number already exists for this anime' });
+        } else {
+            res.status(500).json({ message: 'Failed to update episode' });
+        }
     }
 });
 
