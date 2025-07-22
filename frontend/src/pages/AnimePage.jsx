@@ -4,6 +4,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import placeholder from '../images/image_not_available.jpg';
+import defaultAvatar from '../images/default_avatar.svg';
 import ListCard from '../components/ListCard';
 import TrailerModal from '../components/TrailerModal';
 import '../styles/AnimePage.css';
@@ -912,7 +913,7 @@ export default function AnimePage() {
                                 <div key={r.review_id} className="review-card">
                                     <div className="reviewer-info">
                                         <img
-                                            src={r.avatarUrl || placeholder}
+                                            src={r.avatarUrl || defaultAvatar}
                                             alt={`${r.username} avatar`}
                                             className="reviewer-avatar"
                                         />

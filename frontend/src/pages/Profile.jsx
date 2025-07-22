@@ -3,6 +3,7 @@ import React, {useEffect, useState} from 'react';
 import {Link, useNavigate, useParams} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
 import placeholderImg from '../images/image_not_available.jpg';
+import defaultAvatar from '../images/default_avatar.svg';
 import '../styles/Profile.css';
 
 export default function Profile() {
@@ -194,7 +195,7 @@ export default function Profile() {
             <div className="profile-card">
                 <h2>{profileTitle}</h2>
                 <img
-                    src={profileUser.profile_picture_url || placeholderImg}
+                    src={profileUser.profile_picture_url || defaultAvatar}
                     alt="Profile"
                     className="user-profile-pic"
                 />

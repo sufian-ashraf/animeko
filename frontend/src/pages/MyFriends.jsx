@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import placeholderImg from '../images/image_not_available.jpg';
+import defaultAvatar from '../images/default_avatar.svg';
 import '../styles/MyFriends.css';
 
 export default function MyFriends() {
@@ -370,7 +371,7 @@ export default function MyFriends() {
                             <div key={user.user_id} className="search-result-item">
                                 <div className="user-info">
                                     <img
-                                        src={user.profile_picture_url || placeholderImg}
+                                        src={user.profile_picture_url || defaultAvatar}
                                         alt={user.display_name || 'User'}
                                         className="user-avatar"
                                     />
