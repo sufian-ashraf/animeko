@@ -79,7 +79,6 @@ function Navigation() {
     
     // If no search params at all, don't navigate (this handles "Clear All")
     if (!hasAdvancedParams && !hasBasicSearch) {
-      setSearchTitle("");
       setShowAdvancedSearch(false);
       setMenuOpen(false);
       return;
@@ -125,7 +124,6 @@ function Navigation() {
     });
     
     navigate(`/search-results?${params.toString()}`);
-    setSearchTitle("");
     setShowAdvancedSearch(false);
     setMenuOpen(false);
   };

@@ -12,7 +12,7 @@ function ListCard({ list }) {
                 <span className={styles.listItemCount}>{list.item_count} items</span>
             </div>
             <div className={styles.listCardFooter}>
-                <span className={styles.listOwner}>By {list.owner_username || 'you'}</span>
+                <span className={styles.listOwner}>By <Link to={`/profile/${list.owner_id}`} className="username-link">{list.owner_username || 'you'}</Link></span>
                 <span className={styles.listDate}>{formattedDate}</span>
             </div>
         </Link>

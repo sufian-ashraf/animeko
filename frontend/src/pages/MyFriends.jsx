@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import placeholderImg from '../images/image_not_available.jpg';
 import defaultAvatar from '../images/default_avatar.svg';
 import '../styles/MyFriends.css';
@@ -351,7 +351,7 @@ export default function MyFriends() {
                                             {request.display_name}
                                         </div>
                                         <div className="user-username">
-                                            @{request.username}
+                                            <Link to={`/profile/${request.user_id}`}>@{request.username}</Link>
                                         </div>
                                     </div>
                                 </div>
@@ -395,7 +395,7 @@ export default function MyFriends() {
                                             {request.display_name}
                                         </div>
                                         <div className="user-username">
-                                            @{request.username}
+                                            <Link to={`/profile/${request.user_id}`}>@{request.username}</Link>
                                         </div>
                                     </div>
                                 </div>
@@ -431,7 +431,7 @@ export default function MyFriends() {
                                 </div>
                                 <div className="friend-info">
                                     <h3>{friend.display_name || friend.username}</h3>
-                                    <p>@{friend.username}</p>
+                                    <p><Link to={`/profile/${friend.user_id}`}>@{friend.username}</Link></p>
                                 </div>
                                 <button
                                     className="btn-small unfriend"
@@ -480,7 +480,7 @@ export default function MyFriends() {
                                             {user.display_name || 'No display name'}
                                         </div>
                                         <div className="user-username">
-                                            @{user.username}
+                                            <Link to={`/profile/${user.user_id}`} className="username-link">@{user.username}</Link>
                                         </div>
                                     </div>
                                 </div>

@@ -166,9 +166,13 @@ export default function Profile() {
             <div className="profile-page">
                 <div className="profile-card">
                     <div className="profile-error">{error}</div>
-                    <button onClick={() => navigate('/profile')}>
-                        {isOwnProfile ? 'Please log in' : 'Back to My Profile'}
-                    </button>
+                    {isOwnProfile ? (
+                        <button onClick={() => navigate('/profile')}>
+                            Please log in
+                        </button>
+                    ) : (
+                        <p>Please try again later.</p>
+                    )}
                 </div>
             </div>
         );

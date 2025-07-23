@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import AnimeCard from '../components/AnimeCard';
 import ListCard from '../components/ListCard';
 import CastCard from '../components/CastCard';
@@ -112,7 +112,7 @@ function SearchResultsPage() {
                 <div className="anime-grid">
                     {results.map(user => (
                         <div key={user.id} className="simple-card">
-                            <h4>{user.username}</h4>
+                            <h4><Link to={`/profile/${user.id}`} className="username-link">{user.username}</Link></h4>
                             {user.display_name && <p>Display: {user.display_name}</p>}
                         </div>
                     ))}

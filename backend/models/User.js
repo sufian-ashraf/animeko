@@ -8,7 +8,7 @@ class User {
         let query = `
             SELECT user_id as id, username, display_name, email, is_admin
             FROM users
-            WHERE 1=1
+            WHERE is_admin = FALSE
         `;
         const params = [];
         let paramCount = 1;

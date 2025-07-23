@@ -917,7 +917,7 @@ export default function AnimePage() {
                                             alt={`${r.username} avatar`}
                                             className="reviewer-avatar"
                                         />
-                                        <span className="reviewer-name">{r.username}</span>
+                                        <Link to={`/profile/${r.user_id}`} className="reviewer-name username-link">{r.username}</Link>
                                         <span className="review-timestamp">
                                 {new Date(r.created_at).toLocaleString()}
                               </span>

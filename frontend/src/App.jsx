@@ -24,7 +24,7 @@ import NotFound from './pages/NotFound';
 import MyLists from './pages/MyLists';
 import AnimeLibrary from './pages/AnimeLibrary';
 import ListDetail from './pages/ListDetail';
-import ListSearch from './pages/ListSearch';
+
 import AdminDashboard from './pages/AdminDashboard';
 import SubscriptionPage from './pages/SubscriptionPage';
 import PaymentConfirmationPage from './pages/PaymentConfirmationPage';
@@ -111,14 +111,7 @@ function App() {
                             </ProtectedRoute>}
                         />
 
-                        <Route
-                            path="/search-lists"
-                            element={
-                                <ProtectedRoute>
-                                    <ListSearch/>
-                                </ProtectedRoute>
-                            }
-                        />
+                        
 
                         {/* 404 Route */}
                         <Route path="*" element={<NotFound/>}/>

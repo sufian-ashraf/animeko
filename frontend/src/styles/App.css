@@ -125,3 +125,14 @@ button:hover {
 .theme-toggle-button:hover {
     background-color: #4d4d4d;
 }
+
+/* Styles for username links */
+.username-link {
+    text-decoration: none;
+    color: inherit; /* Inherit color from parent to appear as normal text */
+    cursor: pointer;
+}
+
+.username-link:hover {
+    text-decoration: underline; /* Add underline on hover for discoverability */
+}
