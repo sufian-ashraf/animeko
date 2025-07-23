@@ -88,6 +88,7 @@ const AuthProvider = ({children}) => {
                 profile_bio: userData.profile_bio || '',
                 created_at: userData.created_at || '',
                 subscription_status: userData.subscription_status || '',
+                profile_picture_url: userData.profile_picture_url || '',
                 is_admin: tokenIsAdmin // Always use token value, never API response
             };
 
@@ -162,6 +163,7 @@ const AuthProvider = ({children}) => {
                     username: userData.username,
                     email: userData.email || '',
                     display_name: userData.display_name || userData.username,
+                    profile_picture_url: userData.profile_picture_url || '',
                     is_admin: Boolean(userData.is_admin)
                 };
                 

@@ -5,6 +5,7 @@ import {useAuth} from '../contexts/AuthContext';
 import placeholderImg from '../images/image_not_available.jpg';
 import defaultAvatar from '../images/default_avatar.svg';
 import '../styles/Profile.css';
+import '../styles/AnimeImageInput.css';
 
 export default function Profile() {
     const {userId} = useParams(); // If present, viewing someone else's profile
@@ -143,7 +144,8 @@ export default function Profile() {
     const handleCancel = () => {
         setFormData({
             display_name: profileUser.display_name || '', 
-            profile_bio: profileUser.profile_bio || ''
+            profile_bio: profileUser.profile_bio || '',
+            profile_picture_url: profileUser.profile_picture_url || ''
         });
         setEditError('');
         setEditMessage('');
@@ -235,6 +237,9 @@ export default function Profile() {
                                 onChange={handleChange}
                                 disabled={loadingEdit}
                             />
+                            <div className="anime-url-hint">
+                                Paste a direct link to a profile image (JPG, PNG, WEBP)
+                            </div>
                         </div>
                         <div className="profile-buttons">
                             <button type="submit" disabled={loadingEdit}>

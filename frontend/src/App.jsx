@@ -22,7 +22,7 @@ import Home from './pages/Home';
 import SearchResultsPage from './pages/SearchResultsPage';
 import NotFound from './pages/NotFound';
 import MyLists from './pages/MyLists';
-import MyLibrary from './pages/MyLibrary';
+import AnimeLibrary from './pages/AnimeLibrary';
 import ListDetail from './pages/ListDetail';
 import ListSearch from './pages/ListSearch';
 import AdminDashboard from './pages/AdminDashboard';
@@ -41,7 +41,7 @@ import './styles/Navigation.css';
 import './styles/Home.css';
 import './styles/NotFound.css';
 import './styles/MyLists.css';
-import './styles/MyLibrary.css';
+import './styles/AnimeLibrary.css';
 import './styles/ListDetail.css';
 import './styles/dark-mode.css';
 
@@ -85,9 +85,9 @@ function App() {
                             </ProtectedRoute>}
                         />
                         <Route
-                            path="/my-library"
+                            path="/anime-library"
                             element={<ProtectedRoute>
-                                <MyLibrary/>
+                                <AnimeLibrary/>
                             </ProtectedRoute>}
                         />
 

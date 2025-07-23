@@ -10,14 +10,14 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.my-library-container {
+.anime-library-container {
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
     font-family: 'Arial', sans-serif;
 }
 
-.my-library-container h2 {
+.anime-library-container h2 {
     text-align: center;
     margin-bottom: 30px;
     color: var(--text-color);
@@ -25,21 +25,44 @@
 
 .filter-controls {
     margin-bottom: 20px;
-    text-align: center;
+    display: flex;
+    justify-content: space-between; /* Pushes items to the ends */
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between label and select */
 }
 
 .filter-controls label {
-    margin-right: 10px;
     color: var(--text-color);
+    margin: 0; /* Remove default margin */
+    padding: 0; /* Remove default padding */
 }
 
-.filter-controls select {
-    padding: 8px 12px;
+.filter-controls select,
+.filter-controls .search-input {
+    padding: 6px 10px; /* Reduced padding */
     border-radius: 5px;
     border: 1px solid var(--border-color);
     background-color: var(--input-bg-color);
     color: var(--text-color);
+    height: 34px; /* Adjusted height */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    vertical-align: middle; /* Align vertically with other inline elements */
+    margin: 0; /* Remove default margin */
+    display: inline-block; /* Ensure consistent display behavior */
+}
+
+.filter-controls select {
     cursor: pointer;
+}
+
+.filter-controls .search-input {
+    width: 250px; /* Adjust width as needed */
 }
 
 .library-grid {

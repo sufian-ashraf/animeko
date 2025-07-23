@@ -292,7 +292,7 @@ function Navigation() {
                       <Link to="/my-lists" className="dropdown-item">
                         My Lists
                       </Link>
-                      <Link to="/my-library" className="dropdown-item">
+                      <Link to="/anime-library" className="dropdown-item">
                         My Library
                       </Link>
                       <Link to="/subscription" className="dropdown-item">

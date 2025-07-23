@@ -47,8 +47,9 @@ CREATE TABLE users
     created_at            TIMESTAMPTZ                  DEFAULT NOW(),
     subscription_status   BOOLEAN                      DEFAULT FALSE,
     active_transaction_id INTEGER,
+    is_admin              BOOLEAN             NOT NULL DEFAULT FALSE,
     subscription_end_date TIMESTAMPTZ,
-    is_admin              BOOLEAN             NOT NULL DEFAULT FALSE
+    visibility_level visibility_type DEFAULT 'public'
 );
 
 CREATE TABLE company
@@ -86,7 +87,9 @@ CREATE TABLE anime
     rating            FLOAT,
     rank              INTEGER,
     company_id        INTEGER,
-    trailer_url_yt_id VARCHAR(20)
+    trailer_url_yt_id VARCHAR(20),
+    seed_rating double precision,
+    seed_count integer
 );
 
 CREATE TABLE characters
@@ -114,10 +117,11 @@ CREATE TABLE review
     user_id    INTEGER NOT NULL,
     anime_id   INTEGER NOT NULL,
     content    TEXT    NOT NULL,
-    rating     INTEGER CHECK (rating BETWEEN 1 AND 10),
+    rating     INTEGER CHECK (rating >= 1 AND rating <= 5),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT fk_review_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_review_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE
+    CONSTRAINT fk_review_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE,
+    CONSTRAINT unique_user_anime_review UNIQUE (user_id, anime_id)
 );
 
 -- Replace the original lists table creation with this:
@@ -126,7 +130,8 @@ CREATE TABLE lists
     id         SERIAL PRIMARY KEY,
     user_id    INTEGER REFERENCES users (user_id) ON DELETE CASCADE,
     title      VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    visibility_level visibility_type DEFAULT 'public' visibility_type
 );
 
 -- Then create the list_items table
@@ -194,7 +199,7 @@ CREATE TABLE transaction_history
     amount                 FLOAT       NOT NULL,
     completed_on           TIMESTAMPTZ,
     end_date               TIMESTAMPTZ,
-    is_paid                 BOOLEAN      NOT NULL DEFAULT FALSE,
+    ispaid                 BOOLEAN      NOT NULL DEFAULT FALSE,
 
     UNIQUE (transaction_id)
 );
@@ -262,7 +267,7 @@ CONSTRAINT IF EXISTS review_rating_check;
 
 -- Re-create it so that rating ∈ [1,5], not [1,10].
 ALTER TABLE review
-    ADD CONSTRAINT review_rating_check CHECK (rating BETWEEN 1 AND 5);
+    ADD CONSTRAINT review_rating_check CHECK (rating >= 1 AND rating <= 5);
 
 ALTER TABLE review
     ADD CONSTRAINT unique_user_anime_review UNIQUE (user_id, anime_id);

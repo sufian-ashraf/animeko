@@ -1,17 +1,18 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import '../styles/MyLibrary.css';
+import '../styles/AnimeLibrary.css';
 import placeholder from '../images/image_not_available.jpg';
 
 const validStatuses = ['All', 'Watching', 'Completed', 'Planned to Watch', 'Dropped', 'On Hold'];
 
-function MyLibrary() {
+function AnimeLibrary() {
     const { token } = useContext(AuthContext);
     const [library, setLibrary] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filterStatus, setFilterStatus] = useState('All');
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         const fetchLibrary = async () => {
@@ -107,7 +108,7 @@ function MyLibrary() {
 
     if (loading) {
         return (
-            <div className="my-library-container">
+            <div className="anime-library-container">
                 <div className="spinner-container">
                     <div className="spinner"></div>
                     <p>Loading your library...</p>
@@ -118,14 +119,20 @@ function MyLibrary() {
 
     if (error) {
         return (
-            <div className="my-library-container">
+            <div className="anime-library-container">
                 <p className="error-message">{error}</p>
             </div>
         );
     }
 
+    const filteredLibrary = library.filter(anime => {
+        const matchesStatus = filterStatus === 'All' || anime.status === filterStatus;
+        const matchesSearch = anime.title.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesStatus && matchesSearch;
+    });
+
     return (
-        <div className="my-library-container">
+        <div className="anime-library-container">
             <div className="refresh-notice">
                 ⚠️ To see status changes made here, refresh the page
             </div>
@@ -133,25 +140,34 @@ function MyLibrary() {
             <h2>My Anime Library</h2>
 
             <div className="filter-controls">
-                <label htmlFor="status-filter">Filter by Status:</label>
-                <select
-                    id="status-filter"
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                >
-                    {validStatuses.map((status) => (
-                        <option key={status} value={status}>
-                            {status}
-                        </option>
-                    ))}
-                </select>
+                <div className="filter-group">
+                    <label htmlFor="status-filter">Filter by Status:</label>
+                    <select
+                        id="status-filter"
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                    >
+                        {validStatuses.map((status) => (
+                            <option key={status} value={status}>
+                                {status}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <input
+                    type="text"
+                    placeholder="Search anime by title..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="search-input"
+                />
             </div>
 
-            {library.length === 0 ? (
-                <p>Your library is empty. Add some anime!</p>
+            {filteredLibrary.length === 0 ? (
+                <p>No anime found matching your criteria.</p>
             ) : (
                 <div className="library-grid">
-                    {library.map((anime) => (
+                    {filteredLibrary.map((anime) => (
                         <div key={anime.anime_id} className="library-item-card">
                             <Link to={`/anime/${anime.anime_id}`}>
                                 <img
@@ -185,4 +201,4 @@ function MyLibrary() {
     );
 }
 
-export default MyLibrary;
+export default AnimeLibrary;
