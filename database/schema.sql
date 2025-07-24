@@ -238,21 +238,21 @@ CREATE TABLE continue_watching
     PRIMARY KEY (user_id, episode_id)
 );
 
--- Add foreign key constraints
+-- Add foreign key constraints with CASCADE DELETE fixes
 ALTER TABLE users
-    ADD CONSTRAINT fk_user_transaction FOREIGN KEY (active_transaction_id) REFERENCES transaction_history (transaction_history_id);
+    ADD CONSTRAINT fk_user_transaction FOREIGN KEY (active_transaction_id) REFERENCES transaction_history (transaction_history_id) ON DELETE SET NULL;
 
 ALTER TABLE anime
-    ADD CONSTRAINT fk_anime_company FOREIGN KEY (company_id) REFERENCES company (company_id);
+    ADD CONSTRAINT fk_anime_company FOREIGN KEY (company_id) REFERENCES company (company_id) ON DELETE SET NULL;
 
 ALTER TABLE characters
-    ADD CONSTRAINT fk_character_voice_actor FOREIGN KEY (voice_actor_id) REFERENCES voice_actor (voice_actor_id);
+    ADD CONSTRAINT fk_character_voice_actor FOREIGN KEY (voice_actor_id) REFERENCES voice_actor (voice_actor_id) ON DELETE SET NULL;
 
-ALTER TABLE review DROP CONSTRAINT fk_review_user;
+ALTER TABLE review DROP CONSTRAINT IF EXISTS fk_review_user;
 ALTER TABLE review
     ADD CONSTRAINT fk_review_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE;
 
-ALTER TABLE review DROP CONSTRAINT fk_review_anime;
+ALTER TABLE review DROP CONSTRAINT IF EXISTS fk_review_anime;
 ALTER TABLE review
     ADD CONSTRAINT fk_review_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE;
 
@@ -273,53 +273,52 @@ ALTER TABLE review
     ADD CONSTRAINT unique_user_anime_review UNIQUE (user_id, anime_id);
 
 ALTER TABLE user_favorite
-    ADD CONSTRAINT fk_user_favorite_user FOREIGN KEY (user_id) REFERENCES users (user_id);
+    ADD CONSTRAINT fk_user_favorite_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE;
 
 ALTER TABLE user_anime_status
-    ADD CONSTRAINT fk_user_anime_status_user FOREIGN KEY (user_id) REFERENCES users (user_id);
+    ADD CONSTRAINT fk_user_anime_status_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE;
 
 ALTER TABLE user_anime_status
-    ADD CONSTRAINT fk_user_anime_status_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id);
+    ADD CONSTRAINT fk_user_anime_status_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE;
 
 ALTER TABLE friendship
-    ADD CONSTRAINT fk_friendship_requester FOREIGN KEY (requester_id) REFERENCES users (user_id);
+    ADD CONSTRAINT fk_friendship_requester FOREIGN KEY (requester_id) REFERENCES users (user_id) ON DELETE CASCADE;
 
 ALTER TABLE friendship
-    ADD CONSTRAINT fk_friendship_addressee FOREIGN KEY (addressee_id) REFERENCES users (user_id);
+    ADD CONSTRAINT fk_friendship_addressee FOREIGN KEY (addressee_id) REFERENCES users (user_id) ON DELETE CASCADE;
 
 ALTER TABLE friendship
     ADD CONSTRAINT chk_status CHECK (status IN ('pending', 'accepted', 'rejected'));
 
 ALTER TABLE anime_character
-    ADD CONSTRAINT fk_anime_character_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id);
+    ADD CONSTRAINT fk_anime_character_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE;
 
 ALTER TABLE anime_character
-    ADD CONSTRAINT fk_anime_character_character FOREIGN KEY (character_id) REFERENCES characters (character_id);
+    ADD CONSTRAINT fk_anime_character_character FOREIGN KEY (character_id) REFERENCES characters (character_id) ON DELETE CASCADE;
 
 ALTER TABLE anime_genre
-    ADD CONSTRAINT fk_anime_genre_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id);
+    ADD CONSTRAINT fk_anime_genre_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE;
 
 ALTER TABLE anime_genre
-    ADD CONSTRAINT fk_anime_genre_genre FOREIGN KEY (genre_id) REFERENCES genre (genre_id);
-
+    ADD CONSTRAINT fk_anime_genre_genre FOREIGN KEY (genre_id) REFERENCES genre (genre_id) ON DELETE CASCADE;
 
 ALTER TABLE transaction_history
-    ADD CONSTRAINT fk_transaction_user FOREIGN KEY (user_id) REFERENCES users (user_id);
+    ADD CONSTRAINT fk_transaction_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE;
 
 ALTER TABLE episode
-    ADD CONSTRAINT fk_episode_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id);
+    ADD CONSTRAINT fk_episode_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE;
 
 ALTER TABLE watch_history
-    ADD CONSTRAINT fk_watch_history_user FOREIGN KEY (user_id) REFERENCES users (user_id);
+    ADD CONSTRAINT fk_watch_history_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE;
 
 ALTER TABLE watch_history
-    ADD CONSTRAINT fk_watch_history_episode FOREIGN KEY (episode_id) REFERENCES episode (episode_id);
+    ADD CONSTRAINT fk_watch_history_episode FOREIGN KEY (episode_id) REFERENCES episode (episode_id) ON DELETE CASCADE;
 
 ALTER TABLE continue_watching
-    ADD CONSTRAINT fk_continue_watching_user FOREIGN KEY (user_id) REFERENCES users (user_id);
+    ADD CONSTRAINT fk_continue_watching_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE;
 
 ALTER TABLE continue_watching
-    ADD CONSTRAINT fk_continue_watching_episode FOREIGN KEY (episode_id) REFERENCES episode (episode_id);
+    ADD CONSTRAINT fk_continue_watching_episode FOREIGN KEY (episode_id) REFERENCES episode (episode_id) ON DELETE CASCADE;
 -- Indexes for performance
 CREATE INDEX idx_anime_title ON anime (title);
 CREATE INDEX idx_anime_company ON anime (company_id);

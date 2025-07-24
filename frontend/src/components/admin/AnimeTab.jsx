@@ -395,8 +395,14 @@ const AnimeTab = ({searchQuery}) => {
             // Refresh the list after successful deletion
             await fetchAnime();
 
-            // Show success message
+            // Show success message for deletion (red styling like other tabs)
             setError('');
+            // Use setTimeout to ensure the error clearing takes effect first
+            setTimeout(() => {
+                setError('Anime deleted successfully');
+                // Clear the message after 3 seconds
+                setTimeout(() => setError(''), 3000);
+            }, 10);
         } catch (err) {
             console.error('Delete error:', err);
             showError(err.message || 'Failed to delete anime');
@@ -856,7 +862,7 @@ const AnimeTab = ({searchQuery}) => {
                             <div className="col-actions">Actions</div>
                         </div>
                         {filteredAnime.map((anime, index) => (
-                            <div key={anime.anime_id || `anime-${index}`} className="table-row">
+                            <div key={anime.id || `anime-${index}`} className="table-row">
                                 <div className="col-title">{anime.title}</div>
                                 <div className="col-season">
                                     {anime.season || 'N/A'}
@@ -875,7 +881,7 @@ const AnimeTab = ({searchQuery}) => {
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => handleDelete(anime.anime_id)}
+                                        onClick={() => handleDelete(anime.id)}
                                         className="btn btn-delete btn-sm"
                                         disabled={loading}
                                     >

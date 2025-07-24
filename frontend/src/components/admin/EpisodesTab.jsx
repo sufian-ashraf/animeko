@@ -273,6 +273,10 @@ const EpisodesTab = ({ searchQuery }) => {
             }
 
             await fetchEpisodes();
+            setError('');
+            // Show success message for deletion (red styling like CharactersTab)
+            setError('Episode deleted successfully');
+            setTimeout(() => setError(''), 3000);
         } catch (err) {
             showError(err.message || 'Failed to delete episode');
         }
