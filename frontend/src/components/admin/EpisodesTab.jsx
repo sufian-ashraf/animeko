@@ -168,10 +168,7 @@ const EpisodesTab = ({ searchQuery }) => {
                 : 'Episode created successfully!';
             showSuccess(successMessage);
             
-            // Only reset form if creating new episode (not editing)
-            if (!editingId) {
-                resetForm();
-            }
+            // Don't reset form after successful creation/update
         } catch (err) {
             showError(err.message);
         } finally {
@@ -232,7 +229,7 @@ const EpisodesTab = ({ searchQuery }) => {
                 episode_number: detailedEpisode.episode_number ? String(detailedEpisode.episode_number) : '',
                 title: detailedEpisode.title || '',
                 duration_seconds: detailedEpisode.duration_seconds ? String(detailedEpisode.duration_seconds) : '',
-                air_date: detailedEpisode.air_date ? detailedEpisode.air_date.split('T')[0] : '',
+                air_date: detailedEpisode.air_date || '',
                 episode_url_yt_id: detailedEpisode.episode_url_yt_id || '',
                 premium_only: detailedEpisode.premium_only || false
             });

@@ -129,10 +129,7 @@ const GenreTab = ({searchQuery}) => {
                 : 'Genre created successfully!';
             showSuccess(successMessage);
             
-            // Only reset form if creating new genre (not editing)
-            if (!editingId) {
-                resetForm();
-            }
+            // Don't reset form after successful creation/update
             console.log('Form handled and list refreshed');
         } catch (err) {
             console.error('Error in handleSubmit:', err);

@@ -283,10 +283,7 @@ const AnimeTab = ({searchQuery}) => {
                 : 'Anime created successfully!';
             showSuccess(successMessage);
             
-            // Only reset form if creating new anime (not editing)
-            if (!editingId) {
-                resetForm();
-            }
+            // Don't reset form after successful creation/update
         } catch (err) {
             showError(err.message);
         } finally {
@@ -343,7 +340,7 @@ const AnimeTab = ({searchQuery}) => {
                 title: detailedAnime.title || '',
                 alternative_title: detailedAnime.alternative_title || '',
                 synopsis: detailedAnime.synopsis || '',
-                release_date: detailedAnime.release_date ? detailedAnime.release_date.split('T')[0] : '',
+                release_date: detailedAnime.release_date || '',
                 episodes: detailedAnime.episodes ? String(detailedAnime.episodes) : '',
                 season: detailedAnime.season || '',
                 trailer_url_yt_id: detailedAnime.trailer_url_yt_id || '',

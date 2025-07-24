@@ -142,10 +142,7 @@ const VATab = ({searchQuery}) => {
                 : 'Voice actor created successfully!';
             showSuccess(successMessage);
             
-            // Only reset form if creating new voice actor (not editing)
-            if (!editingId) {
-                resetForm();
-            }
+            // Don't reset form after successful creation/update
         } catch (err) {
             showError(err.message);
         } finally {
@@ -170,19 +167,10 @@ const VATab = ({searchQuery}) => {
         try {
             // Scroll to top of the page
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            // Format the date for the date input (YYYY-MM-DD)
-            let formattedDate = '';
-            const birthDate = va.birth_date || va.birthDate; // Handle both formats
-            if (birthDate) {
-                const date = new Date(birthDate);
-                if (!isNaN(date.getTime())) {
-                    formattedDate = date.toISOString().split('T')[0];
-                }
-            }
             
             setFormData({
                 name: va.name || '',
-                birth_date: formattedDate,
+                birth_date: va.birth_date || va.birthDate || '',
                 nationality: va.nationality || '',
                 image_url: va.imageUrl || ''
             });

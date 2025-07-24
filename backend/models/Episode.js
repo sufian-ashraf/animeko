@@ -32,7 +32,7 @@ class Episode {
                        e.episode_number,
                        e.title,
                        e.duration_seconds,
-                       e.air_date,
+                       e.air_date::text AS air_date,
                        e.episode_url_yt_id,
                        e.premium_only,
                        a.title AS anime_title

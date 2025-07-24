@@ -236,10 +236,7 @@ const CharactersTab = ({ searchQuery }) => {
                 : 'Character created successfully!';
             showSuccess(successMessage);
             
-            // Only reset form if creating new character (not editing)
-            if (!editingId) {
-                resetForm();
-            }
+            // Don't reset form after successful creation/update
         } catch (err) {
             showError(err.message);
         } finally {

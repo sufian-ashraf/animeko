@@ -187,7 +187,7 @@ class Anime {
                    a.company_id,
                    a.episodes,
                    a.season,
-                   a.release_date,
+                   a.release_date::text AS release_date,
                    a.trailer_url_yt_id,
                    a.streaming_available,
                    m.url AS "imageUrl"

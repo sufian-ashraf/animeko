@@ -110,10 +110,7 @@ const CompanyTab = ({searchQuery}) => {
                 : 'Company created successfully!';
             showSuccess(successMessage);
             
-            // Only reset form if creating new company (not editing)
-            if (!editingId) {
-                resetForm();
-            }
+            // Don't reset form after successful creation/update
         } catch (err) {
             showError(err.message);
         } finally {
