@@ -192,13 +192,7 @@ export default function Profile() {
     return (
         <div className="profile-page">
             {/* Back button if viewing someone else's profile */}
-            {!isOwnProfile && (
-                <div className="profile-nav">
-                    <button onClick={() => navigate('/profile')} className="back-btn">
-                        ← Back to My Profile
-                    </button>
-                </div>
-            )}
+            
 
             {/* Profile Card */}
             <div className="profile-card">

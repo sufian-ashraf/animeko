@@ -1,6 +1,7 @@
 import express from 'express';
 import List from '../models/List.js'; // Import the List model
 import authenticate from '../middlewares/authenticate.js';
+import { parseIntParam } from '../utils/mediaUtils.js';
 
 const router = express.Router();
 
@@ -63,11 +64,7 @@ router.get('/search/:keyword', async (req, res) => {
 // ──────────────────────────────────────────────────
 router.get('/:id', async (req, res) => {
     try {
-        const listId = parseInt(req.params.id, 10);
-        
-        if (isNaN(listId) || listId <= 0) {
-            return res.status(400).json({error: 'Invalid list ID'});
-        }
+        const listId = parseIntParam(req.params.id, 'listId');
 
         const list = await List.getListById(listId);
         
@@ -79,6 +76,9 @@ router.get('/:id', async (req, res) => {
         
     } catch (err) {
         console.error('[GET /lists/:id] Error:', err);
+        if (err.message && err.message.includes('Invalid')) {
+            return res.status(400).json({error: err.message});
+        }
         res.status(500).json({error: 'Failed to fetch list: ' + err.message});
     }
 });
@@ -88,13 +88,9 @@ router.get('/:id', async (req, res) => {
 // ──────────────────────────────────────────────────
 router.put('/:id', authenticate, async (req, res) => {
     try {
-        const listId = parseInt(req.params.id, 10);
+        const listId = parseIntParam(req.params.id, 'listId');
         const { title, animeEntries = [] } = req.body;
         const userId = req.user.id;
-
-        if (isNaN(listId) || listId <= 0) {
-            return res.status(400).json({error: 'Invalid list ID'});
-        }
 
         const updatedList = await List.updateList(listId, userId, { title, animeEntries });
         
@@ -103,7 +99,9 @@ router.put('/:id', authenticate, async (req, res) => {
     } catch (err) {
         console.error('[PUT /lists/:id] Error:', err);
         let statusCode = 500;
-        if (err.message.includes('not found')) {
+        if (err.message && err.message.includes('Invalid')) {
+            statusCode = 400;
+        } else if (err.message.includes('not found')) {
             statusCode = 404;
         } else if (err.message.includes('permission')) {
             statusCode = 403;
@@ -151,12 +149,8 @@ router.get('/anime/:animeId', async (req, res) => {
 // ──────────────────────────────────────────────────
 router.delete('/:id', authenticate, async (req, res) => {
     try {
-        const listId = parseInt(req.params.id, 10);
+        const listId = parseIntParam(req.params.id, 'listId');
         const userId = req.user.id;
-
-        if (isNaN(listId) || listId <= 0) {
-            return res.status(400).json({error: 'Invalid list ID'});
-        }
 
         await List.deleteList(listId, userId);
 
@@ -165,7 +159,9 @@ router.delete('/:id', authenticate, async (req, res) => {
     } catch (err) {
         console.error('[DELETE /lists/:id] Error:', err);
         let statusCode = 500;
-        if (err.message.includes('not found')) {
+        if (err.message && err.message.includes('Invalid')) {
+            statusCode = 400;
+        } else if (err.message.includes('not found')) {
             statusCode = 404;
         } else if (err.message.includes('permission')) {
             statusCode = 403;
@@ -179,10 +175,7 @@ router.delete('/:id', authenticate, async (req, res) => {
 // ──────────────────────────────────────────────────
 router.get('/:id/items', authenticate, async (req, res) => {
     try {
-        const listId = parseInt(req.params.id, 10);
-        if (isNaN(listId)) {
-            return res.status(400).json({ error: 'Invalid list ID format' });
-        }
+        const listId = parseIntParam(req.params.id, 'listId');
 
         // Check if list exists (handled by model)
         const listExists = await List.getListById(listId);
@@ -195,6 +188,9 @@ router.get('/:id/items', authenticate, async (req, res) => {
         res.json(items);
     } catch (err) {
         console.error('[GET /lists/:id/items] Error:', err);
+        if (err.message && err.message.includes('Invalid')) {
+            return res.status(400).json({error: err.message});
+        }
         res.status(500).json({ error: 'Failed to fetch list items' });
     }
 });

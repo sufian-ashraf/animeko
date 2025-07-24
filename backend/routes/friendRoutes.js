@@ -4,6 +4,7 @@ import User from '../models/User.js'; // Import the User model
 import Favorite from '../models/Favorite.js'; // Import the Favorite model
 import authenticate from '../middlewares/authenticate.js';
 import authorizeAdmin from '../middlewares/authorizeAdmin.js';
+import { parseIntParam } from '../utils/mediaUtils.js';
 
 const router = express.Router();
 
@@ -109,9 +110,10 @@ router.get('/friends', authenticate, async (req, res) => {
  */
 router.get('/users/profile/:userId', authenticate, async (req, res) => {
     const me = req.user.user_id;
-    const targetUserId = parseInt(req.params.userId);
-
+    
     try {
+        const targetUserId = parseIntParam(req.params.userId, 'userId');
+
         // Check if they are friends or if it's the same user
         const isFriend = await Friendship.getProfileWithFriendStatus({ viewerId: me, targetUserId });
 
@@ -140,6 +142,9 @@ router.get('/users/profile/:userId', authenticate, async (req, res) => {
 
     } catch (err) {
         console.error(err);
+        if (err.message && err.message.includes('Invalid')) {
+            return res.status(400).json({message: err.message});
+        }
         res.status(500).json({message: 'Server error'});
     }
 });
@@ -199,9 +204,10 @@ router.get('/users/debug', authenticate, async (req, res) => {
  */
 router.delete('/friends/:friendId', authenticate, async (req, res) => {
     const me = req.user.user_id;
-    const friendId = parseInt(req.params.friendId, 10);
-
+    
     try {
+        const friendId = parseIntParam(req.params.friendId, 'friendId');
+
         const unfriended = await Friendship.unfriend({ userId: me, friendId });
 
         if (!unfriended) {
@@ -213,6 +219,9 @@ router.delete('/friends/:friendId', authenticate, async (req, res) => {
         return res.json({message: 'Unfriended successfully'});
     } catch (err) {
         console.error('Unfriend error:', err);
+        if (err.message && err.message.includes('Invalid')) {
+            return res.status(400).json({message: err.message});
+        }
         return res.status(500).json({message: 'Server error'});
     }
 });
@@ -223,9 +232,10 @@ router.delete('/friends/:friendId', authenticate, async (req, res) => {
  */
 router.delete('/friends/requests/:addresseeId', authenticate, async (req, res) => {
     const requesterId = req.user.user_id;
-    const addresseeId = parseInt(req.params.addresseeId, 10);
-
+    
     try {
+        const addresseeId = parseIntParam(req.params.addresseeId, 'addresseeId');
+
         const canceled = await Friendship.cancelFriendRequest({ requesterId, addresseeId });
         if (!canceled) {
             return res.status(404).json({ message: 'Pending friend request not found' });
@@ -233,6 +243,9 @@ router.delete('/friends/requests/:addresseeId', authenticate, async (req, res) =
         res.json({ message: 'Friend request canceled successfully' });
     } catch (err) {
         console.error('Cancel friend request error:', err);
+        if (err.message && err.message.includes('Invalid')) {
+            return res.status(400).json({message: err.message});
+        }
         res.status(500).json({ message: 'Server error' });
     }
 });
