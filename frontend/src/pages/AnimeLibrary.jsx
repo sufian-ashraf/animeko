@@ -1,22 +1,27 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import '../styles/AnimeLibrary.css';
 import placeholder from '../images/image_not_available.jpg';
 
 const validStatuses = ['All', 'Watching', 'Completed', 'Planned to Watch', 'Dropped', 'On Hold'];
 
 function AnimeLibrary() {
-    const { token } = useContext(AuthContext);
+    const { token, user: currentUser } = useContext(AuthContext);
+    const { userId } = useParams();
+
+    const isOwnLibrary = !userId || userId === currentUser?.user_id?.toString();
+    const targetUserId = isOwnLibrary ? currentUser?.user_id : userId;
     const [library, setLibrary] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filterStatus, setFilterStatus] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
+    const [viewedUsername, setViewedUsername] = useState('');
 
     useEffect(() => {
         const fetchLibrary = async () => {
-            if (!token) {
+            if (!token || !targetUserId) {
                 setError('You must be logged in to view your library.');
                 setLoading(false);
                 return;
@@ -25,7 +30,7 @@ function AnimeLibrary() {
             setLoading(true);
             setError(null);
             try {
-                let url = '/api/anime-library';
+                let url = `/api/anime-library/user/${targetUserId}`;
                 if (filterStatus !== 'All') {
                     url += `?status=${filterStatus}`;
                 }
@@ -38,8 +43,14 @@ function AnimeLibrary() {
                     throw new Error(errorData.message || 'Failed to fetch library');
                 }
 
-                const data = await response.json();
-                setLibrary(data);
+                const responseData = await response.json();
+                setLibrary(Array.isArray(responseData.library) ? responseData.library : []);
+                // Set the username from the response data
+                if (responseData.user && responseData.user.username) {
+                    setViewedUsername(responseData.user.username);
+                } else {
+                    setViewedUsername('User'); // Fallback if username is not provided
+                }
             } catch (err) {
                 console.error('Error fetching library:', err);
                 setError(err.message || 'Failed to load your anime library.');
@@ -49,10 +60,10 @@ function AnimeLibrary() {
         };
 
         fetchLibrary();
-    }, [token, filterStatus]);
+    }, [token, filterStatus, targetUserId]);
 
     const handleUpdateStatus = async (animeId, newStatus) => {
-        if (!token) return;
+        if (!token || !isOwnLibrary) return;
         try {
             const response = await fetch(`/api/anime-library/${animeId}`, {
                 method: 'PUT',
@@ -81,7 +92,7 @@ function AnimeLibrary() {
     };
 
     const handleRemoveAnime = async (animeId) => {
-        if (!token) return;
+        if (!token || !isOwnLibrary) return;
         if (!window.confirm('Are you sure you want to remove this anime from your library?')) {
             return;
         }
@@ -133,11 +144,13 @@ function AnimeLibrary() {
 
     return (
         <div className="anime-library-container">
-            <div className="refresh-notice">
-                ⚠️ To see status changes made here, refresh the page
-            </div>
+            {isOwnLibrary && (
+                <div className="refresh-notice">
+                    ⚠️ To see status changes made here, refresh the page
+                </div>
+            )}
             
-            <h2>My Anime Library</h2>
+            <h2>{isOwnLibrary ? 'My Anime Library' : `${viewedUsername}'s Anime Library`}</h2>
 
             <div className="filter-controls">
                 <div className="filter-group">
@@ -165,7 +178,7 @@ function AnimeLibrary() {
             </div>
 
             {filteredLibrary.length === 0 ? (
-                <p>No anime found matching your criteria.</p>
+                <p>No anime found.</p>
             ) : (
                 <div className="library-grid">
                     {filteredLibrary.map((anime) => (
@@ -179,22 +192,24 @@ function AnimeLibrary() {
                                 <h3>{anime.title}</h3>
                             </Link>
                             <p>Status: {anime.status}</p>
-                            <div className="library-item-actions">
-                                <select
-                                    value={anime.status}
-                                    onChange={(e) => handleUpdateStatus(anime.anime_id, e.target.value)}
-                                    className="anime-library-filter"
-                                >
-                                    {validStatuses.filter(s => s !== 'All').map((status) => (
-                                        <option key={status} value={status}>
-                                            {status}
-                                        </option>
-                                    ))}
-                                </select>
-                                <button onClick={() => handleRemoveAnime(anime.anime_id)} className="remove-btn">
-                                    Remove
-                                </button>
-                            </div>
+                            {isOwnLibrary && (
+                                <div className="library-item-actions">
+                                    <select
+                                        value={anime.status}
+                                        onChange={(e) => handleUpdateStatus(anime.anime_id, e.target.value)}
+                                        className="anime-library-filter"
+                                    >
+                                        {validStatuses.filter(s => s !== 'All').map((status) => (
+                                            <option key={status} value={status}>
+                                                {status}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <button onClick={() => handleRemoveAnime(anime.anime_id)} className="remove-btn">
+                                        Remove
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

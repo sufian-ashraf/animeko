@@ -147,3 +147,59 @@ body.dark-mode .auth-link a {
     font-size: 0.95em;
     font-weight: 500;
 }
+
+.password-group {
+    position: relative;
+}
+
+.password-group .input-wrapper {
+    position: relative;
+    display: flex; /* To make input and button align */
+    align-items: center;
+}
+
+.password-group input {
+    padding-right: 40px; /* Adjust padding for icon */
+    flex-grow: 1; /* Allow input to take available space */
+}
+
+.toggle-password-visibility {
+    position: absolute;
+    right: 10px; /* Adjust position */
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #666; /* Softer color for icon */
+    cursor: pointer;
+    font-size: 1.2em; /* Adjust icon size */
+    padding: 0; /* Remove padding */
+    display: flex; /* For centering icon */
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-password-visibility:hover {
+    color: #2196f3; /* Hover color */
+    background-color: transparent; /* No background on hover */
+}
+
+.toggle-password-visibility:disabled {
+    color: #90caf9;
+    cursor: not-allowed;
+    background: none;
+}
+
+/* Dark mode styles for the toggle button */
+body.dark-mode .toggle-password-visibility {
+    color: #ccc; /* Dark mode icon color */
+}
+
+body.dark-mode .toggle-password-visibility:hover {
+    color: #61dafb; /* Dark mode hover color */
+    background-color: transparent;
+}
+
+body.dark-mode .toggle-password-visibility:disabled {
+    color: #555;
+}

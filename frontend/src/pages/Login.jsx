@@ -2,12 +2,14 @@
 import React, {useEffect, useState} from 'react';
 import {Link, useLocation, useNavigate, useSearchParams} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 import '../styles/Auth.css';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loginError, setLoginError] = useState(''); // New state for login errors
     
     const [isLoading, setIsLoading] = useState(false);
@@ -93,16 +95,26 @@ const Login = () => {
                     />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group password-group">
                     <label htmlFor="password">Password</label>
-                    <input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        disabled={isLoading}
-                        required
-                    />
+                    <div className="input-wrapper">
+                        <input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            disabled={isLoading}
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="toggle-password-visibility"
+                            onClick={() => setShowPassword(!showPassword)}
+                            disabled={isLoading}
+                        >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                    </div>
                 </div>
 
                 <button

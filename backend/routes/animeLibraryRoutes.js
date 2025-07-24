@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import authenticateToken from '../middlewares/authenticate.js';
 import UserAnimeStatus from '../models/UserAnimeStatus.js';
+import User from '../models/User.js';
 
 // Helper function to validate status (moved to route level like other routes)
 const isValidStatus = (status) => {
@@ -94,6 +95,29 @@ router.get('/', authenticateToken, async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error('Error retrieving anime library:', error);
+        res.status(500).json({ message: 'Server error.' });
+    }
+});
+
+// GET /api/anime-library/user/:userId: Retrieve all anime in a specific user's library, optionally filtered by status.
+router.get('/user/:userId', authenticateToken, async (req, res) => {
+    const { userId } = req.params;
+    const { status } = req.query;
+
+    if (status && !isValidStatus(status)) {
+        return res.status(400).json({ message: 'Invalid status provided for filtering.' });
+    }
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        const library = await UserAnimeStatus.getUserLibrary(userId, status);
+        res.json({ user: { username: user.username, display_name: user.display_name }, library });
+    } catch (error) {
+        console.error('Error retrieving other user\'s anime library:', error);
         res.status(500).json({ message: 'Server error.' });
     }
 });

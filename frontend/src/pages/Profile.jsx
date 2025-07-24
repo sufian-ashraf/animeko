@@ -284,7 +284,7 @@ export default function Profile() {
                                     Edit Profile
                                 </button>
                             )}
-                            <button onClick={() => navigate('/anime-library')}>
+                            <button onClick={() => navigate(isOwnProfile ? '/anime-library' : `/anime-library/${viewingUserId}`)}>
                                 Anime Library
                             </button>
                         </div>

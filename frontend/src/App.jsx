@@ -90,6 +90,12 @@ function App() {
                                 <AnimeLibrary/>
                             </ProtectedRoute>}
                         />
+                        <Route
+                            path="/anime-library/:userId"
+                            element={<ProtectedRoute>
+                                <AnimeLibrary/>
+                            </ProtectedRoute>}
+                        />
 
                         <Route
                             path="/lists/:id"

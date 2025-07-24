@@ -52,6 +52,7 @@ class UserAnimeStatus {
             let query = `
                 SELECT 
                     uas.user_id,
+                    u.username, -- Added username
                     uas.anime_id,
                     uas.status,
                     uas.episodes_watched,
@@ -64,6 +65,7 @@ class UserAnimeStatus {
                     m.url AS "image_url"
                 FROM user_anime_status uas
                 JOIN anime a ON uas.anime_id = a.anime_id
+                JOIN users u ON uas.user_id = u.user_id -- Joined with users table
                 LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'image'
                 WHERE uas.user_id = $1
             `;
