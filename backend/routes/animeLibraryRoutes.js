@@ -1,8 +1,23 @@
 import express from 'express';
 const router = express.Router();
 import authenticateToken from '../middlewares/authenticate.js';
+import { attachVisibilityHelpers, canAccessProfile, sanitizeProfileData } from '../middlewares/visibilityCheck.js';
 import UserAnimeStatus from '../models/UserAnimeStatus.js';
 import User from '../models/User.js';
+
+// Optional authentication middleware to get user context for visibility
+const optionalAuth = (req, res, next) => {
+  // Try to authenticate but don't fail if no token
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    authenticateToken(req, res, (err) => {
+      // Continue regardless of authentication success/failure
+      next();
+    });
+  } else {
+    next();
+  }
+};
 
 // Helper function to validate status (moved to route level like other routes)
 const isValidStatus = (status) => {
@@ -100,7 +115,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // GET /api/anime-library/user/:userId: Retrieve all anime in a specific user's library, optionally filtered by status.
-router.get('/user/:userId', authenticateToken, async (req, res) => {
+router.get('/user/:userId', optionalAuth, attachVisibilityHelpers, async (req, res) => {
     const { userId } = req.params;
     const { status } = req.query;
 
@@ -114,8 +129,21 @@ router.get('/user/:userId', authenticateToken, async (req, res) => {
             return res.status(404).json({ message: 'User not found.' });
         }
 
+        // Check if current user can access this user's profile/library
+        const currentUserId = req.user?.user_id || null;
+        const canAccess = await canAccessProfile(parseInt(userId), currentUserId, user.visibility_level);
+        
+        if (!canAccess) {
+            return res.status(403).json({ message: 'Access denied. This user\'s library is private.' });
+        }
+
         const library = await UserAnimeStatus.getUserLibrary(userId, status);
-        res.json({ user: { username: user.username, display_name: user.display_name }, library });
+        
+        // Sanitize user data based on visibility
+        const isOwner = currentUserId === parseInt(userId);
+        const sanitizedUser = sanitizeProfileData(user, canAccess, isOwner);
+        
+        res.json({ user: sanitizedUser, library });
     } catch (error) {
         console.error('Error retrieving other user\'s anime library:', error);
         res.status(500).json({ message: 'Server error.' });

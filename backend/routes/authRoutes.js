@@ -117,9 +117,9 @@ router.get('/profile', authenticate, async (req, res) => {
 // Update user profile
 router.put('/profile', authenticate, async (req, res) => {
     try {
-        const {display_name, profile_bio, profile_picture_url} = req.body;
+        const {display_name, profile_bio, profile_picture_url, visibility_level} = req.body;
 
-        const updatedUser = await User.updateProfile(req.user.id, {display_name, profile_bio, profile_picture_url});
+        const updatedUser = await User.updateProfile(req.user.id, {display_name, profile_bio, profile_picture_url, visibility_level});
 
         res.json({
             message: 'Profile updated successfully', user: updatedUser

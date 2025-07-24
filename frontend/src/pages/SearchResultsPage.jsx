@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import AnimeCard from '../components/AnimeCard';
 import ListCard from '../components/ListCard';
 import CastCard from '../components/CastCard';
@@ -15,6 +16,7 @@ function SearchResultsPage() {
     const [sortOrder, setSortOrder] = useState('asc');
     const [pendingSortField, setPendingSortField] = useState('name');
     const [pendingSortOrder, setPendingSortOrder] = useState('asc');
+    const { token } = useAuth(); // Get the auth token
 
     // Get search type from query string
     const queryParams = new URLSearchParams(location.search);
@@ -40,7 +42,18 @@ function SearchResultsPage() {
                 params.delete('sortOrder');
             }
             try {
-                const response = await fetch(`/api/search?${params.toString()}`);
+                // Prepare headers - include auth token if available
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch(`/api/search?${params.toString()}`, {
+                    headers: headers
+                });
                 if (!response.ok) throw new Error(`Status ${response.status}`);
                 const data = await response.json();
                 setResults(data);
@@ -52,7 +65,7 @@ function SearchResultsPage() {
         };
         fetchSearchResults();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.search, sortField, sortOrder]);
+    }, [location.search, sortField, sortOrder, token]); // Added token dependency
 
     // Renderers for each type
     const renderResults = () => {

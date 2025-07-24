@@ -3,20 +3,41 @@ import pool from '../db.js';
 import bcrypt from 'bcrypt';
 
 class User {
-    // Search users by username (partial match)
-    static async getAll({ username } = {}) {
+    // Search users by username (partial match) with visibility filtering
+    static async getAll({ username } = {}, currentUserId = null) {
         let query = `
-            SELECT user_id as id, username, display_name, email, is_admin
-            FROM users
-            WHERE is_admin = FALSE
+            SELECT DISTINCT u.user_id as id, u.username, u.display_name, u.email, u.is_admin, u.visibility_level
+            FROM users u
+            WHERE u.is_admin = FALSE
         `;
         const params = [];
         let paramCount = 1;
+        
         if (username) {
-            query += ` AND username ILIKE $${paramCount++}`;
+            query += ` AND u.username ILIKE $${paramCount++}`;
             params.push(`%${username}%`);
         }
-        query += ' ORDER BY username';
+        
+        // Apply visibility filtering
+        if (currentUserId) {
+            query += ` AND (
+                u.visibility_level = 'public' 
+                OR u.user_id = $${paramCount++}
+                OR (u.visibility_level = 'friends_only' AND EXISTS (
+                    SELECT 1 FROM friendship f 
+                    WHERE ((f.requester_id = u.user_id AND f.addressee_id = $${paramCount}) 
+                           OR (f.requester_id = $${paramCount} AND f.addressee_id = u.user_id))
+                    AND f.status = 'accepted'
+                ))
+            )`;
+            params.push(currentUserId, currentUserId, currentUserId);
+            paramCount += 3;
+        } else {
+            // Not logged in - only show public profiles
+            query += ` AND u.visibility_level = 'public'`;
+        }
+        
+        query += ' ORDER BY u.username';
         const result = await pool.query(query, params);
         return result.rows;
     }
@@ -42,7 +63,7 @@ class User {
 
     static async findById(userId) {
         const result = await pool.query(
-            `SELECT u.user_id, u.username, u.email, u.display_name, u.profile_bio, TO_CHAR(u.created_at, 'DD Mon YYYY') AS created_at, u.is_admin, u.subscription_status, m.url AS profile_picture_url
+            `SELECT u.user_id, u.username, u.email, u.display_name, u.profile_bio, u.visibility_level, TO_CHAR(u.created_at, 'DD Mon YYYY') AS created_at, u.is_admin, u.subscription_status, m.url AS profile_picture_url
              FROM users u
              LEFT JOIN media m ON u.user_id = m.entity_id AND m.entity_type = 'user' AND m.media_type = 'image'
              WHERE u.user_id = $1`,
@@ -74,16 +95,34 @@ class User {
         return result.rows[0];
     }
 
-    static async updateProfile(userId, { display_name, profile_bio, profile_picture_url }) {
+    static async updateProfile(userId, { display_name, profile_bio, profile_picture_url, visibility_level }) {
         // Start a transaction
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
 
-            // 1. Update users table for display_name and profile_bio
+            // 1. Update users table for display_name, profile_bio, and visibility_level
+            let updateFields = [];
+            let updateValues = [];
+            let paramCount = 1;
+
+            if (display_name !== undefined) {
+                updateFields.push(`display_name = $${paramCount++}`);
+                updateValues.push(display_name);
+            }
+            if (profile_bio !== undefined) {
+                updateFields.push(`profile_bio = $${paramCount++}`);
+                updateValues.push(profile_bio);
+            }
+            if (visibility_level !== undefined) {
+                updateFields.push(`visibility_level = $${paramCount++}`);
+                updateValues.push(visibility_level);
+            }
+
+            updateValues.push(userId);
             const userUpdateResult = await client.query(
-                'UPDATE users SET display_name = $1, profile_bio = $2 WHERE user_id = $3 RETURNING user_id, username, email, display_name, profile_bio',
-                [display_name, profile_bio, userId]
+                `UPDATE users SET ${updateFields.join(', ')} WHERE user_id = $${paramCount} RETURNING user_id, username, email, display_name, profile_bio, visibility_level`,
+                updateValues
             );
 
             // 2. Handle profile picture URL in media table

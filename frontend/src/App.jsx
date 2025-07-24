@@ -92,16 +92,12 @@ function App() {
                         />
                         <Route
                             path="/anime-library/:userId"
-                            element={<ProtectedRoute>
-                                <AnimeLibrary/>
-                            </ProtectedRoute>}
+                            element={<AnimeLibrary/>}
                         />
 
                         <Route
                             path="/lists/:id"
-                            element={<ProtectedRoute>
-                                <ListDetail/>
-                            </ProtectedRoute>}
+                            element={<ListDetail/>}
                         />
                         {/* Profile Routes - Both use the same Profile component */}
                         <Route
@@ -112,9 +108,7 @@ function App() {
                         />
                         <Route
                             path="/profile/:userId"
-                            element={<ProtectedRoute>
-                                <Profile/>
-                            </ProtectedRoute>}
+                            element={<Profile/>}
                         />
 
                         

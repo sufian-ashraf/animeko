@@ -1,0 +1,161 @@
+/* Visibility Restriction Component Styles */
+
+.visibility-restriction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  border: 2px dashed var(--border-color, #ddd);
+  border-radius: 12px;
+  background-color: var(--secondary-bg, #f8f9fa);
+  color: #666;
+  margin: 20px auto;
+  max-width: 500px;
+}
+
+body.dark-mode .visibility-restriction {
+  background-color: #23272f;
+  border-color: #444;
+  color: #ccc;
+}
+
+.visibility-restriction.compact {
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  border: 1px solid var(--border-color, #ddd);
+  background-color: #fafafa;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+body.dark-mode .visibility-restriction.compact {
+  background-color: #2a2a2a;
+  border-color: #444;
+  color: #ccc;
+}
+
+.restriction-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.visibility-restriction.compact .restriction-icon {
+  font-size: 1.2rem;
+  margin-bottom: 0;
+}
+
+.restriction-content {
+  max-width: 400px;
+}
+
+.restriction-title {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+body.dark-mode .restriction-title {
+  color: #e0e0e0;
+}
+
+.restriction-message {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 24px;
+  color: #666;
+}
+
+body.dark-mode .restriction-message {
+  color: #ccc;
+}
+
+.visibility-restriction.compact .restriction-message {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+}
+
+.restriction-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.restriction-actions .btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s ease;
+}
+
+.restriction-actions .btn.btn-primary {
+  background-color: var(--primary-color, #2196f3);
+  color: white;
+}
+
+.restriction-actions .btn.btn-primary:hover {
+  background-color: var(--primary-hover, #1976d2);
+  transform: translateY(-1px);
+}
+
+.restriction-actions .btn.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+body.dark-mode .restriction-actions .btn.btn-secondary {
+  background-color: #495057;
+  color: #e0e0e0;
+}
+
+.restriction-actions .btn.btn-secondary:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+body.dark-mode .restriction-actions .btn.btn-secondary:hover {
+  background-color: #6c757d;
+}
+body.dark-mode .restriction-actions .btn.btn-secondary:hover {
+  background-color: #6c757d;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .visibility-restriction {
+    padding: 30px 15px;
+    margin: 15px;
+  }
+  
+  .restriction-icon {
+    font-size: 2.5rem;
+  }
+  
+  .restriction-title {
+    font-size: 1.3rem;
+  }
+  
+  .restriction-message {
+    font-size: 0.9rem;
+  }
+  
+  .restriction-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .restriction-actions .btn {
+    width: 100%;
+    max-width: 200px;
+  }
+}

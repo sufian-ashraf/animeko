@@ -86,6 +86,7 @@ const AuthProvider = ({children}) => {
                 email: userData.email || '',
                 display_name: userData.display_name || userData.username,
                 profile_bio: userData.profile_bio || '',
+                visibility_level: userData.visibility_level || 'public',
                 created_at: userData.created_at || '',
                 subscription_status: userData.subscription_status || '',
                 profile_picture_url: userData.profile_picture_url || '',

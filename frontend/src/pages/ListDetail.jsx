@@ -1,7 +1,10 @@
 // src/pages/ListDetail.js
 import React, {useEffect, useState} from 'react';
-import {Link, useParams} from 'react-router-dom';
+import {Link, useParams, useNavigate} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
+import VisibilityToggle from '../components/VisibilityToggle';
+import VisibilityRestriction from '../components/VisibilityRestriction';
+import { fetchList, VisibilityError, NotFoundError } from '../utils/api';
 import placeholderImg from '../images/image_not_available.jpg';
 import '../styles/ListDetail.css';
 
@@ -25,42 +28,47 @@ export default function ListDetail() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const [addingAnime, setAddingAnime] = useState(null); // Track which anime is being added
+    const [removingAnime, setRemovingAnime] = useState(null); // Track which anime is being removed
+
+    // List editing state
+    const [isEditingList, setIsEditingList] = useState(false);
+    const [editedTitle, setEditedTitle] = useState('');
+    const [editedVisibility, setEditedVisibility] = useState('public');
+    const [saving, setSaving] = useState(false);
 
     // Fetch list metadata & items
     useEffect(() => {
-        if (!token) return;
+        const fetchListData = async () => {
+            setLoading(true);
+            setError(null);
 
-        const baseUrl = 'http://localhost:5000';
-        setLoading(true);
-        setError(null);
-
-        fetch(`${baseUrl}/api/lists/${id}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        })
-            .then(async (res) => {
-                if (!res.ok) {
-                    throw new Error(`Failed to fetch list: ${res.status} ${res.statusText}`);
-                }
-                return res.json();
-            })
-            .then((data) => {
-                console.log('Fetched list data:', data); // Debug log
-                // Ensure items is always an array
+            try {
+                const listData = await fetchList(id);
                 setList({
-                    ...data,
-                    items: Array.isArray(data.items) ? data.items : []
+                    ...listData,
+                    items: Array.isArray(listData.items) ? listData.items : []
                 });
+                
+                // Initialize editing state
+                setEditedTitle(listData.title || '');
+                setEditedVisibility(listData.visibility_level || 'public');
+            } catch (err) {
+                console.error('Error fetching list:', err);
+                if (err instanceof VisibilityError) {
+                    setError('visibility_restricted');
+                } else if (err instanceof NotFoundError) {
+                    setError('List not found');
+                } else {
+                    setError(err.message || 'Failed to load list');
+                }
+            } finally {
                 setLoading(false);
-            })
-            .catch((err) => {
-                console.error('[ListDetail] Error fetching list:', err);
-                setError(err.message);
-                setLoading(false);
-            });
-    }, [id, token]);
+            }
+        };
+
+        fetchListData();
+    }, [id]);
 
     // Determine if current user is the owner
     const isOwner = user && list.user_id === user.user_id;
@@ -106,14 +114,19 @@ export default function ListDetail() {
     };
 
     const handleAddAnime = async (animeId) => {
-        if (!isOwner || !token) return;
+        if (!isOwner || !token || addingAnime === animeId) return;
 
         const baseUrl = 'http://localhost:5000';
+        
+        setAddingAnime(animeId); // Set loading state for this specific anime
 
         try {
             // Prevent duplicate
             const existingIds = new Set(list.items.map((i) => i.anime_id));
-            if (existingIds.has(animeId)) return;
+            if (existingIds.has(animeId)) {
+                setAddingAnime(null);
+                return;
+            }
 
             // Create a new entry
             const newEntry = {
@@ -151,14 +164,18 @@ export default function ListDetail() {
         } catch (err) {
             console.error('Error adding anime:', err);
             setError(err.message);
+        } finally {
+            setAddingAnime(null); // Clear loading state
         }
     };
 
     // Remove an anime from the list (only if owner)
     const handleRemoveAnime = async (animeId) => {
-        if (!isOwner || !token) return;
+        if (!isOwner || !token || removingAnime === animeId) return;
 
         const baseUrl = 'http://localhost:5000';
+        
+        setRemovingAnime(animeId); // Set loading state for this specific anime
 
         try {
             const updatedEntries = list.items.filter((i) => i.anime_id !== animeId);
@@ -190,6 +207,8 @@ export default function ListDetail() {
         } catch (err) {
             console.error('Error removing anime:', err);
             setError(err.message);
+        } finally {
+            setRemovingAnime(null); // Clear loading state
         }
     };
 
@@ -239,6 +258,9 @@ export default function ListDetail() {
                 ...prev,
                 items: sortedEntries
             }));
+            
+            // Show success message
+            alert('All changes saved successfully!');
         } catch (err) {
             console.error('Error saving changes:', err);
             setError(err.message);
@@ -261,6 +283,64 @@ export default function ListDetail() {
             } catch (fetchErr) {
                 console.error('Failed to refresh list after error:', fetchErr);
             }
+        }
+    };
+
+    // List editing functions
+    const handleEditList = () => {
+        setIsEditingList(true);
+        setEditedTitle(list.title || '');
+        setEditedVisibility(list.visibility_level || 'public');
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditingList(false);
+        setEditedTitle(list.title || '');
+        setEditedVisibility(list.visibility_level || 'public');
+    };
+
+    const handleSaveListChanges = async () => {
+        if (!editedTitle.trim()) {
+            alert('List title cannot be empty');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const baseUrl = 'http://localhost:5000';
+            const response = await fetch(`${baseUrl}/api/lists/${id}/metadata`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: editedTitle.trim(),
+                    visibility_level: editedVisibility
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Failed to update list: ${response.status}`);
+            }
+
+            const updatedList = await response.json();
+            setList(prev => ({
+                ...prev,
+                title: updatedList.title,
+                visibility_level: updatedList.visibility_level
+            }));
+            
+            setIsEditingList(false);
+            
+            // Show success message
+            alert('List updated successfully!');
+        } catch (err) {
+            console.error('Error updating list:', err);
+            alert(err.message || 'Failed to update list');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -308,6 +388,21 @@ export default function ListDetail() {
     }
 
     if (error) {
+        if (error === 'visibility_restricted') {
+            return (
+                <div className="list-detail-container">
+                    <VisibilityRestriction 
+                        type="list"
+                        message={user ? 
+                            "This list is private or only visible to friends." :
+                            "This list is private. Please log in if you're friends with the owner."
+                        }
+                        showLoginButton={!user}
+                    />
+                </div>
+            );
+        }
+        
         return (
             <div className="list-detail-container">
                 <div className="error-state">
@@ -322,19 +417,78 @@ export default function ListDetail() {
     return (
         <div className="list-detail-container">
             <div className="list-header">
-                <h2>{list.title}</h2>
-                <p className="list-meta">
-                    Created: {new Date(list.created_at).toLocaleDateString()}
-                    {list.items.length > 0 && ` • ${list.items.length} items`}
-                </p>
-                {isOwner && (
-                    <button
-                        className="delete-list-btn"
-                        onClick={handleDeleteList}
-                        disabled={deleting}
-                    >
-                        {deleting ? 'Deleting...' : 'Delete List'}
-                    </button>
+                {isEditingList ? (
+                    <div className="list-edit-form">
+                        <div className="form-group">
+                            <input
+                                type="text"
+                                value={editedTitle}
+                                onChange={(e) => setEditedTitle(e.target.value)}
+                                className="list-title-input"
+                                placeholder="List title"
+                                disabled={saving}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>List Visibility:</label>
+                            <VisibilityToggle
+                                value={editedVisibility}
+                                onChange={setEditedVisibility}
+                                disabled={saving}
+                            />
+                        </div>
+                        <div className="edit-buttons">
+                            <button 
+                                onClick={handleSaveListChanges}
+                                disabled={saving || !editedTitle.trim()}
+                                className="save-btn"
+                            >
+                                {saving ? 'Saving...' : 'Save Changes'}
+                            </button>
+                            <button 
+                                onClick={handleCancelEdit}
+                                disabled={saving}
+                                className="cancel-btn"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <div className="list-title-row">
+                            <h2>{list.title}</h2>
+                            {isOwner && (
+                                <button
+                                    className="edit-list-btn"
+                                    onClick={handleEditList}
+                                    title="Edit list settings"
+                                >
+                                    ✏️ Edit
+                                </button>
+                            )}
+                        </div>
+                        <p className="list-meta">
+                            Created: {new Date(list.created_at).toLocaleDateString()}
+                            {list.items.length > 0 && ` • ${list.items.length} items`}
+                            {isOwner && list.visibility_level && (
+                                <span className="visibility-indicator">
+                                    • {list.visibility_level === 'public' && '🌍 Public'}
+                                    {list.visibility_level === 'friends_only' && '👥 Friends Only'}
+                                    {list.visibility_level === 'private' && '🔒 Private'}
+                                </span>
+                            )}
+                        </p>
+                        {isOwner && (
+                            <button
+                                className="delete-list-btn"
+                                onClick={handleDeleteList}
+                                disabled={deleting}
+                            >
+                                {deleting ? 'Deleting...' : 'Delete List'}
+                            </button>
+                        )}
+                    </>
                 )}
             </div>
 
@@ -398,10 +552,11 @@ export default function ListDetail() {
                                                     </label>
                                                 </div>
                                                 <button
-                                                    className="remove-btn"
+                                                    className={`remove-btn ${removingAnime === item.anime_id ? 'loading' : ''}`}
                                                     onClick={() => handleRemoveAnime(item.anime_id)}
+                                                    disabled={removingAnime === item.anime_id}
                                                 >
-                                                    Remove
+                                                    {removingAnime === item.anime_id ? 'Removing...' : 'Remove'}
                                                 </button>
                                             </>
                                         ) : (
@@ -481,11 +636,11 @@ export default function ListDetail() {
                                             />
                                             <h4 className="anime-title-small">{anime.title}</h4>
                                             <button
-                                                className={`add-btn ${isAlreadyAdded ? 'added' : ''}`}
+                                                className={`add-btn ${isAlreadyAdded ? 'added' : ''} ${addingAnime === animeId ? 'loading' : ''}`}
                                                 onClick={() => handleAddAnime(animeId)}
-                                                disabled={isAlreadyAdded}
+                                                disabled={isAlreadyAdded || addingAnime === animeId}
                                             >
-                                                {isAlreadyAdded ? 'Already Added' : 'Add to List'}
+                                                {addingAnime === animeId ? 'Adding...' : (isAlreadyAdded ? 'Already Added' : 'Add to List')}
                                             </button>
                                         </div>
                                     );

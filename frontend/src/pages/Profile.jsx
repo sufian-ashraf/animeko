@@ -2,6 +2,9 @@
 import React, {useEffect, useState} from 'react';
 import {Link, useNavigate, useParams} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
+import VisibilityToggle from '../components/VisibilityToggle';
+import VisibilityRestriction from '../components/VisibilityRestriction';
+import { fetchUserProfile, fetchUserFavorites, VisibilityError, NotFoundError } from '../utils/api';
 import placeholderImg from '../images/image_not_available.jpg';
 import defaultAvatar from '../images/default_avatar.svg';
 import '../styles/Profile.css';
@@ -22,7 +25,7 @@ export default function Profile() {
     // Profile‐edit state (own profile only)
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
-        display_name: '', profile_bio: '', profile_picture_url: ''
+        display_name: '', profile_bio: '', profile_picture_url: '', visibility_level: 'public'
     });
     const [loadingEdit, setLoadingEdit] = useState(false);
     const [editError, setEditError] = useState('');
@@ -30,19 +33,29 @@ export default function Profile() {
 
     // Favorites state
     const [favorites, setFavorites] = useState([]);
+    const [favoritesLoading, setFavoritesLoading] = useState(false);
+    const [favoritesError, setFavoritesError] = useState('');
 
     // Initialize form data when profileUser changes
     useEffect(() => {
         if (profileUser && isOwnProfile) {
+            console.log('Setting form data from profileUser:', profileUser);
             setFormData({
-                display_name: profileUser.display_name || '', profile_bio: profileUser.profile_bio || '', profile_picture_url: profileUser.profile_picture_url || ''
+                display_name: profileUser.display_name || '', 
+                profile_bio: profileUser.profile_bio || '', 
+                profile_picture_url: profileUser.profile_picture_url || '',
+                visibility_level: profileUser.visibility_level || 'public'
             });
         }
     }, [profileUser, isOwnProfile]);
 
-    // Fetch profile data (own or someone else’s)
+        // Fetch profile data (own or someone else's)
     useEffect(() => {
-        if (!token) return;
+        // For viewing own profile, require authentication
+        if (isOwnProfile && !token) {
+            navigate('/login');
+            return;
+        }
 
         const fetchProfileData = async () => {
             try {
@@ -50,37 +63,34 @@ export default function Profile() {
                 setError('');
 
                 if (isOwnProfile) {
-                    setProfileUser(currentUser);
-                    // For own profile, we already have the user data
-                    // Just ensure we have the latest favorites
-                    const favsRes = await fetch('/api/favorites', {
+                    // For own profile, fetch fresh data to get latest visibility settings
+                    const profileRes = await fetch('http://localhost:5000/api/auth/profile', {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
 
-                    if (favsRes.ok) {
-                        const favsData = await favsRes.json();
-                        setFavorites(Array.isArray(favsData) ? favsData : []);
+                    if (profileRes.ok) {
+                        const profileData = await profileRes.json();
+                        console.log('Fetched profile data:', profileData);
+                        setProfileUser(profileData);
+                    } else {
+                        console.log('Profile fetch failed, using currentUser:', currentUser);
+                        setProfileUser(currentUser);
                     }
                 } else {
-                    // For other users' profiles, fetch their public data
-                    const response = await fetch(`/api/users/profile/${userId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` },
-                    });
-
-                    if (!response.ok) {
-                        if (response.status === 403) {
-                            throw new Error('You can only view profiles of friends');
-                        } else if (response.status === 404) {
-                            throw new Error('User not found');
+                    // For other users' profiles, use API utility that handles visibility
+                    try {
+                        const userData = await fetchUserProfile(userId);
+                        setProfileUser(userData);
+                    } catch (err) {
+                        if (err instanceof VisibilityError) {
+                            // Handle visibility restriction gracefully
+                            setError('visibility_restricted');
+                        } else if (err instanceof NotFoundError) {
+                            setError('User not found');
                         } else {
-                            throw new Error('Failed to load profile');
+                            setError(err.message || 'Failed to load profile');
                         }
                     }
-
-
-                    const data = await response.json();
-                    setProfileUser(data.user);
-                    setFavorites(data.favorites || []);
                 }
             } catch (err) {
                 console.error('Error fetching profile data:', err);
@@ -91,35 +101,55 @@ export default function Profile() {
         };
 
         fetchProfileData();
-    }, [token, userId, currentUser, isOwnProfile]);
+    }, [token, userId, currentUser, isOwnProfile, navigate]);
+
+    // Fetch favorites for the profile being viewed (with visibility checks)
+    useEffect(() => {
+        if (!viewingUserId || error) return;
+        
+        const fetchFavorites = async () => {
+            setFavoritesLoading(true);
+            setFavoritesError('');
+            
+            try {
+                if (isOwnProfile && token) {
+                    // For own profile, use authenticated endpoint
+                    const response = await fetch('http://localhost:5000/api/favorites', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        setFavorites(Array.isArray(data) ? data : []);
+                    } else {
+                        throw new Error('Failed to fetch favorites');
+                    }
+                } else {
+                    // For other users' profiles, use the new API endpoint with visibility checks
+                    const favoritesData = await fetchUserFavorites(viewingUserId);
+                    setFavorites(Array.isArray(favoritesData) ? favoritesData : []);
+                }
+            } catch (error) {
+                console.error('Error fetching favorites:', error);
+                if (error instanceof VisibilityError) {
+                    setFavoritesError('This user\'s favorites are private.');
+                } else {
+                    setFavoritesError('Failed to load favorites');
+                }
+                setFavorites([]);
+            } finally {
+                setFavoritesLoading(false);
+            }
+        };
+        
+        fetchFavorites();
+    }, [viewingUserId, isOwnProfile, token, error]);
 
     // Profile edit handlers
     const handleChange = (e) => {
         const {name, value} = e.target;
         setFormData((f) => ({...f, [name]: value}));
     };
-    
-    // Fetch favorites for the profile
-    useEffect(() => {
-        if (!token) return;
-        
-        const fetchFavorites = async () => {
-            try {
-                const response = await fetch('/api/favorites', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    setFavorites(Array.isArray(data) ? data : []);
-                }
-            } catch (error) {
-                console.error('Error fetching favorites:', error);
-            }
-        };
-        
-        fetchFavorites();
-    }, [token]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -128,12 +158,15 @@ export default function Profile() {
 
         try {
             setLoadingEdit(true);
-            await updateProfile(formData);
+            const response = await updateProfile(formData);
 
             setEditMessage('Profile updated successfully');
             setIsEditing(false);
-            // Re-fetch profile data to ensure the latest profile picture URL is displayed
-            fetchProfileData();
+            
+            // Update the profile user with the latest data from the response
+            if (response && response.user) {
+                setProfileUser(response.user);
+            }
         } catch (err) {
             setEditError(err.message || 'Failed to update profile');
         } finally {
@@ -145,7 +178,8 @@ export default function Profile() {
         setFormData({
             display_name: profileUser.display_name || '', 
             profile_bio: profileUser.profile_bio || '',
-            profile_picture_url: profileUser.profile_picture_url || ''
+            profile_picture_url: profileUser.profile_picture_url || '',
+            visibility_level: profileUser.visibility_level || 'public'
         });
         setEditError('');
         setEditMessage('');
@@ -162,12 +196,29 @@ export default function Profile() {
     }
 
     if (error) {
+        if (error === 'visibility_restricted') {
+            return (
+                <div className="profile-page">
+                    <div className="profile-card">
+                        <VisibilityRestriction 
+                            type="profile"
+                            message={currentUser ? 
+                                "This user's profile is private or only visible to friends." :
+                                "This user's profile is private. Please log in if you're friends with this user."
+                            }
+                            showLoginButton={!currentUser}
+                        />
+                    </div>
+                </div>
+            );
+        }
+        
         return (
             <div className="profile-page">
                 <div className="profile-card">
                     <div className="profile-error">{error}</div>
                     {isOwnProfile ? (
-                        <button onClick={() => navigate('/profile')}>
+                        <button onClick={() => navigate('/login')}>
                             Please log in
                         </button>
                     ) : (
@@ -239,6 +290,14 @@ export default function Profile() {
                                 Paste a direct link to a profile image (JPG, PNG, WEBP)
                             </div>
                         </div>
+                        <div className="form-group">
+                            <label>Profile Visibility</label>
+                            <VisibilityToggle
+                                value={formData.visibility_level}
+                                onChange={(value) => setFormData(prev => ({...prev, visibility_level: value}))}
+                                disabled={loadingEdit}
+                            />
+                        </div>
                         <div className="profile-buttons">
                             <button type="submit" disabled={loadingEdit}>
                                 {loadingEdit ? 'Saving…' : 'Save Changes'}
@@ -268,6 +327,16 @@ export default function Profile() {
                             <span className="profile-field-label">Bio:</span>
                             <span className="profile-field-value">{profileUser.profile_bio || 'No bio provided'}</span>
                         </p>
+                        {isOwnProfile && (
+                            <p>
+                                <span className="profile-field-label">Profile Visibility:</span>
+                                <span className="profile-field-value">
+                                    {(profileUser.visibility_level === 'public' || !profileUser.visibility_level) && '🌍 Public'}
+                                    {profileUser.visibility_level === 'friends_only' && '👥 Friends Only'}
+                                    {profileUser.visibility_level === 'private' && '🔒 Private'}
+                                </span>
+                            </p>
+                        )}
                         <p>
                             <span className="profile-field-label">Member Since:</span>
                             <span className="profile-field-value">{new Date(profileUser.created_at).toLocaleDateString()}</span>
@@ -286,43 +355,54 @@ export default function Profile() {
                 )}
             </div>
 
-            {/* Favorites Section */}
+            {/* Favorites Section - Show for all users based on visibility */}
             <section className="favorites-section">
                 <h3>Favorites</h3>
-                {['anime', 'character', 'voice_actor'].map((type) => (
-                    <div key={type} className="favorite-type-container">
-                        <h4>
-                            {favoritesPrefix} {type.charAt(0).toUpperCase() + type.slice(1)}s
-                        </h4>
-                        <div className="scroll-box fav-grid">
-                            {favorites.filter((f) => f.entityType === type).length > 0 ? (
-                                favorites
-                                    .filter((f) => f.entityType === type)
-                                    .map((f) => {
-                                        const path = `/${type === 'voice_actor' ? 'va' : type}/${f.entityId}`;
-                                        return (
-                                            <div key={`${type}-${f.entityId}`} className="fav-item">
-                                                <Link to={path} className="fav-card">
-                                                    <img
-                                                        src={f.imageUrl || placeholderImg}
-                                                        alt={f.name}
-                                                        className="fav-image"
-                                                        onError={(e) => {
-                                                            e.target.onerror = null;
-                                                            e.target.src = placeholderImg;
-                                                        }}
-                                                    />
-                                                    <span className="fav-name">{f.name}</span>
-                                                </Link>
-                                            </div>
-                                        );
-                                    })
-                            ) : (
-                                <p>No favorite {type}s yet</p>
-                            )}
-                        </div>
+                {favoritesLoading ? (
+                    <div className="favorites-loading">
+                        <div className="spinner"></div>
+                        <p>Loading favorites...</p>
                     </div>
-                ))}
+                ) : favoritesError ? (
+                    <div className="favorites-error">
+                        <p>{favoritesError}</p>
+                    </div>
+                ) : (
+                    ['anime', 'character', 'voice_actor'].map((type) => (
+                        <div key={type} className="favorite-type-container">
+                            <h4>
+                                {favoritesPrefix} {type.charAt(0).toUpperCase() + type.slice(1)}s
+                            </h4>
+                            <div className="scroll-box fav-grid">
+                                {favorites.filter((f) => f.entityType === type).length > 0 ? (
+                                    favorites
+                                        .filter((f) => f.entityType === type)
+                                        .map((f) => {
+                                            const path = `/${type === 'voice_actor' ? 'va' : type}/${f.entityId}`;
+                                            return (
+                                                <div key={`${type}-${f.entityId}`} className="fav-item">
+                                                    <Link to={path} className="fav-card">
+                                                        <img
+                                                            src={f.imageUrl || placeholderImg}
+                                                            alt={f.name}
+                                                            className="fav-image"
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = placeholderImg;
+                                                            }}
+                                                        />
+                                                        <span className="fav-name">{f.name}</span>
+                                                    </Link>
+                                                </div>
+                                            );
+                                        })
+                                ) : (
+                                    <p>No favorite {type}s yet</p>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
             </section>
         </div>
     );

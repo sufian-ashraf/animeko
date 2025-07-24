@@ -1,16 +1,31 @@
 import express from 'express';
 import List from '../models/List.js'; // Import the List model
 import authenticate from '../middlewares/authenticate.js';
+import { attachVisibilityHelpers, canAccessList, sanitizeListData } from '../middlewares/visibilityCheck.js';
 import { parseIntParam } from '../utils/mediaUtils.js';
 
 const router = express.Router();
+
+// Optional authentication middleware to get user context for visibility
+const optionalAuth = (req, res, next) => {
+  // Try to authenticate but don't fail if no token
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    authenticate(req, res, (err) => {
+      // Continue regardless of authentication success/failure
+      next();
+    });
+  } else {
+    next();
+  }
+};
 
 // ──────────────────────────────────────────────────
 // 1) GET /api/lists            (fetch current user's lists)
 // ──────────────────────────────────────────────────
 router.get('/', authenticate, async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user.user_id;
         const lists = await List.getListsByUserId(userId);
         res.json(lists);
     } catch (err) {
@@ -22,9 +37,10 @@ router.get('/', authenticate, async (req, res) => {
 // ──────────────────────────────────────────────────
 // 2) GET /api/lists/all        (get all public lists with owner info and item counts)
 // ──────────────────────────────────────────────────
-router.get('/all', async (req, res) => {
+router.get('/all', optionalAuth, async (req, res) => {
     try {
-        const lists = await List.getAllPublicLists();
+        const currentUserId = req.user?.user_id || null;
+        const lists = await List.getAllPublicLists(currentUserId);
         res.json(lists);
     } catch (err) {
         console.error('[GET /lists/all] Error:', err);
@@ -33,25 +49,13 @@ router.get('/all', async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────
-// 2.5) GET /api/lists/recent   (get the most recently created lists)
-// ──────────────────────────────────────────────────
-router.get('/recent', async (req, res) => {
-    try {
-        const lists = await List.getRecentLists();
-        res.json(lists);
-    } catch (err) {
-        console.error('[GET /lists/recent] Error:', err);
-        res.status(500).json({error: 'Failed to fetch recent lists: ' + err.message});
-    }
-});
-
-// ──────────────────────────────────────────────────
 // 3) GET /api/lists/search/:keyword   (search lists by keyword)
 // ──────────────────────────────────────────────────
-router.get('/search/:keyword', async (req, res) => {
+router.get('/search/:keyword', optionalAuth, async (req, res) => {
     try {
         const keyword = req.params.keyword;
-        const lists = await List.searchLists(keyword);
+        const currentUserId = req.user?.user_id || null;
+        const lists = await List.searchLists(keyword, currentUserId);
         res.json(lists);
     } catch (err) {
         console.error('Search error:', err);
@@ -62,9 +66,10 @@ router.get('/search/:keyword', async (req, res) => {
 // ──────────────────────────────────────────────────
 // 5) GET /api/lists/:id          (get a specific list by ID with its items)
 // ──────────────────────────────────────────────────
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, attachVisibilityHelpers, async (req, res) => {
     try {
         const listId = parseIntParam(req.params.id, 'listId');
+        const currentUserId = req.user?.user_id || null;
 
         const list = await List.getListById(listId);
         
@@ -72,7 +77,18 @@ router.get('/:id', async (req, res) => {
             return res.status(404).json({error: 'List not found'});
         }
         
-        res.json(list);
+        // Check if current user can access this list
+        const canAccess = await canAccessList(list.user_id, currentUserId, list.visibility_level);
+        
+        if (!canAccess) {
+            return res.status(403).json({error: 'Access denied. This list is private.'});
+        }
+        
+        // Sanitize list data based on visibility
+        const isOwner = currentUserId === list.user_id;
+        const sanitizedList = sanitizeListData(list, canAccess, isOwner);
+        
+        res.json(sanitizedList);
         
     } catch (err) {
         console.error('[GET /lists/:id] Error:', err);
@@ -84,15 +100,45 @@ router.get('/:id', async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────
-// 6) PUT /api/lists/:id           (update a list)
+// 6) PATCH /api/lists/:id/metadata (update list title and visibility only)
+// ──────────────────────────────────────────────────
+router.patch('/:id/metadata', authenticate, async (req, res) => {
+    try {
+        const listId = parseIntParam(req.params.id, 'listId');
+        const { title, visibility_level } = req.body;
+        const userId = req.user.user_id;
+
+        // Only update metadata, don't touch anime entries
+        const updatedList = await List.updateListMetadata(listId, userId, { title, visibility_level });
+        
+        res.json(updatedList);
+        
+    } catch (err) {
+        console.error('[PATCH /lists/:id/metadata] Error:', err);
+        let statusCode = 500;
+        if (err.message && err.message.includes('Invalid')) {
+            statusCode = 400;
+        } else if (err.message.includes('not found')) {
+            statusCode = 404;
+        } else if (err.message.includes('permission')) {
+            statusCode = 403;
+        } else if (err.message.includes('title is required')) {
+            statusCode = 400;
+        }
+        res.status(statusCode).json({ error: err.message });
+    }
+});
+
+// ──────────────────────────────────────────────────
+// 7) PUT /api/lists/:id           (update a list with items)
 // ──────────────────────────────────────────────────
 router.put('/:id', authenticate, async (req, res) => {
     try {
         const listId = parseIntParam(req.params.id, 'listId');
-        const { title, animeEntries = [] } = req.body;
-        const userId = req.user.id;
+        const { title, visibility_level, animeEntries = [] } = req.body;
+        const userId = req.user.user_id;
 
-        const updatedList = await List.updateList(listId, userId, { title, animeEntries });
+        const updatedList = await List.updateList(listId, userId, { title, visibility_level, animeEntries });
         
         res.json(updatedList);
         
@@ -115,7 +161,7 @@ router.put('/:id', authenticate, async (req, res) => {
 // ──────────────────────────────────────────────────
 // 8) GET /api/lists/anime/:animeId   (get lists containing an anime)
 // ──────────────────────────────────────────────────
-router.get('/anime/:animeId', async (req, res) => {
+router.get('/anime/:animeId', optionalAuth, async (req, res) => {
         
     // Set CORS headers
     res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
@@ -130,12 +176,10 @@ router.get('/anime/:animeId', async (req, res) => {
     const { animeId } = req.params;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
+    const currentUserId = req.user?.user_id || null;
 
     try {
-        // Log the anime ID being queried
-        
-        
-        const result = await List.getPaginatedListsByAnimeId(animeId, page, limit);
+        const result = await List.getPaginatedListsByAnimeId(animeId, page, limit, currentUserId);
 
         res.json(result);
     } catch (err) {
@@ -150,7 +194,7 @@ router.get('/anime/:animeId', async (req, res) => {
 router.delete('/:id', authenticate, async (req, res) => {
     try {
         const listId = parseIntParam(req.params.id, 'listId');
-        const userId = req.user.id;
+        const userId = req.user.user_id;
 
         await List.deleteList(listId, userId);
 
@@ -171,7 +215,7 @@ router.delete('/:id', authenticate, async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────
-// 8) GET /api/lists/:id/items  (get just the items for a list) - UPDATED WITH MEDIA
+// 10) GET /api/lists/:id/items  (get just the items for a list) - UPDATED WITH MEDIA
 // ──────────────────────────────────────────────────
 router.get('/:id/items', authenticate, async (req, res) => {
     try {

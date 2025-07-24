@@ -43,7 +43,6 @@ CREATE TABLE users
     password_hash         VARCHAR(255)        NOT NULL,
     display_name          VARCHAR(100),
     profile_bio           TEXT,
-    visible               BOOLEAN                      DEFAULT TRUE,
     created_at            TIMESTAMPTZ                  DEFAULT NOW(),
     subscription_status   BOOLEAN                      DEFAULT FALSE,
     active_transaction_id INTEGER,
@@ -132,7 +131,7 @@ CREATE TABLE lists
     user_id    INTEGER REFERENCES users (user_id) ON DELETE CASCADE,
     title      VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    visibility_level visibility_type DEFAULT 'public' visibility_type
+    visibility_level visibility_type DEFAULT 'public'
 );
 
 -- Then create the list_items table

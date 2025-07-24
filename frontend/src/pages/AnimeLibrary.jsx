@@ -1,6 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { fetchUserLibrary, VisibilityError, NotFoundError } from '../utils/api';
+import VisibilityRestriction from '../components/VisibilityRestriction';
 import '../styles/AnimeLibrary.css';
 import placeholder from '../images/image_not_available.jpg';
 
@@ -9,6 +11,7 @@ const validStatuses = ['All', 'Watching', 'Completed', 'Planned to Watch', 'Drop
 function AnimeLibrary() {
     const { token, user: currentUser } = useContext(AuthContext);
     const { userId } = useParams();
+    const navigate = useNavigate();
 
     const isOwnLibrary = !userId || userId === currentUser?.user_id?.toString();
     const targetUserId = isOwnLibrary ? currentUser?.user_id : userId;
@@ -21,8 +24,15 @@ function AnimeLibrary() {
 
     useEffect(() => {
         const fetchLibrary = async () => {
-            if (!token || !targetUserId) {
-                setError('You must be logged in to view your library.');
+            // For own library, require authentication
+            if (isOwnLibrary && !token) {
+                navigate('/login');
+                return;
+            }
+
+            // For viewing other users' libraries, don't require authentication
+            if (!targetUserId) {
+                setError('Invalid user ID');
                 setLoading(false);
                 return;
             }
@@ -30,37 +40,32 @@ function AnimeLibrary() {
             setLoading(true);
             setError(null);
             try {
-                let url = `/api/anime-library/user/${targetUserId}`;
-                if (filterStatus !== 'All') {
-                    url += `?status=${filterStatus}`;
-                }
-                const response = await fetch(url, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to fetch library');
-                }
-
-                const responseData = await response.json();
+                const statusFilter = filterStatus !== 'All' ? filterStatus : null;
+                const responseData = await fetchUserLibrary(targetUserId, statusFilter);
+                
                 setLibrary(Array.isArray(responseData.library) ? responseData.library : []);
                 // Set the username from the response data
                 if (responseData.user && responseData.user.username) {
                     setViewedUsername(responseData.user.username);
-                } else {
-                    setViewedUsername('User'); // Fallback if username is not provided
+                } else if (isOwnLibrary && currentUser) {
+                    setViewedUsername(currentUser.username);
                 }
             } catch (err) {
-                console.error('Error fetching library:', err);
-                setError(err.message || 'Failed to load your anime library.');
+                console.error('Library fetch error:', err);
+                if (err instanceof VisibilityError) {
+                    setError('visibility_restricted');
+                } else if (err instanceof NotFoundError) {
+                    setError('User not found');
+                } else {
+                    setError(err.message || 'Failed to fetch library');
+                }
             } finally {
                 setLoading(false);
             }
         };
 
         fetchLibrary();
-    }, [token, filterStatus, targetUserId]);
+    }, [token, targetUserId, filterStatus, isOwnLibrary, currentUser, navigate]);
 
     const handleUpdateStatus = async (animeId, newStatus) => {
         if (!token || !isOwnLibrary) return;
@@ -129,6 +134,21 @@ function AnimeLibrary() {
     }
 
     if (error) {
+        if (error === 'visibility_restricted') {
+            return (
+                <div className="anime-library-container">
+                    <VisibilityRestriction 
+                        type="library"
+                        message={currentUser ? 
+                            "This user's anime library is private or only visible to friends." :
+                            "This user's anime library is private. Please log in if you're friends with this user."
+                        }
+                        showLoginButton={!currentUser}
+                    />
+                </div>
+            );
+        }
+        
         return (
             <div className="anime-library-container">
                 <p className="error-message">{error}</p>

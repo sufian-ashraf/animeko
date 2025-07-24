@@ -6,6 +6,7 @@ import {fileURLToPath} from 'url';
 import pool from './db.js'; // import shared pool
 // import middlewares
 import authenticate from './middlewares/authenticate.js';
+import { attachVisibilityHelpers } from './middlewares/visibilityCheck.js';
 
 // import routes
 import authRoutes from './routes/authRoutes.js';
@@ -18,6 +19,7 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import listRoutes from './routes/listRoutes.js';
 import characterRoutes from "./routes/characterRoutes.js";
 import VARoutes from "./routes/VARoutes.js";
+import userRoutes from './routes/userRoutes.js';
 
 import animeLibraryRoutes from "./routes/animeLibraryRoutes.js";
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
@@ -50,16 +52,20 @@ app.use('/api/search', searchRoutes);
 // Parse JSON bodies
 app.use(express.json());
 
+// Attach visibility helpers to all requests
+app.use(attachVisibilityHelpers);
+
 app.use('/api/auth', authRoutes);
 app.use('/api', animeRoutes);
 app.use('/api', genreRoutes);
 app.use('/api', companyRoutes);
 app.use('/api', friendRoutes);
-app.use('/api', favoriteRoutes);
+app.use('/api/favorites', favoriteRoutes);
 app.use('/api', reviewRoutes);
 app.use('/api/lists', listRoutes);
 app.use('/api', characterRoutes);
 app.use('/api', VARoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/anime-library', animeLibraryRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api', premiumRoutes);
