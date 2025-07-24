@@ -87,7 +87,7 @@ router.get('/anime/:animeId', async (req, res) => {
 // ─── ADMIN‐ONLY ───────────────────────────────────────────────
 // POST /api/animes
 router.post('/animes', authenticate, authorizeAdmin, async (req, res) => {
-    const {title, synopsis, release_date, company_id, alternative_title, season, episodes, trailer_url_yt_id, image_url, genres} = req.body;
+    const {title, synopsis, release_date, company_id, alternative_title, season, episodes, trailer_url_yt_id, image_url, genres, streaming_available} = req.body;
 
     try {
         // Use the Anime model to create a new anime with genres
@@ -101,7 +101,8 @@ router.post('/animes', authenticate, authorizeAdmin, async (req, res) => {
             season,
             trailer_url_yt_id,
             image_url,
-            genres: genres || []
+            genres: genres || [],
+            streaming_available
         });
         res.status(201).json(newAnime);
     } catch (err) {
@@ -116,7 +117,7 @@ router.post('/animes', authenticate, authorizeAdmin, async (req, res) => {
 // PUT /api/animes/:animeId
 router.put('/animes/:animeId', authenticate, authorizeAdmin, async (req, res) => {
     const {animeId} = req.params;
-    const {title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, image_url, genres} = req.body;
+    const {title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, image_url, genres, streaming_available} = req.body;
 
     try {
         // Use the Anime model to update an anime with genres
@@ -130,7 +131,8 @@ router.put('/animes/:animeId', authenticate, authorizeAdmin, async (req, res) =>
             season,
             trailer_url_yt_id,
             image_url,
-            genres: genres || []
+            genres: genres || [],
+            streaming_available
         });
 
         if (!updatedAnime) {

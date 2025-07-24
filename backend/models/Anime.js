@@ -14,6 +14,7 @@ class Anime {
                     a.rank,
                     a.episodes,
                     a.season,
+                    a.streaming_available,
                     m.url AS "imageUrl",
                     (SELECT STRING_AGG(g.name, ', ')
                      FROM anime_genre ag
@@ -188,6 +189,7 @@ class Anime {
                    a.season,
                    a.release_date,
                    a.trailer_url_yt_id,
+                   a.streaming_available,
                    m.url AS "imageUrl"
             FROM anime a
             LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'image'
@@ -222,6 +224,7 @@ class Anime {
                    a.season,
                    a.release_date,
                    a.trailer_url_yt_id,
+                   a.streaming_available,
                    m.url AS "imageUrl"
             FROM anime a
             LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'image'
@@ -275,7 +278,7 @@ class Anime {
         return anime;
     }
 
-    static async create({ title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, image_url, genres = [] }) {
+    static async create({ title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, image_url, genres = [], streaming_available }) {
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -287,10 +290,10 @@ class Anime {
 
             // Create the anime
             const result = await client.query(
-                `INSERT INTO anime (title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                `INSERT INTO anime (title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, streaming_available)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                  RETURNING *`,
-                [title, alternative_title || null, synopsis, releaseDate, companyId, episodeCount, season || null, trailerYtId]
+                [title, alternative_title || null, synopsis, releaseDate, companyId, episodeCount, season || null, trailerYtId, streaming_available]
             );
 
             const newAnime = result.rows[0];
@@ -356,7 +359,7 @@ class Anime {
         }
     }
 
-    static async update(animeId, { title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, image_url, genres = [] }) {
+    static async update(animeId, { title, alternative_title, synopsis, release_date, company_id, episodes, season, trailer_url_yt_id, image_url, genres = [], streaming_available }) {
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -376,10 +379,11 @@ class Anime {
                      company_id       = COALESCE($5, company_id),
                      episodes         = COALESCE($6, episodes),
                      season           = COALESCE($7, season),
-                     trailer_url_yt_id = COALESCE($8, trailer_url_yt_id)
-                 WHERE anime_id = $9 
+                     trailer_url_yt_id = COALESCE($8, trailer_url_yt_id),
+                     streaming_available = COALESCE($9, streaming_available)
+                 WHERE anime_id = $10 
                  RETURNING *`,
-                [title, alternative_title, synopsis, releaseDate, companyId, episodeCount, season, trailerYtId, animeId]
+                [title, alternative_title, synopsis, releaseDate, companyId, episodeCount, season, trailerYtId, streaming_available, animeId]
             );
 
             if (result.rows.length === 0) {

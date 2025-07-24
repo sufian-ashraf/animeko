@@ -88,6 +88,7 @@ CREATE TABLE anime
     rank              INTEGER,
     company_id        INTEGER,
     trailer_url_yt_id VARCHAR(20),
+    streaming_available BOOLEAN NOT NULL DEFAULT FALSE,
     seed_rating double precision,
     seed_count integer
 );

@@ -6,7 +6,7 @@ import ListCard from '../components/ListCard';
 function MyLists() {
     const [lists, setLists] = useState([]);
     const [newTitle, setNewTitle] = useState('');
-    const {token} = useContext(AuthContext);
+    const {token, user: currentUser, loading: authLoading} = useContext(AuthContext);
     const {isDarkMode} = useTheme();
 
     // Fetch user's lists on component mount
@@ -88,17 +88,18 @@ function MyLists() {
         </form>
 
         {/* User's Lists */}
-        {lists.length === 0 && (
+        {authLoading || lists.length === 0 ? (
             <div className="spinner-container">
                 <div className="spinner"></div>
                 <p>Loading your lists...</p>
             </div>
+        ) : (
+            <div className="lists-grid">
+                {lists.map(list => (
+                    <ListCard key={list.id} list={list} currentUser={currentUser} />
+                ))}
+            </div>
         )}
-        <div className="lists-grid">
-            {lists.map(list => (
-                <ListCard key={list.id} list={list} />
-            ))}
-        </div>
     </div>);
 }
 

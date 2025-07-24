@@ -20,7 +20,8 @@ const AnimeTab = ({searchQuery}) => {
         season: '',
         trailer_url_yt_id: '',
         company_id: '',
-        image_url: ''
+        image_url: '',
+        streaming_available: false
     });
     const [editingId, setEditingId] = useState(null);
     const [loadingAnimeDetails, setLoadingAnimeDetails] = useState(false);
@@ -251,6 +252,7 @@ const AnimeTab = ({searchQuery}) => {
                 episodes: formData.episodes ? parseInt(formData.episodes) : null,
                 trailer_url_yt_id: formData.trailer_url_yt_id || null,
                 image_url: formData.image_url || null,
+                streaming_available: formData.streaming_available,
                 genres: selectedGenres.map(g => ({
                     genre_id: g.genre_id || g.id,
                     name: g.name
@@ -346,7 +348,8 @@ const AnimeTab = ({searchQuery}) => {
                 season: detailedAnime.season || '',
                 trailer_url_yt_id: detailedAnime.trailer_url_yt_id || '',
                 company_id: detailedAnime.company_id ? String(detailedAnime.company_id) : '',
-                image_url: detailedAnime.imageUrl || ''
+                image_url: detailedAnime.imageUrl || '',
+                streaming_available: detailedAnime.streaming_available || false
             });
 
             // Initialize selected genres
@@ -410,7 +413,8 @@ const AnimeTab = ({searchQuery}) => {
             season: '',
             episodes: '',
             trailer_url_yt_id: '',
-            image_url: ''
+            image_url: '',
+            streaming_available: false
         });
         setEditingId(null);
         setError('');
@@ -545,6 +549,19 @@ const AnimeTab = ({searchQuery}) => {
                                 <div className="anime-url-hint">
                                     Paste a direct link to an anime poster image (JPG, PNG, WEBP)
                                 </div>
+                            </div>
+                            <div className="form-group">
+                                <label className="checkbox-label">
+                                    <span>Streaming Available</span>
+                                    <input
+                                        type="checkbox"
+                                        name="streaming_available"
+                                        className="form-check-input"
+                                        id="streamingAvailableCheck"
+                                        checked={formData.streaming_available}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, streaming_available: e.target.checked }))}
+                                    />
+                                </label>
                             </div>
                         </div>
                         <div className="col-md-4">
@@ -838,8 +855,8 @@ const AnimeTab = ({searchQuery}) => {
                             <div className="col-company">Company</div>
                             <div className="col-actions">Actions</div>
                         </div>
-                        {filteredAnime.map(anime => (
-                            <div key={anime.anime_id} className="table-row">
+                        {filteredAnime.map((anime, index) => (
+                            <div key={anime.anime_id || `anime-${index}`} className="table-row">
                                 <div className="col-title">{anime.title}</div>
                                 <div className="col-season">
                                     {anime.season || 'N/A'}

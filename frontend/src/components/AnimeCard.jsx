@@ -112,6 +112,11 @@ function AnimeCard({ anime, initialFavoriteStatus = false }) {
                     <p className="anime-card-episodes">Episodes: {anime.episodes || 'Unknown'}</p>
                     <p className="anime-card-genre">Genre: {anime.genre || 'Not specified'}</p>
                     <p className="anime-card-season">Season: {anime.season || 'Unknown'}</p>
+                    {anime.streaming_available && (
+                        <div className="anime-card-streaming-tag">
+                            🔴 Streamable
+                        </div>
+                    )}
                 </div>
             </Link>
             

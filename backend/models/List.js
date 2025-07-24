@@ -36,8 +36,11 @@ class List {
                 l.id,
                 l.title,
                 l.created_at,
+                u.username as owner_username,
+                u.user_id as owner_id,
                 COALESCE(li.item_count, 0) as item_count
              FROM lists l
+             JOIN users u ON l.user_id = u.user_id
              LEFT JOIN (
                  SELECT list_id, COUNT(*) as item_count 
                  FROM list_items 

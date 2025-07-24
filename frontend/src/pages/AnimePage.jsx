@@ -728,6 +728,11 @@ export default function AnimePage() {
                             <strong>Release Date:</strong> {formatReleaseDate(release_date)}
                         </div>
                     )}
+                    {anime.streaming_available && (
+                        <div className="anime-streaming-tag">
+                            🔴 Streamable
+                        </div>
+                    )}
                 </div>
 
                 {synopsis && <p className="anime-desc">{synopsis}</p>}
