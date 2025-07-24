@@ -146,6 +146,7 @@ function AnimeLibrary() {
                         id="status-filter"
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
+                        className="anime-library-filter"
                     >
                         {validStatuses.map((status) => (
                             <option key={status} value={status}>
@@ -182,6 +183,7 @@ function AnimeLibrary() {
                                 <select
                                     value={anime.status}
                                     onChange={(e) => handleUpdateStatus(anime.anime_id, e.target.value)}
+                                    className="anime-library-filter"
                                 >
                                     {validStatuses.filter(s => s !== 'All').map((status) => (
                                         <option key={status} value={status}>

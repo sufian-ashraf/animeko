@@ -140,7 +140,7 @@ function AnimeCard({ anime, initialFavoriteStatus = false }) {
                                 <select
                                     value={libraryStatus}
                                     onChange={(e) => handleLibraryAction(e, 'update', e.target.value)}
-                                    className="status-select"
+                                    className="status-select anime-library-filter"
                                     disabled={loading}
                                 >
                                     {validLibraryStatuses.map(status => (

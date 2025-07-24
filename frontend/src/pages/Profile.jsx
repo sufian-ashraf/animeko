@@ -256,17 +256,37 @@ export default function Profile() {
                     </form>
                 ) : (
                     <div className="profile-info">
-                        <p>Username: {profileUser.username}</p>
-                        {!isOwnProfile || <p>Email: {profileUser.email}</p>}
-                        <p>Display Name: {profileUser.display_name || 'Not set'}</p>
-                        <p>Bio: {profileUser.profile_bio || 'No bio provided'}</p>
-                        <p>Member Since: {new Date(profileUser.created_at).toLocaleDateString()}</p>
+                        <p>
+                            <span className="profile-field-label">Username:</span>
+                            <span className="profile-field-value">{profileUser.username}</span>
+                        </p>
+                        {!isOwnProfile || (
+                            <p>
+                                <span className="profile-field-label">Email:</span>
+                                <span className="profile-field-value">{profileUser.email}</span>
+                            </p>
+                        )}
+                        <p>
+                            <span className="profile-field-label">Display Name:</span>
+                            <span className="profile-field-value">{profileUser.display_name || 'Not set'}</span>
+                        </p>
+                        <p>
+                            <span className="profile-field-label">Bio:</span>
+                            <span className="profile-field-value">{profileUser.profile_bio || 'No bio provided'}</span>
+                        </p>
+                        <p>
+                            <span className="profile-field-label">Member Since:</span>
+                            <span className="profile-field-value">{new Date(profileUser.created_at).toLocaleDateString()}</span>
+                        </p>
                         <div className="profile-buttons">
                             {isOwnProfile && (
                                 <button onClick={() => setIsEditing(true)}>
                                     Edit Profile
                                 </button>
                             )}
+                            <button onClick={() => navigate('/anime-library')}>
+                                Anime Library
+                            </button>
                         </div>
                     </div>
                 )}

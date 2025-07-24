@@ -351,7 +351,7 @@ export default function MyFriends() {
                                             {request.display_name}
                                         </div>
                                         <div className="user-username">
-                                            <Link to={`/profile/${request.user_id}`}>@{request.username}</Link>
+                                            <Link to={`/profile/${request.user_id}`} className="username-link">@{request.username}</Link>
                                         </div>
                                     </div>
                                 </div>
@@ -395,7 +395,7 @@ export default function MyFriends() {
                                             {request.display_name}
                                         </div>
                                         <div className="user-username">
-                                            <Link to={`/profile/${request.user_id}`}>@{request.username}</Link>
+                                            <Link to={`/profile/${request.user_id}`} className="username-link">@{request.username}</Link>
                                         </div>
                                     </div>
                                 </div>
@@ -431,7 +431,7 @@ export default function MyFriends() {
                                 </div>
                                 <div className="friend-info">
                                     <h3>{friend.display_name || friend.username}</h3>
-                                    <p><Link to={`/profile/${friend.user_id}`}>@{friend.username}</Link></p>
+                                    <p><Link to={`/profile/${friend.user_id}`} className="username-link">@{friend.username}</Link></p>
                                 </div>
                                 <button
                                     className="btn-small unfriend"

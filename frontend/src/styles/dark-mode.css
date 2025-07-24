@@ -206,3 +206,9 @@ body.dark-mode .error-message {
     background-color: #ffffff; /* White background */
     border-color: #ef9a9a; /* Slightly darker red border */
 }
+/* Anime Library Filter */
+body.dark-mode .anime-library-filter {
+    background-color: #3a3a3a;
+    border-color: #555;
+    color: #e0e0e0;
+}
