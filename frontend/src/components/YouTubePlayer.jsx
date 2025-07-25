@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const YouTubePlayer = ({ 
@@ -12,11 +12,162 @@ const YouTubePlayer = ({
 }) => {
     const { user, token } = useAuth();
     const playerRef = useRef(null);
+    const playerInstanceRef = useRef(null); // Store the actual player instance
     const intervalRef = useRef(null);
     const lastSavedProgress = useRef(0);
     const [player, setPlayer] = useState(null);
     const [playerReady, setPlayerReady] = useState(false);
     const [error, setError] = useState(null);
+
+    // Save progress function
+    const saveProgress = async (timestampPosition, watchedPercentage) => {
+        if (!user || !token || !episodeId) {
+            return;
+        }
+
+        const payload = {
+            episode_id: episodeId,
+            timestamp_position: Math.max(0, Math.floor(timestampPosition)),
+            watched_percentage: Math.min(100, Math.max(0, Math.round(watchedPercentage * 100) / 100))
+        };
+
+        try {
+            const response = await fetch('/api/watch/progress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (onProgress) {
+                    onProgress(timestampPosition, watchedPercentage, data.completed);
+                }
+                
+                if (data.completed && onComplete) {
+                    onComplete();
+                }
+            }
+        } catch (err) {
+            console.error('Error saving progress:', err);
+        }
+    };
+
+    // Start progress tracking
+    const startProgressTracking = () => {
+        // Check each condition individually
+        if (!user || !token || intervalRef.current) {
+            return;
+        }
+
+        // Use the ref for immediate access to the player
+        const activePlayer = playerInstanceRef.current || player;
+        if (!activePlayer) {
+            // Try again in a bit in case the player is still initializing
+            setTimeout(() => {
+                startProgressTracking();
+            }, 500);
+            return;
+        }
+
+        intervalRef.current = setInterval(() => {
+            // Use the ref for immediate access
+            const currentPlayer = playerInstanceRef.current || player;
+            if (!currentPlayer) {
+                return;
+            }
+
+            try {
+                const currentTime = currentPlayer.getCurrentTime();
+                const duration = currentPlayer.getDuration();
+                
+                if (duration > 0) {
+                    const watchedPercentage = (currentTime / duration) * 100;
+                    
+                    // Save progress if there's meaningful change (more than 2% or 10 seconds)
+                    if (Math.abs(watchedPercentage - lastSavedProgress.current) >= 2 || 
+                        Math.abs(currentTime - (lastSavedProgress.current * duration / 100)) >= 10) {
+                        
+                        saveProgress(Math.floor(currentTime), watchedPercentage);
+                        lastSavedProgress.current = watchedPercentage;
+                    }
+                }
+            } catch (err) {
+                console.error('Error tracking progress:', err);
+            }
+        }, 12000); // Save every 12 seconds
+    };
+
+    // Stop progress tracking
+    const stopProgressTracking = () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+    };
+
+    // Handle video completion
+    const handleVideoComplete = () => {
+        if (!user || !token || !episodeId || !player) return;
+
+        try {
+            const duration = player.getDuration();
+            saveProgress(Math.floor(duration), 100);
+        } catch (err) {
+            console.error('Error handling video completion:', err);
+        }
+    };
+
+    // Player event handlers
+    const handlePlayerReady = (event) => {
+        // Ensure the ref is set from the event target
+        if (event.target && !playerInstanceRef.current) {
+            playerInstanceRef.current = event.target;
+        }
+        
+        setPlayerReady(true);
+        setError(null);
+
+        // Seek to initial position if provided
+        if (initialPosition > 0) {
+            setTimeout(() => {
+                try {
+                    event.target.seekTo(initialPosition, true);
+                } catch (err) {
+                    console.error('Error seeking to initial position:', err);
+                }
+            }, 1000);
+        }
+    };
+
+    const handlePlayerStateChange = (event) => {
+        const playerState = event.data;
+        
+        // Ensure we have the player reference
+        if (event.target && !playerInstanceRef.current) {
+            playerInstanceRef.current = event.target;
+        }
+        
+        if (playerState === window.YT.PlayerState.PLAYING) {
+            startProgressTracking();
+        } else {
+            stopProgressTracking();
+        }
+
+        if (playerState === window.YT.PlayerState.ENDED) {
+            handleVideoComplete();
+        }
+    };
+
+    const handlePlayerError = (event) => {
+        console.error('YouTube player error:', event.data);
+        setError('Video playback error occurred');
+        stopProgressTracking();
+    };
 
     // Load YouTube iframe API
     useEffect(() => {
@@ -31,7 +182,7 @@ const YouTubePlayer = ({
 
         // Set up the callback for when the API is ready
         window.onYouTubeIframeAPIReady = () => {
-            console.log('YouTube iframe API loaded');
+            // API loaded
         };
 
         return () => {
@@ -44,7 +195,9 @@ const YouTubePlayer = ({
     // Initialize player when API is ready
     useEffect(() => {
         const initPlayer = () => {
-            if (!window.YT || !window.YT.Player || !playerRef.current) return;
+            if (!window.YT || !window.YT.Player || !playerRef.current) {
+                return;
+            }
 
             try {
                 const newPlayer = new window.YT.Player(playerRef.current, {
@@ -60,13 +213,14 @@ const YouTubePlayer = ({
                         origin: window.location.origin
                     },
                     events: {
-                        onReady: onPlayerReady,
-                        onStateChange: onPlayerStateChange,
-                        onError: onPlayerError
+                        onReady: handlePlayerReady,
+                        onStateChange: handlePlayerStateChange,
+                        onError: handlePlayerError
                     }
                 });
 
                 setPlayer(newPlayer);
+                playerInstanceRef.current = newPlayer; // Store in ref for immediate access
             } catch (err) {
                 console.error('Error initializing YouTube player:', err);
                 setError('Failed to initialize video player');
@@ -85,124 +239,12 @@ const YouTubePlayer = ({
 
             return () => clearInterval(checkAPI);
         }
-    }, [videoId, width, height]);
 
-    const onPlayerReady = useCallback((event) => {
-        console.log('Player ready');
-        setPlayerReady(true);
-        setError(null);
-
-        // Seek to initial position if provided
-        if (initialPosition > 0) {
-            setTimeout(() => {
-                try {
-                    event.target.seekTo(initialPosition, true);
-                    console.log(`Resumed from ${initialPosition} seconds`);
-                } catch (err) {
-                    console.error('Error seeking to initial position:', err);
-                }
-            }, 1000);
-        }
-    }, [initialPosition]);
-
-    const onPlayerStateChange = useCallback((event) => {
-        const playerState = event.data;
-        
-        if (playerState === window.YT.PlayerState.PLAYING) {
-            startProgressTracking();
-        } else {
+        // Cleanup function
+        return () => {
             stopProgressTracking();
-        }
-
-        if (playerState === window.YT.PlayerState.ENDED) {
-            handleVideoComplete();
-        }
-    }, []);
-
-    const onPlayerError = useCallback((event) => {
-        console.error('YouTube player error:', event.data);
-        setError('Video playback error occurred');
-        stopProgressTracking();
-    }, []);
-
-    const startProgressTracking = useCallback(() => {
-        if (!user || !token || intervalRef.current) return;
-
-        intervalRef.current = setInterval(() => {
-            if (!player || !playerReady) return;
-
-            try {
-                const currentTime = player.getCurrentTime();
-                const duration = player.getDuration();
-                
-                if (duration > 0) {
-                    const watchedPercentage = (currentTime / duration) * 100;
-                    
-                    // Only save progress if there's meaningful change (more than 2% or 10 seconds)
-                    if (Math.abs(watchedPercentage - lastSavedProgress.current) >= 2 || 
-                        Math.abs(currentTime - (lastSavedProgress.current * duration / 100)) >= 10) {
-                        
-                        saveProgress(Math.floor(currentTime), watchedPercentage);
-                        lastSavedProgress.current = watchedPercentage;
-                    }
-                }
-            } catch (err) {
-                console.error('Error tracking progress:', err);
-            }
-        }, 8000); // Save every 8 seconds
-    }, [player, playerReady, user, token]);
-
-    const stopProgressTracking = useCallback(() => {
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        }
-    }, []);
-
-    const saveProgress = useCallback(async (timestampPosition, watchedPercentage) => {
-        if (!user || !token || !episodeId) return;
-
-        try {
-            const response = await fetch('/api/watch/progress', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    episode_id: episodeId,
-                    timestamp_position: Math.max(0, Math.floor(timestampPosition)),
-                    watched_percentage: Math.min(100, Math.max(0, Math.round(watchedPercentage * 100) / 100))
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                if (onProgress) {
-                    onProgress(timestampPosition, watchedPercentage, data.completed);
-                }
-                
-                if (data.completed && onComplete) {
-                    onComplete();
-                }
-            } else {
-                console.error('Failed to save progress:', response.statusText);
-            }
-        } catch (err) {
-            console.error('Error saving progress:', err);
-        }
-    }, [user, token, episodeId, onProgress, onComplete]);
-
-    const handleVideoComplete = useCallback(() => {
-        if (!user || !token || !episodeId || !player) return;
-
-        try {
-            const duration = player.getDuration();
-            saveProgress(Math.floor(duration), 100);
-        } catch (err) {
-            console.error('Error handling video completion:', err);
-        }
-    }, [user, token, episodeId, player, saveProgress]);
+        };
+    }, [videoId, width, height]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -215,8 +257,9 @@ const YouTubePlayer = ({
                     console.error('Error destroying player:', err);
                 }
             }
+            playerInstanceRef.current = null;
         };
-    }, [player, stopProgressTracking]);
+    }, [player]);
 
     if (error) {
         return (

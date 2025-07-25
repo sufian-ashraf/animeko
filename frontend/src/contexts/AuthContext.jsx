@@ -19,7 +19,7 @@ const AuthProvider = ({children}) => {
     const setUserFromToken = useCallback((jwtToken) => {
         try {
             const decoded = jwtDecode(jwtToken);
-            console.log('Decoded token:', decoded);
+            // console.log('Decoded token:', decoded);
             // Use is_admin directly from decoded token
             const userData = {
                 id: decoded.id,
@@ -29,7 +29,7 @@ const AuthProvider = ({children}) => {
                 display_name: decoded.username,
                 is_admin: decoded.is_admin === true || decoded.is_admin === 't' || decoded.is_admin === 1 || decoded.is_admin === 'true' || decoded.is_admin === '1'
             };
-            console.log('Setting user from token:', userData);
+            // console.log('Setting user from token:', userData);
             setUser(userData);
             return userData;
         } catch (error) {
@@ -93,7 +93,7 @@ const AuthProvider = ({children}) => {
                 is_admin: tokenIsAdmin // Always use token value, never API response
             };
 
-            console.log('Updated user from profile fetch:', userWithAdmin);
+            // console.log('Updated user from profile fetch:', userWithAdmin);
             setUser(userWithAdmin);
             return userWithAdmin;
         } catch (error) {

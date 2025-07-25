@@ -101,11 +101,10 @@ function EpisodeWatchPage() {
     };
 
     const handleProgress = (timestampPosition, watchedPercentage, completed) => {
-        console.log(`Progress: ${timestampPosition}s (${watchedPercentage.toFixed(1)}%)`, completed ? '- COMPLETED' : '');
+        // Progress tracking handled internally
     };
 
     const handleComplete = () => {
-        console.log('Episode completed!');
         // Optionally auto-navigate to next episode
         const nextEpisode = getNextEpisode();
         if (nextEpisode && window.confirm('Episode completed! Watch next episode?')) {
