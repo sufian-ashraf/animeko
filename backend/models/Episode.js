@@ -60,6 +60,10 @@ class Episode {
                     e.title,
                     e.duration_seconds,
                     e.air_date,
+                    CASE 
+                        WHEN e.episode_url_yt_id IS NOT NULL THEN true
+                        ELSE false
+                    END as has_video,
                     e.premium_only
                 FROM episode e
                 WHERE e.anime_id = $1
@@ -69,6 +73,30 @@ class Episode {
             return result.rows;
         } catch (error) {
             console.error("Error in Episode.getByAnimeId:", error);
+            throw error;
+        }
+    }
+
+    static async getByAnimeIdAndEpisodeNumber(animeId, episodeNumber) {
+        try {
+            const result = await pool.query(`
+                SELECT 
+                    e.episode_id,
+                    e.episode_number,
+                    e.title,
+                    e.duration_seconds,
+                    e.air_date,
+                    e.episode_url_yt_id,
+                    e.premium_only,
+                    a.title AS anime_title
+                FROM episode e
+                JOIN anime a ON e.anime_id = a.anime_id
+                WHERE e.anime_id = $1 AND e.episode_number = $2
+            `, [animeId, episodeNumber]);
+
+            return result.rows[0] || null;
+        } catch (error) {
+            console.error("Error in Episode.getByAnimeIdAndEpisodeNumber:", error);
             throw error;
         }
     }

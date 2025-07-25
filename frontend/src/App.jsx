@@ -14,6 +14,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import AnimePage from './pages/AnimePage';
+import EpisodeWatchPage from './pages/EpisodeWatchPage';
 import CharacterPage from './pages/CharacterPage';
 import VAPage from './pages/VAPage';
 import GenrePage from './pages/GenrePage';
@@ -44,6 +45,7 @@ import './styles/NotFound.css';
 import './styles/MyLists.css';
 import './styles/AnimeLibrary.css';
 import './styles/ListDetail.css';
+import './styles/EpisodeWatchPage.css';
 import './styles/dark-mode.css';
 
 function App() {
@@ -76,6 +78,7 @@ function App() {
                             }
                         />
                         <Route path="/anime/:animeId" element={<AnimePage/>}/>
+                        <Route path="/anime/:animeId/episode/:episodeNumber" element={<EpisodeWatchPage/>}/>
                         <Route path="/character/:charId" element={<CharacterPage/>}/>
                         <Route path="/va/:vaId" element={<VAPage/>}/>
                         <Route path="/genre/:genreId" element={<GenrePage/>}/>

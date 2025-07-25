@@ -971,6 +971,22 @@ export default function AnimePage() {
                                             <span className="detail-value">{formatAirDate(episode.air_date)}</span>
                                         </div>
                                     </div>
+                                    {episode.has_video && (
+                                        <div className="episode-actions">
+                                            {episode.premium_only && (!user || !user.subscription_status) ? (
+                                                <button className="watch-button disabled" disabled>
+                                                    🔒 Premium Required
+                                                </button>
+                                            ) : (
+                                                <button 
+                                                    className="watch-button"
+                                                    onClick={() => navigate(`/anime/${animeId}/episode/${episode.episode_number}`)}
+                                                >
+                                                    ▶ Watch Episode
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>

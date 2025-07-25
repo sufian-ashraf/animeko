@@ -2,6 +2,7 @@ import express from 'express';
 import Episode from '../models/Episode.js';
 import authenticate from '../middlewares/authenticate.js';
 import authorizeAdmin from '../middlewares/authorizeAdmin.js';
+import requireSubscription from '../middlewares/requireSubscription.js';
 import { parseIntParam, parseIntBody } from '../utils/mediaUtils.js';
 
 const router = express.Router();
@@ -50,6 +51,72 @@ router.get('/anime/:animeId', async (req, res) => {
             return res.status(400).json({message: error.message});
         }
         res.status(500).json({ message: 'Failed to fetch episodes' });
+    }
+});
+
+// Optional authentication middleware for episodes
+const optionalAuth = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        // Try to authenticate but don't fail if token is invalid
+        authenticate(req, res, (err) => {
+            // Continue regardless of authentication success/failure
+            next();
+        });
+    } else {
+        next();
+    }
+};
+
+// Get specific episode by anime ID and episode number
+router.get('/anime/:animeId/episode/:episodeNumber', optionalAuth, async (req, res) => {
+    try {
+        const animeId = parseIntParam(req.params.animeId, 'animeId');
+        const episodeNumber = parseIntParam(req.params.episodeNumber, 'episodeNumber');
+
+        const episode = await Episode.getByAnimeIdAndEpisodeNumber(animeId, episodeNumber);
+        if (!episode) {
+            return res.status(404).json({ message: 'Episode not found' });
+        }
+
+        // Check if episode is premium and user has subscription
+        if (episode.premium_only) {
+            // If episode is premium but user is not authenticated, deny access
+            if (!req.user || !req.user.id) {
+                return res.status(403).json({ 
+                    message: 'Access denied. This episode requires an active premium subscription. Please log in.',
+                    premiumRequired: true,
+                    requiresLogin: true
+                });
+            }
+
+            // User is authenticated, check subscription status
+            const User = (await import('../models/User.js')).default;
+            const user = await User.findByIdWithSubscription(req.user.id);
+            
+            if (!user) {
+                return res.status(404).json({ message: 'User not found.' });
+            }
+
+            const now = new Date();
+            const hasValidSubscription = user.subscription_status && user.subscription_end_date && new Date(user.subscription_end_date) > now;
+
+            if (!hasValidSubscription) {
+                return res.status(403).json({ 
+                    message: 'Access denied. This episode requires an active premium subscription.',
+                    premiumRequired: true,
+                    requiresSubscription: true
+                });
+            }
+        }
+
+        res.json(episode);
+    } catch (error) {
+        console.error('Error fetching episode:', error);
+        if (error.message && error.message.includes('Invalid')) {
+            return res.status(400).json({message: error.message});
+        }
+        res.status(500).json({ message: 'Failed to fetch episode' });
     }
 });
 
