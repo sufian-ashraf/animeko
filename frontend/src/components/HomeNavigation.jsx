@@ -281,6 +281,9 @@ function Navigation() {
                 <div className="dropdown-menu">
                   {!isAdmin && (
                     <>
+                      <Link to="/streaming" className="dropdown-item">
+                        Streaming
+                      </Link>
                       <Link to="/profile" className="dropdown-item">
                         My Profile
                       </Link>
@@ -313,13 +316,38 @@ function Navigation() {
               )}
             </div>
           ) : (
-            <div className="auth-links">
-              <Link to="/login" className="nav-link">
-                Login
-              </Link>
-              <Link to="/register" className="nav-link">
-                Register
-              </Link>
+            <div className="user-menu" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="nav-link profile-button"
+              >
+                Menu
+              </button>
+              {dropdownOpen && (
+                <div className="dropdown-menu">
+                  <Link 
+                    to="/streaming" 
+                    className="dropdown-item"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Streaming
+                  </Link>
+                  <Link 
+                    to="/login" 
+                    className="dropdown-item"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link 
+                    to="/register" 
+                    className="dropdown-item"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </div>

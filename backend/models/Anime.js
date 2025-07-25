@@ -159,6 +159,161 @@ class Anime {
         }
     }
 
+    static async getStreamable({ title, genre, genres, year, releaseYearStart, releaseYearEnd, episodeCountMin, episodeCountMax, ratingMin, ratingMax, sortField = 'name', sortOrder = 'asc' }) {
+        try {
+            let query = `
+                SELECT 
+                    a.anime_id AS id,
+                    a.title,
+                    a.alternative_title AS "alternative_title",
+                    a.release_date,
+                    a.company_id,
+                    a.rating,
+                    a.rank,
+                    a.episodes,
+                    a.season,
+                    a.streaming_available,
+                    m.url AS "imageUrl",
+                    (SELECT STRING_AGG(g.name, ', ')
+                     FROM anime_genre ag
+                     JOIN genre g ON ag.genre_id = g.genre_id
+                     WHERE ag.anime_id = a.anime_id) AS genre,
+                     EXTRACT(YEAR FROM a.release_date) AS year,
+                    a.synopsis AS synopsis
+                FROM anime a
+                LEFT JOIN media m ON a.anime_id = m.entity_id AND m.entity_type = 'anime' AND m.media_type = 'image'
+                WHERE a.streaming_available = true
+            `;
+
+            const params = [];
+            let paramCount = 1;
+
+            if (title) {
+                params.push(`%${title}%`, `%${title}%`);
+                query += ` AND ( title ILIKE $${paramCount++} OR alternative_title ILIKE $${paramCount++} )`;
+            }
+
+            // Handle multiple genres (advanced search)
+            if (genres && Array.isArray(genres) && genres.length > 0) {
+                const genreNames = genres.map(g => typeof g === 'string' ? g : g.name).filter(Boolean);
+                if (genreNames.length > 0) {
+                    const genrePlaceholders = genreNames.map(() => `$${paramCount++}`).join(',');
+                    params.push(...genreNames);
+                    query += ` AND EXISTS (
+                        SELECT 1 FROM anime_genre ag
+                        JOIN genre g ON ag.genre_id = g.genre_id
+                        WHERE ag.anime_id = a.anime_id
+                        AND g.name IN (${genrePlaceholders})
+                    )`;
+                }
+            } else if (genre) {
+                // Handle single genre (basic search)
+                params.push(`%${genre}%`);
+                query += ` AND EXISTS (
+                    SELECT 1 FROM anime_genre ag
+                    JOIN genre g ON ag.genre_id = g.genre_id
+                    WHERE ag.anime_id = a.anime_id
+                    AND g.name LIKE $${paramCount++}
+                )`;
+            }
+
+            // Release year range filters
+            if (releaseYearStart) {
+                const parsedYear = parseInt(releaseYearStart, 10);
+                if (!isNaN(parsedYear)) {
+                    params.push(parsedYear);
+                    query += ` AND EXTRACT(YEAR FROM a.release_date) >= $${paramCount++}`;
+                }
+            }
+
+            if (releaseYearEnd) {
+                const parsedYear = parseInt(releaseYearEnd, 10);
+                if (!isNaN(parsedYear)) {
+                    params.push(parsedYear);
+                    query += ` AND EXTRACT(YEAR FROM a.release_date) <= $${paramCount++}`;
+                }
+            }
+
+            // Single year filter (for backward compatibility)
+            if (year && !releaseYearStart && !releaseYearEnd) {
+                const parsedYear = parseInt(year, 10);
+                if (!isNaN(parsedYear)) {
+                    params.push(parsedYear);
+                    query += ` AND EXTRACT(YEAR FROM a.release_date) = $${paramCount++}`;
+                }
+            }
+
+            // Episode count range filters
+            if (episodeCountMin) {
+                const parsedCount = parseInt(episodeCountMin, 10);
+                if (!isNaN(parsedCount)) {
+                    params.push(parsedCount);
+                    query += ` AND a.episodes >= $${paramCount++}`;
+                }
+            }
+
+            if (episodeCountMax) {
+                const parsedCount = parseInt(episodeCountMax, 10);
+                if (!isNaN(parsedCount)) {
+                    params.push(parsedCount);
+                    query += ` AND a.episodes <= $${paramCount++}`;
+                }
+            }
+
+            // Rating range filters
+            if (ratingMin) {
+                const parsedRating = parseFloat(ratingMin);
+                if (!isNaN(parsedRating)) {
+                    params.push(parsedRating);
+                    query += ` AND a.rating >= $${paramCount++}`;
+                }
+            }
+
+            if (ratingMax) {
+                const parsedRating = parseFloat(ratingMax);
+                if (!isNaN(parsedRating)) {
+                    params.push(parsedRating);
+                    query += ` AND a.rating <= $${paramCount++}`;
+                }
+            }
+
+            let orderBy = 'title ASC'; // Default sort
+
+            if (sortField) {
+                let field = '';
+                switch (sortField) {
+                    case 'name':
+                        field = 'title';
+                        break;
+                    case 'rating':
+                        field = 'rating';
+                        break;
+                    case 'release_date':
+                        field = 'release_date';
+                        break;
+                    case 'rank':
+                        field = 'rank';
+                        break;
+                    default:
+                        field = 'title';
+                }
+                orderBy = `${field} ${sortOrder.toUpperCase()}`;
+                if (sortOrder.toUpperCase() === 'ASC') {
+                    orderBy += ' NULLS LAST';
+                } else {
+                    orderBy += ' NULLS FIRST';
+                }
+            }
+
+            query += ` ORDER BY ${orderBy}`;
+            const result = await pool.query(query, params);
+            return result.rows;
+        } catch (error) {
+            console.error("Error in Anime.getStreamable:", error);
+            throw error;
+        }
+    }
+
     static async getAllForAdmin() {
         try {
             let query = `

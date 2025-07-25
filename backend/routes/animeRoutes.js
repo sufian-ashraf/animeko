@@ -23,6 +23,23 @@ router.get('/animes', async (req, res, next) => {
 });
 
 /**
+ * GET /api/animes/streaming
+ * Returns a list of streamable anime (streaming_available = true)
+ */
+router.get('/animes/streaming', async (req, res, next) => {
+    try {
+        const {title, genre, year, sortField, sortOrder} = req.query;
+
+        // Use the Anime model to get streamable anime
+        const animes = await Anime.getStreamable({ title, genre, year, sortField, sortOrder });
+        res.json(animes);
+    } catch (err) {
+        console.error('Error fetching streamable anime:', err);
+        next(err);
+    }
+});
+
+/**
  * GET /api/animes/admin
  * Returns a simplified list of anime for admin management (fast loading)
  */

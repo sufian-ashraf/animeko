@@ -20,6 +20,7 @@ import GenrePage from './pages/GenrePage';
 import CompanyPage from './pages/CompanyPage';
 import Home from './pages/Home';
 import SearchResultsPage from './pages/SearchResultsPage';
+import StreamingPage from './pages/StreamingPage';
 import NotFound from './pages/NotFound';
 import MyLists from './pages/MyLists';
 import AnimeLibrary from './pages/AnimeLibrary';
@@ -62,6 +63,7 @@ function App() {
                     <Routes>
                         {/* Public Routes */}
                         <Route path="/" element={<Home/>}/>
+                        <Route path="/streaming" element={<StreamingPage/>}/>
                         <Route path="/search-results" element={<SearchResultsPage/>}/>
                         <Route path="/login" element={<Login/>}/>
                         <Route path="/register" element={<Register/>}/>
