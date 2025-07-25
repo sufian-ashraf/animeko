@@ -131,7 +131,6 @@ export default function ListDetail() {
             // Create a new entry
             const newEntry = {
                 anime_id: animeId,
-                rank: (list.items.length > 0 ? Math.max(...list.items.map(i => i.rank || 0)) : 0) + 1,
                 note: ''
             };
 
@@ -212,7 +211,7 @@ export default function ListDetail() {
         }
     };
 
-    // Handle rank or note change on an existing entry (only if owner)
+    // Handle note change on an existing entry (only if owner)
     const handleEntryChange = (animeId, field, value) => {
         if (!isOwner) return;
 
@@ -229,11 +228,11 @@ export default function ListDetail() {
         const baseUrl = 'http://localhost:5000';
         
         try {
-            // Sort items by rank ascending, then by anime_id to break ties
+            // Sort items by anime title for consistent ordering
             const sortedEntries = [...list.items].sort((a, b) => {
-                const rA = a.rank || 0,
-                    rB = b.rank || 0;
-                return rA !== rB ? rA - rB : a.anime_id - b.anime_id;
+                const titleA = a.anime_title || a.title || '';
+                const titleB = b.anime_title || b.title || '';
+                return titleA.localeCompare(titleB);
             });
 
             const response = await fetch(`${baseUrl}/api/lists/${id}`, {
@@ -496,7 +495,11 @@ export default function ListDetail() {
             <div className="anime-items">
                 {Array.isArray(list.items) && list.items.length > 0 ? (
                     list.items
-                        .sort((a, b) => (a.rank || 999) - (b.rank || 999)) // Sort by rank
+                        .sort((a, b) => {
+                            const titleA = a.anime_title || a.title || '';
+                            const titleB = b.anime_title || b.title || '';
+                            return titleA.localeCompare(titleB);
+                        }) // Sort by anime title
                         .map((item) => (
                             <div key={item.anime_id} className="anime-card animecard-row">
                                 <div className="animecard-img-col">
@@ -510,9 +513,6 @@ export default function ListDetail() {
                                                     e.target.src = placeholderImg;
                                                 }}
                                             />
-                                            {item.rank && (
-                                                <div className="rank-badge">#{item.rank}</div>
-                                            )}
                                         </div>
                                     </Link>
                                 </div>
@@ -523,20 +523,6 @@ export default function ListDetail() {
                                     <div className="anime-info">
                                         {isOwner ? (
                                             <>
-                                                <div className="input-group">
-                                                    <label>
-                                                        Rank:
-                                                        <input
-                                                            type="number"
-                                                            value={item.rank || ''}
-                                                            min="1"
-                                                            onChange={(e) =>
-                                                                handleEntryChange(item.anime_id, 'rank', e.target.value)
-                                                            }
-                                                            className="rank-input"
-                                                        />
-                                                    </label>
-                                                </div>
                                                 <div className="input-group">
                                                     <label>
                                                         Note:
@@ -560,9 +546,8 @@ export default function ListDetail() {
                                                 </button>
                                             </>
                                         ) : (
-                                            // Non‐owners see plain text for rank and note
+                                            // Non‐owners see plain text for note only
                                             <>
-                                                <div className="anime-rank-text">Rank: #{item.rank || 'N/A'}</div>
                                                 {item.note && (
                                                     <div className="anime-note-text">Note: {item.note}</div>
                                                 )}
@@ -582,7 +567,7 @@ export default function ListDetail() {
                 )}
             </div>
 
-            {/* ─────────── Save All Edits (Rank & Note) ─────────── */}
+            {/* ─────────── Save All Edits (Note) ─────────── */}
             {isOwner && list.items.length > 0 && (
                 <div className="save-container">
                     <button className="save-btn" onClick={handleSaveAll}>

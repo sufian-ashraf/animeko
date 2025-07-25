@@ -285,19 +285,6 @@ body.dark-mode .delete-list-btn:hover:not(:disabled) {
     transform: scale(1.05);
 }
 
-.rank-badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
 /* Anime Link */
 .anime-link {
     text-decoration: none;
@@ -332,20 +319,6 @@ body.dark-mode .delete-list-btn:hover:not(:disabled) {
     color: #34495e;
     margin-bottom: 0.5rem;
     font-size: 0.9rem;
-}
-
-.rank-input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 2px solid #e9ecef;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    transition: border-color 0.3s ease;
-}
-
-.rank-input:focus {
-    outline: none;
-    border-color: #3498db;
 }
 
 .note-input {
@@ -389,7 +362,7 @@ body.dark-mode .delete-list-btn:hover:not(:disabled) {
 }
 
 /* Read-only display for non-owners */
-.anime-rank-text, .anime-note-text {
+.anime-note-text {
     background: #f8f9fa;
     padding: 0.75rem;
     border-radius: 6px;
@@ -397,10 +370,6 @@ body.dark-mode .delete-list-btn:hover:not(:disabled) {
     font-size: 0.9rem;
     color: #495057;
     border-left: 4px solid #3498db;
-}
-
-.anime-rank-text {
-    font-weight: 600;
 }
 
 /* Save Container */
@@ -597,26 +566,22 @@ body.dark-mode .input-group label {
     color: #cbd5e0;
 }
 
-body.dark-mode .rank-input,
 body.dark-mode .note-input {
     background: #4a5568;
     border-color: #718096;
     color: #e0e0e0;
 }
 
-body.dark-mode .rank-input:focus,
 body.dark-mode .note-input:focus {
     border-color: #4299e1;
     background: #2d3748;
 }
 
-body.dark-mode .rank-input::placeholder,
 body.dark-mode .note-input::placeholder {
     color: #a0aec0;
 }
 
 /* Dark mode read-only displays */
-body.dark-mode .anime-rank-text,
 body.dark-mode .anime-note-text {
     background: #4a5568;
     color: #e0e0e0;

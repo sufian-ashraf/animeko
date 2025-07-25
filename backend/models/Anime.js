@@ -133,8 +133,11 @@ class Anime {
                     case 'release_date':
                         field = 'release_date';
                         break;
+                    case 'rating':
+                        field = 'rating';
+                        break;
                     case 'rank':
-                        field = 'rank'; // Assuming a 'rank' column exists or will be added
+                        field = 'rank';
                         break;
                     default:
                         field = 'title';

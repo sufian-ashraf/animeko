@@ -246,14 +246,13 @@ class List {
                     
                     const existingAnimeIds = new Set(animeCheck.rows.map(row => row.anime_id));
                     
-                    for (const entry of validEntries) {
+                    for (const [idx, entry] of validEntries.entries()) {
                         if (existingAnimeIds.has(parseInt(entry.anime_id, 10))) {
                             await client.query(
-                                'INSERT INTO list_items (list_id, anime_id, rank, note) VALUES ($1, $2, $3, $4)',
+                                'INSERT INTO list_items (list_id, anime_id, note) VALUES ($1, $2, $3)',
                                 [
                                     listId,
                                     entry.anime_id,
-                                    entry.rank || null,
                                     entry.note || ''
                                 ]
                             );
@@ -299,7 +298,6 @@ class List {
             const itemsResult = await client.query(
                 `SELECT 
                     li.anime_id,
-                    li.rank,
                     li.note,
                     a.title as anime_title,
                     a.alternative_title,
@@ -308,7 +306,7 @@ class List {
                     a.episodes,
                     a.synopsis,
                     a.rating,
-                    a.rank as anime_rank,
+                    a.rating as anime_rating,
                     m.url as image_url
                  FROM list_items li
                  JOIN anime a ON li.anime_id = a.anime_id
@@ -316,7 +314,7 @@ class List {
                      AND m.entity_type = 'anime' 
                      AND m.media_type = 'image'
                  WHERE li.list_id = $1
-                 ORDER BY li.rank ASC NULLS LAST, a.title ASC`,
+                 ORDER BY a.title ASC`,
                 [listId]
             );
             
@@ -393,14 +391,13 @@ class List {
                     
                     const existingAnimeIds = new Set(animeCheck.rows.map(row => row.anime_id));
                     
-                    for (const entry of validEntries) {
+                    for (const [idx, entry] of validEntries.entries()) {
                         if (existingAnimeIds.has(parseInt(entry.anime_id, 10))) {
                             await client.query(
-                                'INSERT INTO list_items (list_id, anime_id, rank, note) VALUES ($1, $2, $3, $4)',
+                                'INSERT INTO list_items (list_id, anime_id, note) VALUES ($1, $2, $3)',
                                 [
                                     listId,
                                     entry.anime_id,
-                                    entry.rank || null,
                                     entry.note || ''
                                 ]
                             );
@@ -518,7 +515,6 @@ class List {
     static async getListItems(listId) {
         const itemsRes = await pool.query(
             `SELECT li.anime_id,
-                    li.rank,
                     li.note,
                     a.title,
                     a.rating,
@@ -530,10 +526,7 @@ class List {
                  AND m.entity_type = 'anime'
                  AND m.media_type = 'cover'
              WHERE li.list_id = $1
-             ORDER BY
-                 CASE WHEN li.rank IS NULL THEN 1 ELSE 0 END,
-                 li.rank ASC,
-                 a.title ASC`,
+             ORDER BY a.title ASC`,
             [listId]
         );
         return itemsRes.rows;

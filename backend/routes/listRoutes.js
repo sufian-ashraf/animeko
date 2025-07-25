@@ -64,6 +64,32 @@ router.get('/search/:keyword', optionalAuth, async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────
+// 4) POST /api/lists             (create a new list)
+// ──────────────────────────────────────────────────
+router.post('/', authenticate, async (req, res) => {
+    try {
+        const { title, animeEntries = [] } = req.body;
+        const userId = req.user.user_id;
+
+        if (!title || title.trim().length === 0) {
+            return res.status(400).json({ error: 'List title is required' });
+        }
+
+        const newList = await List.createList({ 
+            userId, 
+            title: title.trim(), 
+            animeEntries 
+        });
+
+        res.status(201).json(newList);
+        
+    } catch (err) {
+        console.error('[POST /lists] Error:', err);
+        res.status(500).json({ error: 'Failed to create list: ' + err.message });
+    }
+});
+
+// ──────────────────────────────────────────────────
 // 5) GET /api/lists/:id          (get a specific list by ID with its items)
 // ──────────────────────────────────────────────────
 router.get('/:id', optionalAuth, attachVisibilityHelpers, async (req, res) => {
