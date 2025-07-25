@@ -954,7 +954,7 @@ export default function AnimePage() {
                                 <div key={episode.episode_id} className="episode-card">
                                     <div className="episode-header">
                                         <span className="episode-number">Episode {episode.episode_number}</span>
-                                        {episode.premium_only && user && user.subscription_status && (
+                                        {episode.premium_only && (
                                             <span className="premium-indicator">PRO</span>
                                         )}
                                     </div>
