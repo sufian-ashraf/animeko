@@ -224,10 +224,11 @@ CREATE TABLE watch_history
     history_id         SERIAL PRIMARY KEY,
     user_id            INTEGER NOT NULL,
     episode_id         INTEGER NOT NULL,
-    watched_date       TIMESTAMPTZ DEFAULT NOW(),
     timestamp_position INTEGER NOT NULL,
+    watched_percentage DECIMAL(5, 2),
+    last_watched       TIMESTAMPTZ DEFAULT NOW(),
     completed          BOOLEAN     DEFAULT FALSE,
-    watched_percentage DECIMAL(5, 2)
+    UNIQUE(user_id, episode_id)
 );
 
 CREATE TABLE continue_watching
@@ -321,6 +322,20 @@ ALTER TABLE continue_watching
 
 ALTER TABLE continue_watching
     ADD CONSTRAINT fk_continue_watching_episode FOREIGN KEY (episode_id) REFERENCES episode (episode_id) ON DELETE CASCADE;
+-- Add constraints for watch_history
+ALTER TABLE watch_history
+    ADD CONSTRAINT chk_watched_percentage CHECK (watched_percentage >= 0 AND watched_percentage <= 100),
+    ADD CONSTRAINT chk_timestamp_position CHECK (timestamp_position >= 0);
+
+-- Add constraints for continue_watching  
+ALTER TABLE continue_watching
+    ADD CONSTRAINT chk_continue_watched_percentage CHECK (watched_percentage >= 0 AND watched_percentage <= 100),
+    ADD CONSTRAINT chk_continue_timestamp_position CHECK (timestamp_position >= 0);
+
+-- Add useful indexes for performance
+CREATE INDEX idx_continue_watching_user_last_watched ON continue_watching(user_id, last_watched DESC);
+CREATE INDEX idx_watch_history_user_episode ON watch_history(user_id, episode_id);
+CREATE INDEX idx_watch_history_user_recent ON watch_history(user_id, last_watched DESC);
 -- Indexes for performance
 CREATE INDEX idx_anime_title ON anime (title);
 CREATE INDEX idx_anime_company ON anime (company_id);
@@ -334,43 +349,83 @@ CREATE INDEX idx_character_va ON characters (voice_actor_id);
 CREATE INDEX idx_transaction_history_user_id ON transaction_history(user_id);
 CREATE INDEX idx_user_subscription_expiry ON users (subscription_status, subscription_end_date);
 
--- Create a function to manage continue watching entries (keep only 5 latest animes per users)
-CREATE
-OR REPLACE FUNCTION manage_continue_watching()
+-- Create a function to manage continue watching entries
+-- This function enforces the "10 unique anime" constraint and handles episode replacement
+CREATE OR REPLACE FUNCTION manage_continue_watching()
 RETURNS TRIGGER AS $$
 BEGIN
+    -- Update the last_watched timestamp to NOW() for any insert/update
+    NEW.last_watched := NOW();
+    
     -- Get the anime_id for the new episode
-WITH new_anime AS (SELECT anime_id FROM episode WHERE episode_id = NEW.episode_id)
--- Delete older entries for the same anime
-DELETE
-FROM continue_watching
-WHERE user_id = NEW.user_id
-  AND episode_id IN (SELECT e.episode_id
-                     FROM episode e
-                     WHERE e.anime_id = (SELECT anime_id FROM new_anime)
-                       AND e.episode_id
-    != NEW.episode_id );
-
--- Delete oldest entries if count exceeds 5 (counting unique animes)
-DELETE
-FROM continue_watching
-WHERE (user_id, episode_id) IN (SELECT cw.user_id, cw.episode_id
-                                FROM (SELECT DISTINCT
-                                      ON (e.anime_id) cw.user_id, cw.episode_id, cw.last_watched, ROW_NUMBER() OVER ( PARTITION BY cw.user_id ORDER BY cw.last_watched DESC ) as anime_rank
-                                      FROM continue_watching cw JOIN episode e
-                                      ON e.episode_id = cw.episode_id
-                                      WHERE cw.user_id = NEW.user_id) cw
-                                WHERE anime_rank > 5);
-
-RETURN NEW;
+    DECLARE
+        new_anime_id INTEGER;
+    BEGIN
+        SELECT anime_id INTO new_anime_id 
+        FROM episode 
+        WHERE episode_id = NEW.episode_id;
+        
+        -- Remove any existing episodes from the same anime for this user
+        DELETE FROM continue_watching 
+        WHERE user_id = NEW.user_id 
+        AND episode_id IN (
+            SELECT e.episode_id 
+            FROM episode e 
+            WHERE e.anime_id = new_anime_id 
+            AND e.episode_id != NEW.episode_id
+        );
+        
+        -- After inserting/updating this record, ensure we only keep 10 most recent anime
+        -- This will be handled in an AFTER trigger to avoid conflicts
+    END;
+    
+    RETURN NEW;
 END;
 $$
 LANGUAGE plpgsql;
 
--- Create trigger for continue watching management
+-- Create a function to enforce the 10 anime limit after insert/update
+CREATE OR REPLACE FUNCTION enforce_continue_watching_limit()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Delete oldest anime entries if we exceed 10 unique anime for this user
+    WITH anime_rankings AS (
+        SELECT DISTINCT ON (e.anime_id) 
+            cw.user_id, 
+            cw.episode_id, 
+            e.anime_id,
+            cw.last_watched,
+            ROW_NUMBER() OVER (
+                PARTITION BY cw.user_id 
+                ORDER BY cw.last_watched DESC
+            ) as anime_rank
+        FROM continue_watching cw
+        JOIN episode e ON cw.episode_id = e.episode_id
+        WHERE cw.user_id = NEW.user_id
+    )
+    DELETE FROM continue_watching 
+    WHERE (user_id, episode_id) IN (
+        SELECT user_id, episode_id 
+        FROM anime_rankings 
+        WHERE anime_rank > 10
+    );
+    
+    RETURN NEW;
+END;
+$$
+LANGUAGE plpgsql;
+
+-- Create triggers for continue watching management
+DROP TRIGGER IF EXISTS tr_manage_continue_watching ON continue_watching;
+DROP TRIGGER IF EXISTS tr_enforce_continue_watching_limit ON continue_watching;
+
 CREATE TRIGGER tr_manage_continue_watching
-    AFTER INSERT OR
-UPDATE ON continue_watching FOR EACH ROW EXECUTE FUNCTION manage_continue_watching();
+    BEFORE INSERT OR UPDATE ON continue_watching 
+    FOR EACH ROW EXECUTE FUNCTION manage_continue_watching();
+
+CREATE TRIGGER tr_enforce_continue_watching_limit
+    AFTER INSERT OR UPDATE ON continue_watching 
+    FOR EACH ROW EXECUTE FUNCTION enforce_continue_watching_limit();
 
 
 

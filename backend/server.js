@@ -25,6 +25,7 @@ import animeLibraryRoutes from "./routes/animeLibraryRoutes.js";
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import premiumRoutes from './routes/premiumRoutes.js';
 import episodeRoutes from './routes/episodeRoutes.js';
+import watchProgressRoutes from './routes/watchProgressRoutes.js';
 import subscriptionExpiryJob from './cron/subscriptionExpiryJob.js';
 import searchRoutes from './routes/searchRoutes.js';
 
@@ -70,6 +71,7 @@ app.use('/api/anime-library', animeLibraryRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api', premiumRoutes);
 app.use('/api/episodes', episodeRoutes);
+app.use('/api/watch', watchProgressRoutes);
 
 // Test database connection
     pool.connect()

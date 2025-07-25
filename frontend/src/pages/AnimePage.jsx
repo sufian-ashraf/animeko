@@ -64,6 +64,7 @@ export default function AnimePage() {
     const [episodesList, setEpisodesList] = useState([]);
     const [episodesLoading, setEpisodesLoading] = useState(false);
     const [episodesError, setEpisodesError] = useState(null);
+    const [episodeProgress, setEpisodeProgress] = useState({});
 
     // Tab state
     const [activeTab, setActiveTab] = useState('details'); // 'details' or 'episodes'
@@ -453,24 +454,54 @@ export default function AnimePage() {
         setEpisodesLoading(true);
         setEpisodesError(null);
         
-        fetch(`/api/episodes/anime/${animeId}`)
-            .then((r) => {
+        const fetchEpisodes = async () => {
+            try {
+                // Fetch episodes
+                const r = await fetch(`/api/episodes/anime/${animeId}`);
                 if (!r.ok) throw new Error(`Status ${r.status}`);
-                return r.json();
-            })
-            .then((episodesData) => {
+                
+                const episodesData = await r.json();
                 const arr = Array.isArray(episodesData) ? episodesData : [];
                 setEpisodesList(arr);
-            })
-            .catch((err) => {
+
+                // Fetch episode progress for authenticated users
+                if (user && token && arr.length > 0) {
+                    try {
+                        const progressResponse = await fetch(`/api/watch/history?animeId=${animeId}`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        if (progressResponse.ok) {
+                            const progressData = await progressResponse.json();
+                            const progressMap = {};
+                            
+                            progressData.forEach(item => {
+                                progressMap[item.episode_id] = {
+                                    timestamp_position: item.timestamp_position,
+                                    watched_percentage: item.watched_percentage,
+                                    completed: item.completed
+                                };
+                            });
+                            
+                            setEpisodeProgress(progressMap);
+                        }
+                    } catch (progressErr) {
+                        console.error('Error fetching episode progress:', progressErr);
+                    }
+                }
+            } catch (err) {
                 console.error('Fetch episodes error:', err);
                 setEpisodesError('Failed to load episodes');
                 setEpisodesList([]);
-            })
-            .finally(() => {
+            } finally {
                 setEpisodesLoading(false);
-            });
-    }, [animeId, activeTab]);
+            }
+        };
+
+        fetchEpisodes();
+    }, [animeId, activeTab, user, token]);
 
     // Handle star‐click & comment change
     const handleStarClick = (starIndex) => {
@@ -950,17 +981,39 @@ export default function AnimePage() {
                         <div className="error">{episodesError}</div>
                     ) : episodesList.length > 0 ? (
                         <div className="episodes-grid">
-                            {episodesList.map((episode) => (
+                            {episodesList.map((episode) => {
+                                const progress = episodeProgress[episode.episode_id];
+                                
+                                return (
                                 <div key={episode.episode_id} className="episode-card">
                                     <div className="episode-header">
                                         <span className="episode-number">Episode {episode.episode_number}</span>
                                         {episode.premium_only && (
                                             <span className="premium-indicator">PRO</span>
                                         )}
+                                        {progress && progress.completed && (
+                                            <span className="completed-indicator">✓</span>
+                                        )}
                                     </div>
                                     {episode.title && (
                                         <h4 className="episode-title">{episode.title}</h4>
                                     )}
+                                    
+                                    {/* Progress Bar */}
+                                    {progress && progress.watched_percentage > 0 && (
+                                        <div className="episode-progress">
+                                            <div className="progress-bar">
+                                                <div 
+                                                    className="progress-fill" 
+                                                    style={{ width: `${progress.watched_percentage}%` }}
+                                                ></div>
+                                            </div>
+                                            <span className="progress-text">
+                                                {progress.completed ? 'Completed' : `${Math.round(progress.watched_percentage)}% watched`}
+                                            </span>
+                                        </div>
+                                    )}
+                                    
                                     <div className="episode-details">
                                         <div className="episode-detail">
                                             <span className="detail-label">Duration:</span>
@@ -982,13 +1035,19 @@ export default function AnimePage() {
                                                     className="watch-button"
                                                     onClick={() => navigate(`/anime/${animeId}/episode/${episode.episode_number}`)}
                                                 >
-                                                    ▶ Watch Episode
+                                                    {progress && progress.watched_percentage > 0 && !progress.completed 
+                                                        ? '⏯ Continue Watching' 
+                                                        : progress && progress.completed 
+                                                        ? '🔄 Watch Again' 
+                                                        : '▶ Watch Episode'
+                                                    }
                                                 </button>
                                             )}
                                         </div>
                                     )}
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     ) : (
                         <div className="no-episodes">

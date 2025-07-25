@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import YouTubePlayer from '../components/YouTubePlayer';
 import '../styles/EpisodeWatchPage.css';
 
 function EpisodeWatchPage() {
@@ -13,7 +14,7 @@ function EpisodeWatchPage() {
     const [episodes, setEpisodes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
+    const [initialPosition, setInitialPosition] = useState(0);
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -63,6 +64,11 @@ function EpisodeWatchPage() {
                 }
 
                 setEpisode(currentEpisode);
+
+                // Fetch user's progress for this episode if authenticated
+                if (user && token) {
+                    await fetchEpisodeProgress(currentEpisode.episode_id);
+                }
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -71,7 +77,41 @@ function EpisodeWatchPage() {
         };
 
         fetchData();
-    }, [animeId, episodeNumber, user]);
+    }, [animeId, episodeNumber, user, token]);
+
+    const fetchEpisodeProgress = async (episodeId) => {
+        if (!user || !token) return;
+        
+        try {
+            const response = await fetch(`/api/watch/progress/${episodeId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const progress = await response.json();
+                if (progress.timestamp_position > 0) {
+                    setInitialPosition(progress.timestamp_position);
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching episode progress:', err);
+        }
+    };
+
+    const handleProgress = (timestampPosition, watchedPercentage, completed) => {
+        console.log(`Progress: ${timestampPosition}s (${watchedPercentage.toFixed(1)}%)`, completed ? '- COMPLETED' : '');
+    };
+
+    const handleComplete = () => {
+        console.log('Episode completed!');
+        // Optionally auto-navigate to next episode
+        const nextEpisode = getNextEpisode();
+        if (nextEpisode && window.confirm('Episode completed! Watch next episode?')) {
+            handleEpisodeChange(nextEpisode.episode_number);
+        }
+    };
 
     const handleEpisodeChange = (newEpisodeNumber) => {
         navigate(`/anime/${animeId}/episode/${newEpisodeNumber}`);
@@ -166,13 +206,13 @@ function EpisodeWatchPage() {
             {/* Video Player */}
             <div className="video-section">
                 <div className="video-container">
-                    <iframe
-                        src={`https://www.youtube.com/embed/${episode.episode_url_yt_id}?autoplay=1&controls=1&modestbranding=1&rel=0`}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        title={`${anime?.title} - Episode ${episodeNumber}`}
-                    ></iframe>
+                    <YouTubePlayer
+                        videoId={episode.episode_url_yt_id}
+                        episodeId={episode.episode_id}
+                        onProgress={handleProgress}
+                        onComplete={handleComplete}
+                        initialPosition={initialPosition}
+                    />
                 </div>
             </div>
 

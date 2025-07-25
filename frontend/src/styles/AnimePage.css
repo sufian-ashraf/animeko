@@ -213,6 +213,44 @@
     letter-spacing: 0.5px;
 }
 
+.completed-indicator {
+    background: #4caf50;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 50%;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+/* Episode Progress */
+.episode-progress {
+    margin: 0.5rem 0;
+    padding: 0.5rem 0;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background-color: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #61dafb, #21a1f1);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.75rem;
+    color: #666;
+    font-weight: 500;
+}
+
 .episode-title {
     margin: 0 0 0.75rem 0;
     font-size: 1rem;
@@ -543,6 +581,20 @@
 
 .dark-mode .detail-value {
     color: #eee;
+}
+
+/* Dark mode for episode progress */
+.dark-mode .progress-bar {
+    background-color: #444;
+}
+
+.dark-mode .progress-text {
+    color: #bbb;
+}
+
+.dark-mode .completed-indicator {
+    background: #4caf50;
+    color: white;
 }
 
 /* Dark mode for episode actions */

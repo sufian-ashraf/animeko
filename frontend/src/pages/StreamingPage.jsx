@@ -2,6 +2,7 @@
 import React, {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import AnimeCard from '../components/AnimeCard';
+import ContinueWatching from '../components/ContinueWatching';
 import { useAuth } from '../contexts/AuthContext';
 
 // import the extracted styles (reusing Home styles)
@@ -71,6 +72,9 @@ function StreamingPage() {
                 <h2>Streaming Anime</h2>
                 <p>Watch your favorite anime series and movies online!</p>
             </div>
+
+            {/* Continue Watching Section */}
+            {user && <ContinueWatching limit={10} />}
 
             <section className="results-section">
                 <h3>Available for Streaming</h3>
