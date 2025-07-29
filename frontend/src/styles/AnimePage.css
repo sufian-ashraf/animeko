@@ -1461,3 +1461,15 @@
     height: 100%; /* Adjust as needed */
     width: 100%; /* Adjust as needed */
 }
+
+/* Review reaction buttons styling adjustments */
+.review-body {
+    padding-left: 2.5rem !important; /* indent so it doesn't overlap avatar */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+}
+
+.review-content {
+    margin-bottom: 0.5rem !important;
+}

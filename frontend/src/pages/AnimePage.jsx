@@ -8,6 +8,7 @@ import defaultAvatar from '../images/default_avatar.svg';
 import ListCard from '../components/ListCard';
 import TrailerModal from '../components/TrailerModal';
 import RecommendationModal from '../components/RecommendationModal';
+import ReviewReactionButtons from '../components/ReviewReactionButtons';
 import '../styles/AnimePage.css';
 
 const roundToHalf = (num) => Math.round(num * 2) / 2;
@@ -43,6 +44,9 @@ export default function AnimePage() {
     const [reviewError, setReviewError] = useState(null);
     const [submittingReview, setSubmittingReview] = useState(false);
     const [showReviewForm, setShowReviewForm] = useState(false);
+    
+    // Review reactions state
+    const [userReactions, setUserReactions] = useState({});
     
     // Rating and rank state
     const [averageRating, setAverageRating] = useState(null);
@@ -415,12 +419,13 @@ export default function AnimePage() {
     // 4) Fetch reviews
     // ───────────────────────────────────────────────────
     useEffect(() => {
-        fetch(`/api/anime/${animeId}/reviews`)
-            .then((r) => {
-                if (!r.ok) throw new Error(`Status ${r.status}`);
-                return r.json();
-            })
-            .then((allReviews) => {
+        const fetchReviewsAndReactions = async () => {
+            try {
+                // Fetch reviews
+                const reviewsResponse = await fetch(`/api/anime/${animeId}/reviews`);
+                if (!reviewsResponse.ok) throw new Error(`Status ${reviewsResponse.status}`);
+                
+                const allReviews = await reviewsResponse.json();
                 const arr = Array.isArray(allReviews) ? allReviews : [];
                 setReviews(arr);
 
@@ -430,13 +435,50 @@ export default function AnimePage() {
                     if (mine) {
                         setReviewForm({rating: mine.rating, content: mine.content});
                     }
+
+                    // Fetch user reactions for all reviews if user is logged in
+                    if (token) {
+                        const reviewIds = arr.map(r => r.review_id);
+                        const reactionsResponse = await fetch('/api/reviews/user-reactions', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ reviewIds })
+                        });
+
+                        if (reactionsResponse.ok) {
+                            const reactionsData = await reactionsResponse.json();
+                            setUserReactions(reactionsData.data.userReactions || {});
+                        }
+                    }
+                } else if (token && arr.length > 0) {
+                    // User is logged in but no reviews yet, still fetch reactions
+                    const reviewIds = arr.map(r => r.review_id);
+                    const reactionsResponse = await fetch('/api/reviews/user-reactions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ reviewIds })
+                    });
+
+                    if (reactionsResponse.ok) {
+                        const reactionsData = await reactionsResponse.json();
+                        setUserReactions(reactionsData.data.userReactions || {});
+                    }
                 }
-            })
-            .catch((err) => {
+            } catch (err) {
                 console.error('Fetch reviews error:', err);
                 setReviews([]);
-            });
-    }, [animeId, user]);
+                setUserReactions({});
+            }
+        };
+
+        fetchReviewsAndReactions();
+    }, [animeId, user, token]);
 
     // ───────────────────────────────────────────────────
     // 5) Fetch episodes (only when episodes tab is active)
@@ -547,7 +589,26 @@ export default function AnimePage() {
             // Re‐fetch all reviews
             const allRes = await fetch(`/api/anime/${animeId}/reviews`);
             const allData = await allRes.json();
-            setReviews(Array.isArray(allData) ? allData : []);
+            const arr = Array.isArray(allData) ? allData : [];
+            setReviews(arr);
+
+            // Re-fetch user reactions for the updated reviews
+            if (token && arr.length > 0) {
+                const reviewIds = arr.map(r => r.review_id);
+                const reactionsResponse = await fetch('/api/reviews/user-reactions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reviewIds })
+                });
+
+                if (reactionsResponse.ok) {
+                    const reactionsData = await reactionsResponse.json();
+                    setUserReactions(reactionsData.data.userReactions || {});
+                }
+            }
         } catch (err) {
             console.error('Submit review error:', err);
             setReviewError(err.message || 'Failed to save review');
@@ -591,13 +652,52 @@ export default function AnimePage() {
             // Re-fetch all reviews
             const allRes = await fetch(`/api/anime/${animeId}/reviews`);
             const allData = await allRes.json();
-            setReviews(Array.isArray(allData) ? allData : []);
+            const arr = Array.isArray(allData) ? allData : [];
+            setReviews(arr);
+
+            // Re-fetch user reactions for the updated reviews
+            if (token && arr.length > 0) {
+                const reviewIds = arr.map(r => r.review_id);
+                const reactionsResponse = await fetch('/api/reviews/user-reactions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reviewIds })
+                });
+
+                if (reactionsResponse.ok) {
+                    const reactionsData = await reactionsResponse.json();
+                    setUserReactions(reactionsData.data.userReactions || {});
+                }
+            } else {
+                setUserReactions({});
+            }
         } catch (err) {
             console.error('Delete review error:', err);
             setReviewError(err.message || 'Failed to delete review');
         } finally {
             setReviewLoading(false);
         }
+    };
+
+    // Handle reaction changes from review reaction buttons
+    const handleReactionChange = ({ reviewId, likeCount, dislikeCount, userReaction }) => {
+        // Update reviews state with new counts
+        setReviews(prevReviews => 
+            prevReviews.map(review => 
+                review.review_id === reviewId 
+                    ? { ...review, like_count: likeCount, dislike_count: dislikeCount }
+                    : review
+            )
+        );
+
+        // Update user reactions state
+        setUserReactions(prevReactions => ({
+            ...prevReactions,
+            [reviewId]: userReaction
+        }));
     };
 
     if (error) return <div className="anime-error">{error}</div>;
@@ -983,6 +1083,15 @@ export default function AnimePage() {
                                   {Array.from({length: 5 - r.rating}, (_, idx) => (<span key={idx}>☆</span>))}
                               </span>
                                         <p className="review-content">{r.content}</p>
+                                        
+                                        {/* Review Reaction Buttons */}
+                                        <ReviewReactionButtons
+                                            reviewId={r.review_id}
+                                            initialLikes={r.like_count || 0}
+                                            initialDislikes={r.dislike_count || 0}
+                                            userReaction={userReactions[r.review_id] || null}
+                                            onReactionChange={handleReactionChange}
+                                        />
                                     </div>
                                 </div>)))}
                         </div>

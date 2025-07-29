@@ -29,6 +29,7 @@ import watchProgressRoutes from './routes/watchProgressRoutes.js';
 import subscriptionExpiryJob from './cron/subscriptionExpiryJob.js';
 import searchRoutes from './routes/searchRoutes.js';
 import recommendationRoutes from './routes/recommendationRoutes.js';
+import reviewReactionRoutes from './routes/reviewReactionRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -64,6 +65,7 @@ app.use('/api', companyRoutes);
 app.use('/api', friendRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api', reviewRoutes);
+app.use('/api/reviews', reviewReactionRoutes);
 app.use('/api/lists', listRoutes);
 app.use('/api', characterRoutes);
 app.use('/api', VARoutes);

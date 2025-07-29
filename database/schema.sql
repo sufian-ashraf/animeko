@@ -119,6 +119,8 @@ CREATE TABLE review
     content    TEXT    NOT NULL,
     rating     INTEGER CHECK (rating >= 1 AND rating <= 5),
     created_at TIMESTAMPTZ DEFAULT NOW(),
+    like_count INTEGER DEFAULT 0 NOT NULL,
+    dislike_count INTEGER DEFAULT 0 NOT NULL,
     CONSTRAINT fk_review_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
     CONSTRAINT fk_review_anime FOREIGN KEY (anime_id) REFERENCES anime (anime_id) ON DELETE CASCADE,
     CONSTRAINT unique_user_anime_review UNIQUE (user_id, anime_id)
@@ -252,6 +254,16 @@ CREATE TABLE anime_recommendations (
     UNIQUE (sender_id, receiver_id, anime_id),
     CHECK (sender_id != receiver_id)
 );
+
+CREATE TABLE review_reactions (
+    reaction_id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    review_id INTEGER NOT NULL REFERENCES review(review_id) ON DELETE CASCADE,
+    reaction_type VARCHAR(10) NOT NULL CHECK (reaction_type IN ('like', 'dislike')),
+    reacted_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (user_id, review_id)
+);
+
 
 -- Add foreign key constraints with CASCADE DELETE fixes
 ALTER TABLE users

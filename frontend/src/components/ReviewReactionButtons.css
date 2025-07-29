@@ -1,0 +1,144 @@
+.review-reaction-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.reaction-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    background-color: transparent;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 60px;
+    justify-content: center;
+}
+
+.reaction-btn:hover:not(:disabled) {
+    background-color: #f5f5f5;
+    border-color: #ccc;
+}
+
+.reaction-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.reaction-btn svg {
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.like-btn {
+    border-color: #22c55e;
+    color: #22c55e;
+}
+
+.like-btn:hover:not(:disabled) {
+    background-color: #f0fdf4;
+    border-color: #16a34a;
+}
+
+.like-btn.active {
+    background-color: #22c55e;
+    color: white;
+    border-color: #16a34a;
+}
+
+.like-btn.active:hover:not(:disabled) {
+    background-color: #16a34a;
+}
+
+.dislike-btn {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.dislike-btn:hover:not(:disabled) {
+    background-color: #fef2f2;
+    border-color: #dc2626;
+}
+
+.dislike-btn.active {
+    background-color: #ef4444;
+    color: white;
+    border-color: #dc2626;
+}
+
+.dislike-btn.active:hover:not(:disabled) {
+    background-color: #dc2626;
+}
+
+.reaction-count {
+    font-weight: 500;
+    font-size: 13px;
+    min-width: 16px;
+    text-align: center;
+}
+
+/* Dark mode styles */
+body.dark-mode .reaction-btn {
+    border-color: #555;
+    color: #ccc;
+}
+
+body.dark-mode .reaction-btn:hover:not(:disabled) {
+    background-color: #333;
+    border-color: #666;
+}
+
+body.dark-mode .like-btn {
+    border-color: #22c55e;
+    color: #22c55e;
+}
+
+body.dark-mode .like-btn:hover:not(:disabled) {
+    background-color: rgba(34, 197, 94, 0.1);
+}
+
+body.dark-mode .like-btn.active {
+    background-color: #22c55e;
+    color: white;
+}
+
+body.dark-mode .dislike-btn {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+body.dark-mode .dislike-btn:hover:not(:disabled) {
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+body.dark-mode .dislike-btn.active {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .review-reaction-buttons {
+        gap: 8px;
+    }
+    
+    .reaction-btn {
+        padding: 4px 8px;
+        font-size: 12px;
+        min-width: 50px;
+    }
+    
+    .reaction-btn svg {
+        font-size: 14px;
+    }
+    
+    .reaction-count {
+        font-size: 12px;
+    }
+}

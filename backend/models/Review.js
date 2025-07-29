@@ -39,7 +39,9 @@ class Review {
                    m.url AS avatar_url,
                    r.content,
                    r.rating,
-                   r.created_at
+                   r.created_at,
+                   r.like_count,
+                   r.dislike_count
             FROM review AS r
                      LEFT JOIN users AS u
                                ON r.user_id = u.user_id
