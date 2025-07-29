@@ -6,8 +6,10 @@ class User {
     // Search users by username (partial match) with visibility filtering
     static async getAll({ username } = {}, currentUserId = null) {
         let query = `
-            SELECT DISTINCT u.user_id as id, u.username, u.display_name, u.email, u.is_admin, u.visibility_level
+            SELECT DISTINCT u.user_id as id, u.username, u.display_name, u.email, u.is_admin, u.visibility_level,
+                   m.url as profile_image_url
             FROM users u
+            LEFT JOIN media m ON u.user_id = m.entity_id AND m.entity_type = 'user' AND m.media_type = 'image'
             WHERE u.is_admin = FALSE
         `;
         const params = [];
@@ -18,23 +20,22 @@ class User {
             params.push(`%${username}%`);
         }
         
-        // Apply visibility filtering
+        // Apply visibility filtering - now includes private profiles in search results
         if (currentUserId) {
             query += ` AND (
-                u.visibility_level = 'public' 
+                u.visibility_level IN ('public', 'private')
                 OR u.user_id = $${paramCount++}
                 OR (u.visibility_level = 'friends_only' AND EXISTS (
                     SELECT 1 FROM friendship f 
-                    WHERE ((f.requester_id = u.user_id AND f.addressee_id = $${paramCount}) 
-                           OR (f.requester_id = $${paramCount} AND f.addressee_id = u.user_id))
+                    WHERE ((f.requester_id = u.user_id AND f.addressee_id = $${paramCount++}) 
+                           OR (f.requester_id = $${paramCount++} AND f.addressee_id = u.user_id))
                     AND f.status = 'accepted'
                 ))
             )`;
             params.push(currentUserId, currentUserId, currentUserId);
-            paramCount += 3;
         } else {
-            // Not logged in - only show public profiles
-            query += ` AND u.visibility_level = 'public'`;
+            // Not logged in - show public and private profiles in search
+            query += ` AND u.visibility_level IN ('public', 'private')`;
         }
         
         query += ' ORDER BY u.username';

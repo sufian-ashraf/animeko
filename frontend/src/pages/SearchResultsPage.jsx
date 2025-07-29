@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import AnimeCard from '../components/AnimeCard';
 import ListCard from '../components/ListCard';
 import CastCard from '../components/CastCard';
+import UserSearchCard from '../components/UserSearchCard';
 import '../styles/Home.css'; // Reusing Home.css for now, can create a specific one later
 
 
@@ -42,6 +43,13 @@ function SearchResultsPage() {
                 params.delete('sortOrder');
             }
             try {
+                // Check if user search requires authentication
+                if (type === 'user' && !token) {
+                    setError('Please log in to search for other users');
+                    setResults([]);
+                    return;
+                }
+
                 // Prepare headers - include auth token if available
                 const headers = {
                     'Content-Type': 'application/json'
@@ -54,7 +62,14 @@ function SearchResultsPage() {
                 const response = await fetch(`/api/search?${params.toString()}`, {
                     headers: headers
                 });
-                if (!response.ok) throw new Error(`Status ${response.status}`);
+                
+                if (!response.ok) {
+                    if (response.status === 401 && type === 'user') {
+                        throw new Error('Please log in to search for other users');
+                    }
+                    throw new Error(`Status ${response.status}`);
+                }
+                
                 const data = await response.json();
                 setResults(data);
             } catch (err) {
@@ -122,12 +137,9 @@ function SearchResultsPage() {
         }
         if (type === 'user') {
             return (
-                <div className="anime-grid">
+                <div className="user-search-results">
                     {results.map(user => (
-                        <div key={user.id} className="simple-card">
-                            <h4><Link to={`/profile/${user.id}`} className="username-link">{user.username}</Link></h4>
-                            {user.display_name && <p>Display: {user.display_name}</p>}
-                        </div>
+                        <UserSearchCard key={user.id} user={user} />
                     ))}
                 </div>
             );

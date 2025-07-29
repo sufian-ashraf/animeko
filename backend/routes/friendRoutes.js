@@ -199,6 +199,31 @@ router.get('/users/debug', authenticate, async (req, res) => {
 });
 
 /**
+ * Get friendship status between current user and another user
+ * GET /api/friends/status/:userId
+ */
+router.get('/friends/status/:userId', authenticate, async (req, res) => {
+    const currentUserId = req.user.user_id;
+    
+    try {
+        const targetUserId = parseIntParam(req.params.userId, 'userId');
+        
+        if (currentUserId === targetUserId) {
+            return res.json({ status: 'self' });
+        }
+        
+        const status = await Friendship.getFriendshipStatus(currentUserId, targetUserId);
+        res.json({ status });
+    } catch (err) {
+        console.error('Error getting friendship status:', err);
+        if (err.message && err.message.includes('Invalid')) {
+            return res.status(400).json({ message: err.message });
+        }
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
  * Unfriend someone
  * DELETE /api/friends/:friendId
  */

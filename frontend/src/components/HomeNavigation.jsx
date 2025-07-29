@@ -12,6 +12,13 @@ function Navigation() {
   const navigate = useNavigate();
   const [searchTitle, setSearchTitle] = useState("");
   const [searchType, setSearchType] = useState("anime"); // New state for search type
+
+  // Reset search type to anime if user logs out and was searching users
+  useEffect(() => {
+    if (!user && searchType === 'user') {
+      setSearchType('anime');
+    }
+  }, [user, searchType]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
@@ -171,7 +178,7 @@ function Navigation() {
                   <option value="anime">Anime</option>
                   <option value="character">Character</option>
                   <option value="va">Voice Actor</option>
-                  <option value="user">User</option>
+                  {user && <option value="user">User</option>}
                   <option value="list">List</option>
                 </select>
                 <input

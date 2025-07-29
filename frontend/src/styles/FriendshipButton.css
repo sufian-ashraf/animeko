@@ -1,0 +1,114 @@
+/* Friendship Button Styles */
+.friendship-button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.friendship-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.friendship-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.friendship-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Size variants */
+.friendship-btn.small {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+.friendship-btn.large {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+/* Action-specific styles */
+.friendship-btn.add-friend {
+    background: #007bff;
+    color: white;
+}
+
+.friendship-btn.add-friend:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.friendship-btn.cancel-request {
+    background: #dc3545;
+    color: white;
+}
+
+.friendship-btn.cancel-request:hover:not(:disabled) {
+    background: #c82333;
+}
+
+.friendship-btn.accept-request {
+    background: #28a745;
+    color: white;
+}
+
+.friendship-btn.accept-request:hover:not(:disabled) {
+    background: #1e7e34;
+}
+
+.friendship-btn.reject-request {
+    background: #dc3545;
+    color: white;
+}
+
+.friendship-btn.reject-request:hover:not(:disabled) {
+    background: #c82333;
+}
+
+.friendship-btn.unfriend {
+    background: #dc3545;
+    color: white;
+}
+
+.friendship-btn.unfriend:hover:not(:disabled) {
+    background: #c82333;
+}
+
+.friendship-error {
+    color: #dc3545;
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 0.25rem;
+}
+
+/* Dark mode styles */
+body.dark-mode .friendship-error,
+[data-theme="dark"] .friendship-error {
+    color: #ff6b6b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .friendship-actions {
+        flex-direction: column;
+    }
+    
+    .friendship-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+}

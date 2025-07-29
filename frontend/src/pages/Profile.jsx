@@ -4,6 +4,7 @@ import {Link, useNavigate, useParams} from 'react-router-dom';
 import {useAuth} from '../contexts/AuthContext';
 import VisibilityToggle from '../components/VisibilityToggle';
 import VisibilityRestriction from '../components/VisibilityRestriction';
+import FriendshipButton from '../components/FriendshipButton';
 import { fetchUserProfile, fetchUserFavorites, VisibilityError, NotFoundError } from '../utils/api';
 import placeholderImg from '../images/image_not_available.jpg';
 import defaultAvatar from '../images/default_avatar.svg';
@@ -81,9 +82,14 @@ export default function Profile() {
                     try {
                         const userData = await fetchUserProfile(userId);
                         setProfileUser(userData);
+                        
+                        // If profile is restricted, clear error as we'll show minimal info
+                        if (userData.restricted) {
+                            setError('');
+                        }
                     } catch (err) {
                         if (err instanceof VisibilityError) {
-                            // Handle visibility restriction gracefully
+                            // This shouldn't happen anymore since backend returns minimal data
                             setError('visibility_restricted');
                         } else if (err instanceof NotFoundError) {
                             setError('User not found');
@@ -105,7 +111,7 @@ export default function Profile() {
 
     // Fetch favorites for the profile being viewed (with visibility checks)
     useEffect(() => {
-        if (!viewingUserId || error) return;
+        if (!viewingUserId) return;
         
         const fetchFavorites = async () => {
             setFavoritesLoading(true);
@@ -143,7 +149,7 @@ export default function Profile() {
         };
         
         fetchFavorites();
-    }, [viewingUserId, isOwnProfile, token, error]);
+    }, [viewingUserId, isOwnProfile, token]);
 
     // Profile edit handlers
     const handleChange = (e) => {
@@ -309,48 +315,80 @@ export default function Profile() {
                     </form>
                 ) : (
                     <div className="profile-info">
-                        <p>
-                            <span className="profile-field-label">Username:</span>
-                            <span className="profile-field-value">{profileUser.username}</span>
-                        </p>
-                        {!isOwnProfile || (
-                            <p>
-                                <span className="profile-field-label">Email:</span>
-                                <span className="profile-field-value">{profileUser.email}</span>
-                            </p>
+                        {profileUser.restricted ? (
+                            // Show minimal info for restricted profiles
+                            <>
+                                <p>
+                                    <span className="profile-field-label">Username:</span>
+                                    <span className="profile-field-value">{profileUser.username}</span>
+                                </p>
+                                <p>
+                                    <span className="profile-field-label">Display Name:</span>
+                                    <span className="profile-field-value">{profileUser.display_name || 'Not set'}</span>
+                                </p>
+                                <p>
+                                    <span className="profile-field-label">Bio:</span>
+                                    <span className="profile-field-value">{profileUser.profile_bio || 'No bio provided'}</span>
+                                </p>
+                                <div className="visibility-notice">
+                                    <p className="restricted-message">
+                                        🔒 {profileUser.message}
+                                    </p>
+                                </div>
+                                <div className="profile-buttons">
+                                    {currentUser && <FriendshipButton targetUserId={viewingUserId} />}
+                                </div>
+                            </>
+                        ) : (
+                            // Show full info for accessible profiles
+                            <>
+                                <p>
+                                    <span className="profile-field-label">Username:</span>
+                                    <span className="profile-field-value">{profileUser.username}</span>
+                                </p>
+                                {isOwnProfile && (
+                                    <p>
+                                        <span className="profile-field-label">Email:</span>
+                                        <span className="profile-field-value">{profileUser.email}</span>
+                                    </p>
+                                )}
+                                <p>
+                                    <span className="profile-field-label">Display Name:</span>
+                                    <span className="profile-field-value">{profileUser.display_name || 'Not set'}</span>
+                                </p>
+                                <p>
+                                    <span className="profile-field-label">Bio:</span>
+                                    <span className="profile-field-value">{profileUser.profile_bio || 'No bio provided'}</span>
+                                </p>
+                                {isOwnProfile && (
+                                    <p>
+                                        <span className="profile-field-label">Profile Visibility:</span>
+                                        <span className="profile-field-value">
+                                            {(profileUser.visibility_level === 'public' || !profileUser.visibility_level) && '🌍 Public'}
+                                            {profileUser.visibility_level === 'friends_only' && '👥 Friends Only'}
+                                            {profileUser.visibility_level === 'private' && '🔒 Private'}
+                                        </span>
+                                    </p>
+                                )}
+                                <p>
+                                    <span className="profile-field-label">Member Since:</span>
+                                    <span className="profile-field-value">{new Date(profileUser.created_at).toLocaleDateString()}</span>
+                                </p>
+                                <div className="profile-buttons">
+                                    {isOwnProfile && (
+                                        <button onClick={() => setIsEditing(true)}>
+                                            Edit Profile
+                                        </button>
+                                    )}
+                                    <button onClick={() => navigate(isOwnProfile ? '/anime-library' : `/anime-library/${viewingUserId}`)}>
+                                        Anime Library
+                                    </button>
+                                    {!isOwnProfile && (
+                                        <FriendshipButton targetUserId={viewingUserId} />
+                                    )}
+                                </div>
+                            </>
                         )}
-                        <p>
-                            <span className="profile-field-label">Display Name:</span>
-                            <span className="profile-field-value">{profileUser.display_name || 'Not set'}</span>
-                        </p>
-                        <p>
-                            <span className="profile-field-label">Bio:</span>
-                            <span className="profile-field-value">{profileUser.profile_bio || 'No bio provided'}</span>
-                        </p>
-                        {isOwnProfile && (
-                            <p>
-                                <span className="profile-field-label">Profile Visibility:</span>
-                                <span className="profile-field-value">
-                                    {(profileUser.visibility_level === 'public' || !profileUser.visibility_level) && '🌍 Public'}
-                                    {profileUser.visibility_level === 'friends_only' && '👥 Friends Only'}
-                                    {profileUser.visibility_level === 'private' && '🔒 Private'}
-                                </span>
-                            </p>
-                        )}
-                        <p>
-                            <span className="profile-field-label">Member Since:</span>
-                            <span className="profile-field-value">{new Date(profileUser.created_at).toLocaleDateString()}</span>
-                        </p>
-                        <div className="profile-buttons">
-                            {isOwnProfile && (
-                                <button onClick={() => setIsEditing(true)}>
-                                    Edit Profile
-                                </button>
-                            )}
-                            <button onClick={() => navigate(isOwnProfile ? '/anime-library' : `/anime-library/${viewingUserId}`)}>
-                                Anime Library
-                            </button>
-                        </div>
                     </div>
                 )}
             </div>

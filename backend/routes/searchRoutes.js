@@ -78,6 +78,10 @@ router.get('/', optionalAuth, async (req, res) => {
         results = await VoiceActor.getAll({ name: req.query.name });
         break;
       case 'user':
+        // Only authenticated users can search for other users
+        if (!req.user) {
+          return res.status(401).json({ error: 'Authentication required to search users' });
+        }
         const currentUserIdForUsers = req.user?.id || null;
         results = await User.getAll({ username: req.query.username }, currentUserIdForUsers);
         break;

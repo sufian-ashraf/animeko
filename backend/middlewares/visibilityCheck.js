@@ -78,6 +78,8 @@ export function sanitizeProfileData(profileData, hasAccess, isOwner) {
             user_id: profileData.user_id,
             username: profileData.username,
             display_name: profileData.display_name,
+            profile_bio: profileData.profile_bio, // Always show profile bio
+            profile_picture_url: profileData.profile_picture_url, // Show profile image even for restricted profiles
             visibility_level: profileData.visibility_level,
             restricted: true,
             message: profileData.visibility_level === 'private' 

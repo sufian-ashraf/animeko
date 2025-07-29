@@ -35,11 +35,8 @@ router.get('/:userId', optionalAuth, attachVisibilityHelpers, async (req, res) =
         // Check if current user can access this profile
         const canAccess = await canAccessProfile(targetUserId, currentUserId, user.visibility_level);
         
-        if (!canAccess) {
-            return res.status(403).json({ message: 'Access denied. This profile is private.' });
-        }
-
-        // Sanitize user data based on visibility
+        // Always return sanitized data - don't return 403 error
+        // For restricted profiles, this will return minimal profile info
         const isOwner = currentUserId === targetUserId;
         const sanitizedUser = sanitizeProfileData(user, canAccess, isOwner);
         

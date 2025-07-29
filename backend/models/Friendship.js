@@ -177,6 +177,37 @@ class Friendship {
         return result.rows;
     }
 
+    // Get friendship status between two users
+    static async getFriendshipStatus(userId1, userId2) {
+        const result = await pool.query(`
+            SELECT status, requester_id, addressee_id
+            FROM friendship
+            WHERE (requester_id = $1 AND addressee_id = $2)
+               OR (requester_id = $2 AND addressee_id = $1)
+        `, [userId1, userId2]);
+
+        if (result.rows.length === 0) {
+            return 'none'; // No relationship
+        }
+
+        const friendship = result.rows[0];
+        
+        if (friendship.status === 'accepted') {
+            return 'friends';
+        } else if (friendship.status === 'pending') {
+            // Check who sent the request
+            if (friendship.requester_id === userId1) {
+                return 'request_sent'; // Current user sent request
+            } else {
+                return 'request_received'; // Current user received request
+            }
+        } else if (friendship.status === 'rejected') {
+            return 'rejected';
+        }
+
+        return 'none';
+    }
+
     static async unfriend({ userId, friendId }) {
         const result = await pool.query(`DELETE
                                          FROM friendship
