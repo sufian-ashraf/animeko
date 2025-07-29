@@ -82,7 +82,13 @@ router.get('/continue-watching', authenticate, async (req, res) => {
         const userId = req.user.id;
         const continueWatching = await ContinueWatching.getUserContinueWatching(userId);
         
-        res.json(continueWatching);
+        // Apply 3-second offset to timestamp positions for better user experience
+        const adjustedContinueWatching = continueWatching.map(item => ({
+            ...item,
+            timestamp_position: Math.max(0, item.timestamp_position - 3)
+        }));
+        
+        res.json(adjustedContinueWatching);
     } catch (error) {
         console.error('Error fetching continue watching:', error);
         res.status(500).json({ message: 'Failed to fetch continue watching list' });
@@ -97,7 +103,18 @@ router.get('/progress/:episodeId', authenticate, async (req, res) => {
 
         const progress = await WatchHistory.getEpisodeProgress(userId, episodeId);
         
-        res.json(progress || { timestamp_position: 0, watched_percentage: 0, completed: false });
+        // If no progress exists, return default values
+        if (!progress) {
+            return res.json({ timestamp_position: 0, watched_percentage: 0, completed: false });
+        }
+
+        // For incomplete episodes with saved progress, start 3 seconds before the saved position
+        // but ensure we don't go below 0
+        if (!progress.completed && progress.timestamp_position > 0) {
+            progress.timestamp_position = Math.max(0, progress.timestamp_position - 3);
+        }
+        
+        res.json(progress);
     } catch (error) {
         console.error('Error fetching episode progress:', error);
         if (error.message && error.message.includes('Invalid')) {
@@ -151,11 +168,12 @@ router.delete('/continue-watching/:episodeId', authenticate, async (req, res) =>
 
         const removed = await ContinueWatching.removeEpisode(userId, episodeId);
         
-        if (!removed) {
-            return res.status(404).json({ message: 'Episode not found in continue watching' });
-        }
-
-        res.json({ message: 'Episode removed from continue watching' });
+        // Return success regardless of whether the episode was actually in continue watching
+        // This makes the operation idempotent - the desired state is achieved
+        res.json({ 
+            message: 'Episode removed from continue watching',
+            was_present: !!removed
+        });
     } catch (error) {
         console.error('Error removing from continue watching:', error);
         if (error.message && error.message.includes('Invalid')) {
