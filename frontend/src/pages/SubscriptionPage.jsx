@@ -39,15 +39,15 @@ const SubscriptionPage = () => {
   const handlePayment = async (plan) => {
     
     let amount;
-    switch (plan) {
-      case 'Monthly':
+    switch (plan.toLowerCase()) {
+      case 'monthly':
         amount = 9.99;
         break;
-      case 'Yearly':
+      case 'yearly':
         amount = 99.99;
         break;
-      case 'Lifetime':
-        amount = 399.99;
+      case 'lifetime':
+        amount = 299.99;
         break;
       default:
         amount = 0;
@@ -65,6 +65,7 @@ const SubscriptionPage = () => {
           amount: parseFloat(amount),
         }),
       });
+      console.log('Payment request sent:', { plan, amount });
 
       const data = await response.json();
 
@@ -189,17 +190,17 @@ Valid Until: ${validUntilText}`);
                   <div className="subscription-plan">
                     <h2>Monthly</h2>
                     <p className="price">$9.99/month</p>
-                    <button onClick={() => handlePayment('Monthly')}>Renew Monthly</button>
+                    <button onClick={() => handlePayment('monthly')}>Renew Monthly</button>
                   </div>
                   <div className="subscription-plan">
                     <h2>Yearly</h2>
                     <p className="price">$99.99/year</p>
-                    <button onClick={() => handlePayment('Yearly')}>Renew Yearly</button>
+                    <button onClick={() => handlePayment('yearly')}>Renew Yearly</button>
                   </div>
                   <div className="subscription-plan">
                     <h2>Lifetime</h2>
                     <p className="price">$299.99</p>
-                    <button onClick={() => handlePayment('Lifetime')}>Upgrade to Lifetime</button>
+                    <button onClick={() => handlePayment('lifetime')}>Upgrade to Lifetime</button>
                   </div>
                 </div>
               </div>
