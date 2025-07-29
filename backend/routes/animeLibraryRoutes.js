@@ -153,7 +153,11 @@ router.get('/user/:userId', optionalAuth, attachVisibilityHelpers, async (req, r
 // GET /api/anime-library/:animeId: Retrieve the status of a specific anime for the logged-in user.
 router.get('/:animeId', authenticateToken, async (req, res) => {
     const { animeId } = req.params;
-    const userId = req.user.user_id;
+    const userId = req.user?.user_id;
+
+    if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+    }
 
     try {
         const result = await UserAnimeStatus.getAnimeStatus(userId, animeId);

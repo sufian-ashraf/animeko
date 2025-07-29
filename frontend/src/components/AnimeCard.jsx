@@ -22,11 +22,19 @@ function AnimeCard({ anime, initialFavoriteStatus = false }) {
             headers: { Authorization: `Bearer ${token}` }
         })
             .then(r => {
-                if (!r.ok && r.status !== 404) throw new Error('Server error');
+                if (!r.ok && r.status !== 404) {
+                    throw new Error(`Server error: ${r.status}`);
+                }
                 return r.json();
             })
-            .then(data => setLibraryStatus(data.status))
-            .catch(console.error);
+            .then(data => {
+                setLibraryStatus(data.status);
+            })
+            .catch(err => {
+                console.error('Error fetching library status:', err);
+                // Don't prevent the component from rendering
+                setLibraryStatus(null);
+            });
     }, [anime.id, user, token]);
 
     const toggleFavorite = async (e) => {
