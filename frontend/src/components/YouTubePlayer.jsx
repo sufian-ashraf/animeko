@@ -99,7 +99,7 @@ const YouTubePlayer = ({
             } catch (err) {
                 console.error('Error tracking progress:', err);
             }
-        }, 12000); // Save every 12 seconds
+        }, 9000); // Save every 9 seconds
     };
 
     // Stop progress tracking

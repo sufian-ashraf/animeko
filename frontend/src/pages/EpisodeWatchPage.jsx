@@ -105,11 +105,8 @@ function EpisodeWatchPage() {
     };
 
     const handleComplete = () => {
-        // Optionally auto-navigate to next episode
-        const nextEpisode = getNextEpisode();
-        if (nextEpisode && window.confirm('Episode completed! Watch next episode?')) {
-            handleEpisodeChange(nextEpisode.episode_number);
-        }
+        // Episode completed - no action needed
+        // Progress is already tracked by the YouTube player component
     };
 
     const handleEpisodeChange = (newEpisodeNumber) => {

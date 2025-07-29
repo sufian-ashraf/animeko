@@ -54,8 +54,8 @@ router.post('/progress', authenticate, async (req, res) => {
             // Remove from continue watching if completed
             await ContinueWatching.removeEpisode(userId, episodeId);
         } else {
-            // Only add to continue watching if meaningful progress (>5%)
-            if (watchedPerc > 5) {
+            // Only add to continue watching if meaningful progress (>3%)
+            if (watchedPerc > 3) {
                 await ContinueWatching.updateProgress(userId, episodeId, timestampPos, watchedPerc);
             }
         }
