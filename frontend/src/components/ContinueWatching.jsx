@@ -134,26 +134,16 @@ const ContinueWatching = ({ limit = 10 }) => {
                                     ></div>
                                 </div>
                             </div>
-                            <div className="episode-info">
-                                <h4 className="anime-title">{item.anime_title}</h4>
-                                <p className="episode-details">
-                                    Episode {item.episode_number}
-                                    {item.episode_title && ` - ${item.episode_title}`}
-                                </p>
-                                <div className="progress-info">
-                                    <span className="progress-text">
-                                        {formatProgress(item.watched_percentage)} watched
-                                    </span>
-                                    <span className="time-remaining">
-                                        {item.duration_seconds && (
-                                            `${formatDuration(
-                                                Math.max(0, item.duration_seconds - item.timestamp_position)
-                                            )} left`
-                                        )}
-                                    </span>
-                                </div>
-                            </div>
-                        </Link>
+                            </Link>
+                        <div className="episode-info">
+                            <h4 className="anime-title">
+                                <Link to={`/anime/${item.anime_id}`}>{item.anime_title}</Link>
+                            </h4>
+                            <p className="episode-details">
+                                Episode {item.episode_number}
+                                {item.episode_title && ` - ${item.episode_title}`}
+                            </p>
+                        </div>
                         <button 
                             className="remove-button"
                             onClick={(e) => {

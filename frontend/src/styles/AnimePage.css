@@ -229,7 +229,7 @@
     padding: 0.5rem 0;
 }
 
-.progress-bar {
+.episodes-grid .progress-bar {
     width: 100%;
     height: 6px;
     background-color: #e0e0e0;
@@ -584,7 +584,7 @@
 }
 
 /* Dark mode for episode progress */
-.dark-mode .progress-bar {
+.dark-mode .episodes-grid .progress-bar {
     background-color: #444;
 }
 
