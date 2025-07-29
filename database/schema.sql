@@ -241,6 +241,18 @@ CREATE TABLE continue_watching
     PRIMARY KEY (user_id, episode_id)
 );
 
+CREATE TABLE anime_recommendations (
+    recommendation_id SERIAL PRIMARY KEY,
+    sender_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    receiver_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    anime_id INTEGER NOT NULL REFERENCES anime(anime_id) ON DELETE CASCADE,
+    message TEXT,
+    recommended_at TIMESTAMPTZ DEFAULT NOW(),
+    dismissed BOOLEAN DEFAULT FALSE,
+    UNIQUE (sender_id, receiver_id, anime_id),
+    CHECK (sender_id != receiver_id)
+);
+
 -- Add foreign key constraints with CASCADE DELETE fixes
 ALTER TABLE users
     ADD CONSTRAINT fk_user_transaction FOREIGN KEY (active_transaction_id) REFERENCES transaction_history (transaction_history_id) ON DELETE SET NULL;

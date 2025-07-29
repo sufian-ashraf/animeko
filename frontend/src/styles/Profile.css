@@ -201,41 +201,72 @@ body.dark-mode .profile-form textarea:focus {
 
 .profile-buttons {
     display: flex;
-    gap: 20px;
+    gap: 15px;
     margin-top: 24px;
     align-items: center;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .profile-buttons > * {
     /* Make all buttons and components in profile-buttons have consistent height */
-    min-height: 40px;
+    min-height: 44px;
     display: flex;
     align-items: center;
 }
 
 .profile-buttons button {
-    flex: 1;
-    padding: 10px 20px;
-    border-radius: 4px;
+    flex: 0 1 auto;
+    padding: 12px 24px;
+    border-radius: 6px;
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s;
     border: none;
-    min-height: 40px;
+    min-height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
+    white-space: nowrap;
+}
+
+/* Ensure FriendshipButton container aligns properly */
+.profile-buttons .friendship-button-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    position: relative;
+}
+
+.profile-buttons .friendship-btn {
+    min-height: 44px;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    box-sizing: border-box;
+    margin: 0;
 }
 
 .primary-button,
 .secondary-button {
-    /* Removed individual flex and padding since it's now handled by .profile-buttons button */
-    border-radius: 4px;
+    /* Consistent styling with profile buttons */
+    border-radius: 6px;
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s;
     border: none;
+    min-height: 44px;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
 }
 
 .primary-button {
@@ -739,6 +770,46 @@ body.dark-mode .favorites-error {
     border: 1px solid #dee2e6;
     border-radius: 8px;
     text-align: center;
+}
+
+/* ================================
+   Responsive Design
+   ================================ */
+@media (max-width: 768px) {
+    .profile-buttons {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .profile-buttons button,
+    .profile-buttons .friendship-btn {
+        width: 100%;
+        margin: 0;
+    }
+    
+    .profile-page {
+        margin: 1rem auto;
+        padding: 0 0.5rem;
+    }
+    
+    .profile-card {
+        padding: 24px 20px;
+        margin-bottom: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-buttons {
+        gap: 10px;
+    }
+    
+    .profile-buttons button,
+    .profile-buttons .friendship-btn {
+        padding: 10px 16px;
+        min-height: 40px;
+        font-size: 0.9rem;
+    }
 }
 
 .restricted-message {

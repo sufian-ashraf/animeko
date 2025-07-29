@@ -3,11 +3,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import placeholderImg from '../images/image_not_available.jpg';
 import defaultAvatar from '../images/default_avatar.svg';
+import Recommendations from '../components/Recommendations';
 import '../styles/MyFriends.css';
 
 export default function MyFriends() {
     const { token } = useAuth();
     const navigate = useNavigate();
+    
+    // Main tab state
+    const [activeMainTab, setActiveMainTab] = useState('friends');
     
     // Friend request and friends state
     const [incoming, setIncoming] = useState([]);
@@ -332,164 +336,192 @@ export default function MyFriends() {
     return (
         <div className="my-friends-page">
             <h1>My Friends</h1>
-            
-            {/* Incoming Friend Requests */}
-            <section className="friend-requests">
-                <h2>Incoming Friend Requests</h2>
-                <div className="scroll-box incoming-requests-grid">
-                    {incoming.length > 0 ? (
-                        incoming.map((request) => (
-                            <div key={request.user_id} className="friend-request">
-                                <div className="request-info">
-                                    <img
-                                        src={request.profile_picture_url || defaultAvatar}
-                                        alt={request.display_name || 'User'}
-                                        className="friend-avatar"
-                                    />
-                                    <div>
-                                        <div className="user-name">
-                                            {request.display_name}
+
+            {/* Main Tab Navigation */}
+            <div className="main-tab-navigation">
+                <button
+                    className={`main-tab-button ${activeMainTab === 'friends' ? 'active' : ''}`}
+                    onClick={() => setActiveMainTab('friends')}
+                >
+                    Friends & Requests
+                </button>
+                <button
+                    className={`main-tab-button ${activeMainTab === 'recommendations' ? 'active' : ''}`}
+                    onClick={() => setActiveMainTab('recommendations')}
+                >
+                    Recommendations
+                </button>
+            </div>
+
+            {/* Tab Content */}
+            {activeMainTab === 'friends' && (
+                <div className="friends-tab-content">
+                    {/* Incoming Friend Requests */}
+                    <section className="friend-requests">
+                        <h2>Incoming Friend Requests</h2>
+                        <div className="scroll-box incoming-requests-grid">
+                            {incoming.length > 0 ? (
+                                incoming.map((request) => (
+                                    <div key={request.user_id} className="friend-request">
+                                        <div className="request-info">
+                                            <img
+                                                src={request.profile_picture_url || defaultAvatar}
+                                                alt={request.display_name || 'User'}
+                                                className="friend-avatar"
+                                            />
+                                            <div>
+                                                <div className="user-name">
+                                                    {request.display_name}
+                                                </div>
+                                                <div className="user-username">
+                                                    <Link to={`/profile/${request.user_id}`} className="username-link">@{request.username}</Link>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="user-username">
-                                            <Link to={`/profile/${request.user_id}`} className="username-link">@{request.username}</Link>
+                                        <div className="request-actions">
+                                            <button
+                                                className="btn-small accept"
+                                                onClick={() => respondRequest(request.user_id, 'accept')}
+                                            >
+                                                Accept
+                                            </button>
+                                            <button
+                                                className="btn-small reject"
+                                                onClick={() => respondRequest(request.user_id, 'reject')}
+                                            >
+                                                Reject
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="request-actions">
-                                    <button
-                                        className="btn-small accept"
-                                        onClick={() => respondRequest(request.user_id, 'accept')}
-                                    >
-                                        Accept
-                                    </button>
-                                    <button
-                                        className="btn-small reject"
-                                        onClick={() => respondRequest(request.user_id, 'reject')}
-                                    >
-                                        Reject
-                                    </button>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p>No pending friend requests</p>
-                    )}
-                </div>
-            </section>
+                                ))
+                            ) : (
+                                <p>No pending friend requests</p>
+                            )}
+                        </div>
+                    </section>
 
-            {/* Sent Friend Requests */}
-            <section className="friend-requests">
-                <h2>Sent Friend Requests</h2>
-                <div className="scroll-box sent-requests-grid">
-                    {sentRequests.length > 0 ? (
-                        sentRequests.map((request) => (
-                            <div key={request.user_id} className="friend-request">
-                                <div className="request-info">
-                                    <img
-                                        src={request.profile_picture_url || defaultAvatar}
-                                        alt={request.display_name || 'User'}
-                                        className="friend-avatar"
-                                    />
-                                    <div>
-                                        <div className="user-name">
-                                            {request.display_name}
+                    {/* Sent Friend Requests */}
+                    <section className="friend-requests">
+                        <h2>Sent Friend Requests</h2>
+                        <div className="scroll-box sent-requests-grid">
+                            {sentRequests.length > 0 ? (
+                                sentRequests.map((request) => (
+                                    <div key={request.user_id} className="friend-request">
+                                        <div className="request-info">
+                                            <img
+                                                src={request.profile_picture_url || defaultAvatar}
+                                                alt={request.display_name || 'User'}
+                                                className="friend-avatar"
+                                            />
+                                            <div>
+                                                <div className="user-name">
+                                                    {request.display_name}
+                                                </div>
+                                                <div className="user-username">
+                                                    <Link to={`/profile/${request.user_id}`} className="username-link">@{request.username}</Link>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="user-username">
-                                            <Link to={`/profile/${request.user_id}`} className="username-link">@{request.username}</Link>
+                                        <div className="request-actions">
+                                            <button
+                                                className="btn-small reject"
+                                                onClick={() => cancelFriendRequest(request.user_id)}
+                                            >
+                                                Cancel Request
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="request-actions">
-                                    <button
-                                        className="btn-small reject"
-                                        onClick={() => cancelFriendRequest(request.user_id)}
-                                    >
-                                        Cancel Request
-                                    </button>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p>No sent friend requests</p>
-                    )}
-                </div>
-            </section>
+                                ))
+                            ) : (
+                                <p>No sent friend requests</p>
+                            )}
+                        </div>
+                    </section>
 
-            {/* Friends List */}
-            <section className="friends-list-section">
-                <h2>Your Friends</h2>
-                <div className="scroll-box friends-grid">
-                    {friends.length > 0 ? (
-                        friends.map((friend) => (
-                            <div key={friend.user_id} className="friend-card">
-                                <div className="friend-avatar-container">
-                                    <img
-                                        src={friend.profile_picture_url || defaultAvatar}
-                                        alt={friend.display_name || 'Friend'}
-                                        className="friend-avatar"
-                                    />
-                                </div>
-                                <div className="friend-info">
-                                    <h3>{friend.display_name || friend.username}</h3>
-                                    <p><Link to={`/profile/${friend.user_id}`} className="username-link">@{friend.username}</Link></p>
-                                </div>
-                                <button
-                                    className="btn-small unfriend"
-                                    onClick={() => removeFriend(friend.user_id)}
-                                >
-                                    Unfriend
-                                </button>
-                            </div>
-                        ))
-                    ) : (
-                        <p>You don't have any friends yet</p>
-                    )}
-                </div>
-            </section>
-
-            {/* Find Friends */}
-            <section className="find-friends">
-                <h2>Find Friends</h2>
-                <div className="search-container">
-                    <input
-                        type="text"
-                        placeholder="Search by username or display name..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="search-input"
-                    />
-                    {sendMessage && <div className="success-message">{sendMessage}</div>}
-                </div>
-                
-                {searchQuery && searchResults.length === 0 && (
-                    <p className="no-results-message">No users found matching your search.</p>
-                )}
-
-                {searchResults.length > 0 && (
-                    <div className="search-results">
-                        {searchResults.map((user) => (
-                            <div key={user.user_id} className="search-result-item">
-                                <div className="user-info">
-                                    <img
-                                        src={user.profile_picture_url || defaultAvatar}
-                                        alt={user.display_name || 'User'}
-                                        className="user-avatar"
-                                    />
-                                    <div>
-                                        <div className="user-name">
-                                            {user.display_name || 'No display name'}
+                    {/* Friends List */}
+                    <section className="friends-list-section">
+                        <h2>Your Friends</h2>
+                        <div className="scroll-box friends-grid">
+                            {friends.length > 0 ? (
+                                friends.map((friend) => (
+                                    <div key={friend.user_id} className="friend-card">
+                                        <div className="friend-avatar-container">
+                                            <img
+                                                src={friend.profile_picture_url || defaultAvatar}
+                                                alt={friend.display_name || 'Friend'}
+                                                className="friend-avatar"
+                                            />
                                         </div>
-                                        <div className="user-username">
-                                            <Link to={`/profile/${user.user_id}`} className="username-link">@{user.username}</Link>
+                                        <div className="friend-info">
+                                            <h3>{friend.display_name || friend.username}</h3>
+                                            <p><Link to={`/profile/${friend.user_id}`} className="username-link">@{friend.username}</Link></p>
                                         </div>
+                                        <button
+                                            className="btn-small unfriend"
+                                            onClick={() => removeFriend(friend.user_id)}
+                                        >
+                                            Unfriend
+                                        </button>
                                     </div>
-                                </div>
-                                {getButtonForUser(user)}
+                                ))
+                            ) : (
+                                <p>You don't have any friends yet</p>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* Find Friends */}
+                    <section className="find-friends">
+                        <h2>Find Friends</h2>
+                        <div className="search-container">
+                            <input
+                                type="text"
+                                placeholder="Search by username or display name..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="search-input"
+                            />
+                            {sendMessage && <div className="success-message">{sendMessage}</div>}
+                        </div>
+                        
+                        {searchQuery && searchResults.length === 0 && (
+                            <p className="no-results-message">No users found matching your search.</p>
+                        )}
+
+                        {searchResults.length > 0 && (
+                            <div className="search-results">
+                                {searchResults.map((user) => (
+                                    <div key={user.user_id} className="search-result-item">
+                                        <div className="user-info">
+                                            <img
+                                                src={user.profile_picture_url || defaultAvatar}
+                                                alt={user.display_name || 'User'}
+                                                className="user-avatar"
+                                            />
+                                            <div>
+                                                <div className="user-name">
+                                                    {user.display_name || 'No display name'}
+                                                </div>
+                                                <div className="user-username">
+                                                    <Link to={`/profile/${user.user_id}`} className="username-link">@{user.username}</Link>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {getButtonForUser(user)}
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                )}
-            </section>
+                        )}
+                    </section>
+                </div>
+            )}
+
+            {/* Recommendations Tab */}
+            {activeMainTab === 'recommendations' && (
+                <div className="recommendations-tab-content">
+                    <Recommendations />
+                </div>
+            )}
         </div>
     );
 }

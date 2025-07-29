@@ -17,15 +17,15 @@
     overflow: hidden;
     margin-bottom: 2rem;
     align-items: flex-start;
-    min-height: 395px;
+    min-height: 400px;
 }
 
 .anime-photo {
     width: 280px;
-    height: 375px;
+    height: 400px;
     object-fit: cover;
     flex-shrink: 0;
-    align-self: center;
+    align-self: flex-start;
     margin: 1rem;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -35,11 +35,14 @@
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0; /* Prevent overflow */
 }
 
 .anime-name {
     margin: 0;
     font-size: 2rem;
+    line-height: 1.2;
 }
 
 .anime-desc {
@@ -145,6 +148,28 @@
 .details-tab,
 .episodes-tab {
     width: 100%;
+}
+
+/* Synopsis section */
+.synopsis-section {
+    margin-bottom: 2rem;
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #61dafb;
+}
+
+.synopsis-section h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.3rem;
+}
+
+.anime-synopsis {
+    margin: 0;
+    line-height: 1.6;
+    color: #555;
+    font-size: 1rem;
 }
 
 /* Cast grid */
@@ -648,16 +673,26 @@
 .anime-meta-header {
     display: flex;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: space-between;
     width: 100%;
-    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.anime-title-section {
+    flex: 1;
+    margin-right: 1rem;
+}
+
+.anime-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .anime-name {
-    margin: 0;
+    margin: 0 0 0.5rem 0;
     font-size: 2rem;
-    flex-grow: 1; /* Allow title to take available space */
-    margin-right: 1rem; /* Add space to the right of the title */
+    line-height: 1.2;
 }
 
 /* Anime page favorite button */
@@ -715,6 +750,92 @@
 .anime-meta-header .favorite-btn:disabled {
     opacity: 0.5;
     cursor: default;
+}
+
+/* Recommend button */
+.anime-meta-header .recommend-btn {
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+    width: 100px;
+    height: 60px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.2rem;
+    flex-shrink: 0;
+    white-space: normal;
+    margin-left: 0.5rem;
+}
+
+.anime-meta-header .recommend-btn .recommend-icon {
+    font-size: 1.2em;
+    line-height: 1;
+}
+
+.anime-meta-header .recommend-btn .recommend-text {
+    font-size: 0.8em;
+    line-height: 1.2;
+}
+
+.anime-meta-header .recommend-btn:hover:not(:disabled) {
+    background-color: #f0f8ff;
+    border-color: #007bff;
+    color: #007bff;
+}
+
+/* Success message */
+.success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin: 0.5rem 0;
+    border: 1px solid #c3e6cb;
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+/* Dark mode for success message */
+.dark-mode .success-message {
+    background: #1e3a33;
+    color: #7dd87d;
+    border-color: #2d5a46;
+}
+
+/* Dark mode for recommend button */
+.dark-mode .anime-meta-header .recommend-btn {
+    background: transparent;
+    border-color: #444;
+    color: #ccc;
+}
+
+.dark-mode .anime-meta-header .recommend-btn:hover:not(:disabled) {
+    background-color: #1a2832;
+    border-color: #61dafb;
+    color: #61dafb;
+}
+
+/* Dark mode for synopsis section */
+.dark-mode .synopsis-section {
+    background: #2a2a2a;
+    border-left-color: #61dafb;
+}
+
+.dark-mode .synopsis-section h3 {
+    color: #fff;
+}
+
+.dark-mode .anime-synopsis {
+    color: #ccc;
 }
 
 /* Library Controls */
@@ -1141,15 +1262,24 @@
         gap: 1rem;
         align-items: center;
     }
-    .anime-meta-header .favorite-btn,
-    .anime-library-controls {
+    .anime-title-section {
+        margin-right: 0;
+        text-align: center;
+    }
+    .anime-actions {
+        justify-content: center;
         width: 100%;
+    }
+    .anime-meta-header .favorite-btn,
+    .anime-meta-header .recommend-btn {
+        width: 100px;
         margin-right: 0;
     }
     .anime-library-controls {
         flex-direction: column;
         gap: 0.5rem;
         align-items: stretch;
+        width: 100%;
     }
     .anime-name {
         margin-right: 0;

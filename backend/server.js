@@ -28,6 +28,7 @@ import episodeRoutes from './routes/episodeRoutes.js';
 import watchProgressRoutes from './routes/watchProgressRoutes.js';
 import subscriptionExpiryJob from './cron/subscriptionExpiryJob.js';
 import searchRoutes from './routes/searchRoutes.js';
+import recommendationRoutes from './routes/recommendationRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -72,6 +73,7 @@ app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api', premiumRoutes);
 app.use('/api/episodes', episodeRoutes);
 app.use('/api/watch', watchProgressRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 
 // Test database connection
     pool.connect()

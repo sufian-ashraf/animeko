@@ -7,6 +7,7 @@ import placeholder from '../images/image_not_available.jpg';
 import defaultAvatar from '../images/default_avatar.svg';
 import ListCard from '../components/ListCard';
 import TrailerModal from '../components/TrailerModal';
+import RecommendationModal from '../components/RecommendationModal';
 import '../styles/AnimePage.css';
 
 const roundToHalf = (num) => Math.round(num * 2) / 2;
@@ -70,11 +71,9 @@ export default function AnimePage() {
     const [activeTab, setActiveTab] = useState('details'); // 'details' or 'episodes'
     const [isTrailerOpen, setIsTrailerOpen] = useState(false);
 
-
-    // Debug: Log auth status
-    useEffect(() => {
-        console.log('User auth status:', { user, hasToken: !!token });
-    }, [user, token]);
+    // Recommendation modal state
+    const [showRecommendationModal, setShowRecommendationModal] = useState(false);
+    const [recommendationMessage, setRecommendationMessage] = useState('');
 
     /**
      * Fetches lists containing the current anime
@@ -163,8 +162,6 @@ export default function AnimePage() {
             }));
 
             const { data, pagination } = await fetchAnimeLists(page);
-            console.log('fetchContainingLists - Data received from fetchAnimeLists:', data);
-            console.log('fetchContainingLists - Pagination received from fetchAnimeLists:', pagination);
             
             setContainingLists(prev => {
                 const newState = {
@@ -176,7 +173,6 @@ export default function AnimePage() {
                         ...pagination
                     }
                 };
-                console.log('fetchContainingLists - New containingLists state:', newState);
                 return newState;
             });
         } catch (error) {
@@ -199,8 +195,6 @@ export default function AnimePage() {
                 console.error('No animeId available');
                 return;
             }
-            
-            console.log('useEffect - Calling fetchContainingLists for anime ID:', animeId);
             await fetchContainingLists(1);
         };
         
@@ -654,62 +648,36 @@ export default function AnimePage() {
             />
             <div className="anime-meta">
                 <div className="anime-meta-header">
-                    <h2 className="anime-name">{title}</h2>
-                    {user && (
-                        <button
-                            className={`favorite-btn ${isFavorite ? 'favorited' : ''}`}
-                            onClick={handleToggleFavorite}
-                            disabled={favLoading}
-                        >
-                                                        <div className="favorite-icon">{isFavorite ? '❤️' : '🤍'}</div>
-                            <div className="favorite-text">{favLoading ? '…' : isFavorite ? 'Remove from Favorite' : 'Add to Favorites'}</div>
-                        </button>
-                    )}
+                    <div className="anime-title-section">
+                        <h2 className="anime-name">{title}</h2>
+                        {recommendationMessage && (
+                            <div className="success-message">
+                                {recommendationMessage}
+                            </div>
+                        )}
+                    </div>
+                    <div className="anime-actions">
+                        {user && (
+                            <button
+                                className={`favorite-btn ${isFavorite ? 'favorited' : ''}`}
+                                onClick={handleToggleFavorite}
+                                disabled={favLoading}
+                            >
+                                <div className="favorite-icon">{isFavorite ? '❤️' : '🤍'}</div>
+                                <div className="favorite-text">{favLoading ? '…' : isFavorite ? 'Remove from Favorite' : 'Add to Favorites'}</div>
+                            </button>
+                        )}
 
-                    {user && (
-                        <div className="anime-library-controls">
-                            {libraryLoading ? (
-                                <span className="loading-text">Loading library status...</span>
-                            ) : libraryError ? (
-                                <span className="error-text">{libraryError}</span>
-                            ) : (
-                                <div className="library-controls-container">
-                                    {!libraryStatus ? (
-                                        <button
-                                            className="add-to-library-btn"
-                                            onClick={() => handleAddToLibrary("Planned to Watch")}
-                                        >
-                                            Add to Library
-                                        </button>
-                                    ) : (
-                                        <>
-                                            <div className="status-controls">
-                                                <select
-                                                    value={libraryStatus}
-                                                    onChange={(e) => handleUpdateLibraryStatus(e.target.value)}
-                                                    className="status-select"
-                                                >
-                                                    {validLibraryStatuses.map((status) => (
-                                                        <option key={status} value={status}>
-                                                            {status}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {libraryStatus && (
-                                                    <button
-                                                        className="remove-from-library-btn"
-                                                        onClick={handleRemoveFromLibrary}
-                                                    >
-                                                        Remove from Library
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
+                        {user && (
+                            <button
+                                className="recommend-btn"
+                                onClick={() => setShowRecommendationModal(true)}
+                            >
+                                <div className="recommend-icon">📤</div>
+                                <div className="recommend-text">Recommend to Friend</div>
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* ───── Average Rating & Rank ──────────── */}
@@ -766,8 +734,6 @@ export default function AnimePage() {
                     )}
                 </div>
 
-                {synopsis && <p className="anime-desc">{synopsis}</p>}
-
                 {trailer_url_yt_id ? (
                     <button onClick={() => setIsTrailerOpen(true)} className="watch-trailer-btn">
                         Watch Trailer
@@ -792,6 +758,51 @@ export default function AnimePage() {
                         {i < genres.length - 1 && ', '}
                 </span>))}
                 </p>)}
+
+                {user && (
+                    <div className="anime-library-controls">
+                        {libraryLoading ? (
+                            <span className="loading-text">Loading library status...</span>
+                        ) : libraryError ? (
+                            <span className="error-text">{libraryError}</span>
+                        ) : (
+                            <div className="library-controls-container">
+                                {!libraryStatus ? (
+                                    <button
+                                        className="add-to-library-btn"
+                                        onClick={() => handleAddToLibrary("Planned to Watch")}
+                                    >
+                                        Add to Library
+                                    </button>
+                                ) : (
+                                    <>
+                                        <div className="status-controls">
+                                            <select
+                                                value={libraryStatus}
+                                                onChange={(e) => handleUpdateLibraryStatus(e.target.value)}
+                                                className="status-select"
+                                            >
+                                                {validLibraryStatuses.map((status) => (
+                                                    <option key={status} value={status}>
+                                                        {status}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {libraryStatus && (
+                                                <button
+                                                    className="remove-from-library-btn"
+                                                    onClick={handleRemoveFromLibrary}
+                                                >
+                                                    Remove from Library
+                                                </button>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
 
@@ -817,6 +828,14 @@ export default function AnimePage() {
         <div className="tab-content">
             {activeTab === 'details' && (
                 <div className="details-tab">
+                    {/* ───────── Synopsis ─────────── */}
+                    {synopsis && (
+                        <div className="synopsis-section">
+                            <h3>Synopsis</h3>
+                            <p className="anime-synopsis">{synopsis}</p>
+                        </div>
+                    )}
+
                     {/* ───────── Cast Grid ─────────── */}
                     <h3 className="cast-heading">Cast &amp; Voice Actors</h3>
                     {cast.length > 0 ? (<div className="cast-grid">
@@ -1060,6 +1079,16 @@ export default function AnimePage() {
         </div>
         {isTrailerOpen && (
             <TrailerModal videoId={trailer_url_yt_id} onClose={() => setIsTrailerOpen(false)} />
+        )}
+        {showRecommendationModal && (
+            <RecommendationModal 
+                anime={anime} 
+                onClose={() => setShowRecommendationModal(false)}
+                onRecommendationSent={() => {
+                    setRecommendationMessage('Recommendation sent successfully!');
+                    setTimeout(() => setRecommendationMessage(''), 5000);
+                }}
+            />
         )}
     </div>
   );

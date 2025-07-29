@@ -5,16 +5,39 @@
     gap: 0.5rem;
 }
 
+/* When used inside profile-buttons, align better */
+.profile-buttons .friendship-button-container {
+    flex-direction: row;
+    align-items: center;
+    min-height: 44px;
+    margin: 0;
+    flex: 0 1 auto;
+    display: flex;
+    justify-content: center;
+}
+
+/* Ensure single buttons (like unfriend) align properly in profile context */
+.profile-buttons .friendship-button-container > .friendship-btn {
+    align-self: center;
+}
+
 .friendship-actions {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
+    align-items: center;
+}
+
+/* Special handling for profile-buttons context */
+.profile-buttons .friendship-actions {
+    gap: 0.5rem;
+    margin: 0;
 }
 
 .friendship-btn {
     border: none;
     border-radius: 6px;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1.25rem;
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
@@ -24,6 +47,30 @@
     align-items: center;
     justify-content: center;
     gap: 0.25rem;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+/* When inside profile-buttons, match the other buttons exactly */
+.profile-buttons .friendship-btn {
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    box-sizing: border-box;
+    margin: 0;
+    align-self: center;
+}
+
+/* Specific fix for unfriend button alignment */
+.profile-buttons .friendship-btn.unfriend {
+    vertical-align: middle;
+    line-height: normal;
 }
 
 .friendship-btn:disabled {
@@ -93,6 +140,16 @@
     font-size: 0.8rem;
     text-align: center;
     padding: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+/* When inside profile-buttons, position error message better */
+.profile-buttons .friendship-error {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 0.25rem;
 }
 
 /* Dark mode styles */
@@ -105,10 +162,32 @@ body.dark-mode .friendship-error,
 @media (max-width: 768px) {
     .friendship-actions {
         flex-direction: column;
+        width: 100%;
     }
     
     .friendship-btn {
-        padding: 0.6rem 1rem;
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9rem;
+        width: 100%;
+    }
+    
+    /* When inside profile-buttons, maintain consistent styling */
+    .profile-buttons .friendship-btn {
+        padding: 10px 16px;
+        min-height: 40px;
+        font-size: 0.9rem;
+        width: 100%;
+    }
+    
+    .profile-buttons .friendship-button-container {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-buttons .friendship-btn {
+        padding: 10px 16px;
+        min-height: 40px;
         font-size: 0.9rem;
     }
 }
