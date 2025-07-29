@@ -24,14 +24,14 @@
   color: var(--dark-primary-color, #4da6ff);
 }
 
-.subscription-options {
+.subscription-container .subscription-options {
   display: flex;
   justify-content: center;
   gap: 2rem;
   margin-top: 2rem;
 }
 
-.subscription-plan {
+.subscription-container .subscription-plan {
   border: 1px solid var(--border-color, #ccc);
   border-radius: 8px;
   padding: 2rem;
@@ -42,30 +42,30 @@
   transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.dark-mode .subscription-plan {
+.dark-mode .subscription-container .subscription-plan {
   border-color: var(--dark-border-color, #444);
   background-color: var(--dark-card-background, #2d2d2d);
   box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
 }
 
-.subscription-plan:hover {
+.subscription-container .subscription-plan:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.dark-mode .subscription-plan:hover {
+.dark-mode .subscription-container .subscription-plan:hover {
   box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
 }
 
-.subscription-plan h2 {
+.subscription-container .subscription-plan h2 {
   margin-top: 0;
   color: var(--heading-color, #333);
 }
 
-.dark-mode .subscription-plan h2 {
+.dark-mode .subscription-container .subscription-plan h2 {
   color: var(--dark-heading-color, #e0e0e0);
 }
 
-.subscription-plan button {
+.subscription-container .subscription-plan button {
   background-color: var(--primary-color, #007bff);
   color: white;
   border: none;
@@ -77,30 +77,30 @@
   width: 100%;
 }
 
-.subscription-plan button:hover {
+.subscription-container .subscription-plan button:hover {
   background-color: var(--primary-hover-color, #0056b3);
 }
 
-.dark-mode .subscription-plan button {
+.dark-mode .subscription-container .subscription-plan button {
   background-color: var(--dark-primary-color, #4da6ff);
 }
 
-.dark-mode .subscription-plan button:hover {
+.dark-mode .subscription-container .subscription-plan button:hover {
   background-color: var(--dark-primary-hover-color, #1a8cff);
 }
 
-.price {
+.subscription-container .price {
   font-size: 1.5rem;
   font-weight: bold;
   margin: 1rem 0;
   color: var(--price-color, #333);
 }
 
-.dark-mode .price {
+.dark-mode .subscription-container .price {
   color: var(--dark-price-color, #e0e0e0);
 }
 
-.subscription-message {
+.subscription-container .subscription-message {
   max-width: 600px;
   margin: 2rem auto;
   padding: 2rem;
@@ -111,40 +111,40 @@
   transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.dark-mode .subscription-message {
+.dark-mode .subscription-container .subscription-message {
   border-color: var(--dark-border-color, #444);
   background-color: var(--dark-card-background, #2d2d2d);
   box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
 }
 
-.subscription-message h2 {
+.subscription-container .subscription-message h2 {
   color: var(--heading-color, #333);
   margin-top: 0;
 }
 
-.dark-mode .subscription-message h2 {
+.dark-mode .subscription-container .subscription-message h2 {
   color: var(--dark-heading-color, #e0e0e0);
 }
 
-.subscription-message.expired {
+.subscription-container .subscription-message.expired {
   border-color: var(--warning-color, #ffc107);
   background-color: var(--warning-background, #fff3cd);
 }
 
-.dark-mode .subscription-message.expired {
+.dark-mode .subscription-container .subscription-message.expired {
   border-color: var(--dark-warning-color, #ffb307);
   background-color: var(--dark-warning-background, #2d2416);
 }
 
-.subscription-message.expired h2 {
+.subscription-container .subscription-message.expired h2 {
   color: var(--warning-text-color, #856404);
 }
 
-.dark-mode .subscription-message.expired h2 {
+.dark-mode .subscription-container .subscription-message.expired h2 {
   color: var(--dark-warning-text-color, #ffc107);
 }
 
-.subscription-details {
+.subscription-container .subscription-details {
   margin: 1.5rem 0;
   padding: 1rem;
   background-color: var(--detail-background, white);
@@ -152,36 +152,49 @@
   border: 1px solid var(--detail-border, #e0e0e0);
 }
 
-.dark-mode .subscription-details {
+.dark-mode .subscription-container .subscription-details {
   background-color: var(--dark-detail-background, #1a1a1a);
   border-color: var(--dark-detail-border, #555);
 }
 
-.detail-item {
+.subscription-container .detail-item {
   margin: 0.8rem 0;
   padding: 0.5rem 0;
   border-bottom: 1px solid var(--item-border, #f0f0f0);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
-.dark-mode .detail-item {
+.dark-mode .subscription-container .detail-item {
   border-bottom-color: var(--dark-item-border, #444);
 }
 
-.detail-item:last-child {
+.subscription-container .detail-item:last-child {
   border-bottom: none;
 }
 
-.detail-item strong {
-  display: inline-block;
-  min-width: 140px;
+.subscription-container .detail-item strong {
   color: var(--label-color, #333);
+  font-weight: 600;
+  margin-bottom: 0.2rem;
 }
 
-.dark-mode .detail-item strong {
+.subscription-container .detail-item span {
+  color: var(--value-color, #555);
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.dark-mode .subscription-container .detail-item strong {
   color: var(--dark-label-color, #ccc);
 }
 
-.subscription-actions {
+.dark-mode .subscription-container .detail-item span {
+  color: var(--dark-value-color, #aaa);
+}
+
+.subscription-container .subscription-actions {
   margin-top: 1.5rem;
   text-align: center;
 }
@@ -209,21 +222,21 @@
   background-color: var(--dark-primary-hover-color, #1a8cff);
 }
 
-.loading-message {
+.subscription-container .loading-message {
   text-align: center;
   padding: 2rem;
   color: var(--text-muted, #666);
 }
 
-.dark-mode .loading-message {
+.dark-mode .subscription-container .loading-message {
   color: var(--dark-text-muted, #aaa);
 }
 
-.loading-message h1 {
+.subscription-container .loading-message h1 {
   color: var(--heading-color, #333);
   margin-bottom: 1rem;
 }
 
-.dark-mode .loading-message h1 {
+.dark-mode .subscription-container .loading-message h1 {
   color: var(--dark-heading-color, #e0e0e0);
 }

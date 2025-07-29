@@ -149,16 +149,20 @@ Valid Until: ${validUntilText}`);
                 
                 <div className="subscription-details">
                   <div className="detail-item">
-                    <strong>Subscription Type:</strong> {subscriptionDetails.subscriptionType}
+                    <strong>Subscription Type:</strong>
+                    <span>{subscriptionDetails.subscriptionType}</span>
                   </div>
                   <div className="detail-item">
-                    <strong>Transaction ID:</strong> {subscriptionDetails.transactionId}
+                    <strong>Transaction ID:</strong>
+                    <span>{subscriptionDetails.transactionId}</span>
                   </div>
                   <div className="detail-item">
-                    <strong>Purchased On:</strong> {subscriptionDetails.purchasedOn ? new Date(subscriptionDetails.purchasedOn).toLocaleDateString() : 'N/A'}
+                    <strong>Purchased On:</strong>
+                    <span>{subscriptionDetails.purchasedOn ? new Date(subscriptionDetails.purchasedOn).toLocaleDateString() : 'N/A'}</span>
                   </div>
                   <div className="detail-item">
-                    <strong>Valid Until:</strong> {subscriptionDetails.subscriptionType === 'Lifetime' ? 'Lifetime Access' : (subscriptionDetails.endDate ? new Date(subscriptionDetails.endDate).toLocaleDateString() : 'N/A')}
+                    <strong>Valid Until:</strong>
+                    <span>{subscriptionDetails.subscriptionType === 'Lifetime' ? 'Lifetime Access' : (subscriptionDetails.endDate ? new Date(subscriptionDetails.endDate).toLocaleDateString() : 'N/A')}</span>
                   </div>
                 </div>                
               </div>
@@ -172,10 +176,12 @@ Valid Until: ${validUntilText}`);
                 
                 <div className="subscription-details">
                   <div className="detail-item">
-                    <strong>Previous Subscription:</strong> {subscriptionDetails.subscriptionType}
+                    <strong>Previous Subscription:</strong>
+                    <span>{subscriptionDetails.subscriptionType}</span>
                   </div>
                   <div className="detail-item">
-                    <strong>Expired On:</strong> {subscriptionDetails.endDate ? new Date(subscriptionDetails.endDate).toLocaleDateString() : 'N/A'}
+                    <strong>Expired On:</strong>
+                    <span>{subscriptionDetails.endDate ? new Date(subscriptionDetails.endDate).toLocaleDateString() : 'N/A'}</span>
                   </div>
                 </div>
                 
