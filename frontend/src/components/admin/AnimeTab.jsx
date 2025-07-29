@@ -59,7 +59,7 @@ const AnimeTab = ({searchQuery}) => {
     
     const fetchGenres = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/genre');
+            const response = await fetch('/api/genre');
             if (response.ok) {
                 const data = await response.json();
                 // Normalize the genre data structure
@@ -116,7 +116,7 @@ const AnimeTab = ({searchQuery}) => {
     const fetchAnime = async () => {
         try {
             console.log('Fetching anime list...');
-            const response = await fetch('http://localhost:5000/api/animes/admin', {
+            const response = await fetch('/api/animes/admin', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -141,7 +141,7 @@ const AnimeTab = ({searchQuery}) => {
     const fetchCompanies = async () => {
         try {
             console.log('Fetching companies...');
-            const response = await fetch('http://localhost:5000/api/company');
+            const response = await fetch('/api/company');
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error('Failed to fetch companies: ' + errorText);
@@ -237,8 +237,8 @@ const AnimeTab = ({searchQuery}) => {
         
         try {
             const url = editingId 
-                ? `http://localhost:5000/api/animes/${editingId}`
-                : 'http://localhost:5000/api/animes';
+                ? `/api/animes/${editingId}`
+                : '/api/animes';
             const method = editingId ? 'PUT' : 'POST';
 
             // Prepare the request body with all fields and genres
@@ -322,7 +322,7 @@ const AnimeTab = ({searchQuery}) => {
             setEditingId(animeId);
 
             // Fetch detailed anime data
-            const response = await fetch(`http://localhost:5000/api/animes/${animeId}/details`, {
+            const response = await fetch(`/api/animes/${animeId}/details`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -375,7 +375,7 @@ const AnimeTab = ({searchQuery}) => {
                 throw new Error('Invalid anime ID format');
             }
 
-            const response = await fetch(`http://localhost:5000/api/animes/${animeId}`, {
+            const response = await fetch(`/api/animes/${animeId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,

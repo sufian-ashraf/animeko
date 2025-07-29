@@ -44,7 +44,7 @@ const EpisodesTab = ({ searchQuery }) => {
     const fetchEpisodes = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:5000/api/episodes/admin', {
+            const response = await fetch('/api/episodes/admin', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -67,7 +67,7 @@ const EpisodesTab = ({ searchQuery }) => {
 
     const fetchAnimes = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/animes/admin', {
+            const response = await fetch('/api/animes/admin', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -130,8 +130,8 @@ const EpisodesTab = ({ searchQuery }) => {
         
         try {
             const url = editingId 
-                ? `http://localhost:5000/api/episodes/${editingId}`
-                : 'http://localhost:5000/api/episodes';
+                ? `/api/episodes/${editingId}`
+                : '/api/episodes';
             const method = editingId ? 'PUT' : 'POST';
 
             const requestBody = {
@@ -210,7 +210,7 @@ const EpisodesTab = ({ searchQuery }) => {
             }
 
             // Fetch detailed episode data
-            const response = await fetch(`http://localhost:5000/api/episodes/${episodeId}/details`, {
+            const response = await fetch(`/api/episodes/${episodeId}/details`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -256,7 +256,7 @@ const EpisodesTab = ({ searchQuery }) => {
                 throw new Error('Invalid episode ID format');
             }
 
-            const response = await fetch(`http://localhost:5000/api/episodes/${episodeId}`, {
+            const response = await fetch(`/api/episodes/${episodeId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,

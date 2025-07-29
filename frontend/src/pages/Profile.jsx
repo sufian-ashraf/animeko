@@ -64,7 +64,7 @@ export default function Profile() {
 
                 if (isOwnProfile) {
                     // For own profile, fetch fresh data to get latest visibility settings
-                    const profileRes = await fetch('http://localhost:5000/api/auth/profile', {
+                    const profileRes = await fetch('/api/auth/profile', {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
 
@@ -114,7 +114,7 @@ export default function Profile() {
             try {
                 if (isOwnProfile && token) {
                     // For own profile, use authenticated endpoint
-                    const response = await fetch('http://localhost:5000/api/favorites', {
+                    const response = await fetch('/api/favorites', {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     

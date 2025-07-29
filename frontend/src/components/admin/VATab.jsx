@@ -24,7 +24,7 @@ const VATab = ({searchQuery}) => {
     const fetchVoiceActors = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:5000/api/voice-actors', {
+            const response = await fetch('/api/voice-actors', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -110,8 +110,8 @@ const VATab = ({searchQuery}) => {
         }
 
         const url = editingId
-            ? `http://localhost:5000/api/voice-actors/${editingId}`
-            : 'http://localhost:5000/api/voice-actors';
+            ? `/api/voice-actors/${editingId}`
+            : '/api/voice-actors';
         const method = editingId ? 'PUT' : 'POST';
 
         try {
@@ -196,7 +196,7 @@ const VATab = ({searchQuery}) => {
             }
 
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/api/voice-actors/${vaId}`, {
+            const response = await fetch(`/api/voice-actors/${vaId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,

@@ -19,7 +19,7 @@ const CompanyTab = ({searchQuery}) => {
 
     const fetchCompanies = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/company');
+            const response = await fetch('/api/company');
             if (!response.ok) {
                 throw new Error('Failed to fetch companies');
             }
@@ -77,8 +77,8 @@ const CompanyTab = ({searchQuery}) => {
         }
 
         const url = editingId
-            ? `http://localhost:5000/api/company/${editingId}`
-            : 'http://localhost:5000/api/company';
+            ? `/api/company/${editingId}`
+            : '/api/company';
         const method = editingId ? 'PUT' : 'POST';
 
         try {
@@ -149,7 +149,7 @@ const CompanyTab = ({searchQuery}) => {
                 showError('Invalid company ID format');
                 return;
             }
-            const response = await fetch(`http://localhost:5000/api/company/${companyId}`, {
+            const response = await fetch(`/api/company/${companyId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`

@@ -78,7 +78,7 @@ export default function ListDetail() {
         if (!searchTerm || !token) return;
         if (!enterPressed) return;
 
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = '';
         
         const timeout = setTimeout(() => {
             setIsSearching(true);
@@ -116,7 +116,7 @@ export default function ListDetail() {
     const handleAddAnime = async (animeId) => {
         if (!isOwner || !token || addingAnime === animeId) return;
 
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = '';
         
         setAddingAnime(animeId); // Set loading state for this specific anime
 
@@ -172,7 +172,7 @@ export default function ListDetail() {
     const handleRemoveAnime = async (animeId) => {
         if (!isOwner || !token || removingAnime === animeId) return;
 
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = '';
         
         setRemovingAnime(animeId); // Set loading state for this specific anime
 
@@ -225,7 +225,7 @@ export default function ListDetail() {
     const handleSaveAll = async () => {
         if (!isOwner || !token) return;
 
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = '';
         
         try {
             // Sort items by anime title for consistent ordering
@@ -306,7 +306,7 @@ export default function ListDetail() {
 
         setSaving(true);
         try {
-            const baseUrl = 'http://localhost:5000';
+            const baseUrl = '';
             const response = await fetch(`${baseUrl}/api/lists/${id}/metadata`, {
                 method: 'PATCH',
                 headers: {
@@ -355,7 +355,7 @@ export default function ListDetail() {
         if (!isOwner || !token) return;
         if (!window.confirm('Are you sure you want to delete this list? This action cannot be undone.')) return;
         setDeleting(true);
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = '';
         try {
             const response = await fetch(`${baseUrl}/api/lists/${id}`, {
                 method: 'DELETE',

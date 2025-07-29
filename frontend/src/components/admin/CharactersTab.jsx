@@ -55,7 +55,7 @@ const CharactersTab = ({ searchQuery }) => {
     
     const fetchAnimeList = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/animes');
+            const response = await fetch('/api/animes');
             if (response.ok) {
                 const data = await response.json();
                 setAnimeList(Array.isArray(data) ? data : []);
@@ -97,7 +97,7 @@ const CharactersTab = ({ searchQuery }) => {
     const fetchCharacters = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:5000/api/characters', {
+            const response = await fetch('/api/characters', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -123,7 +123,7 @@ const CharactersTab = ({ searchQuery }) => {
 
     const fetchVoiceActors = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/voice-actors', {
+            const response = await fetch('/api/voice-actors', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -199,8 +199,8 @@ const CharactersTab = ({ searchQuery }) => {
         }
 
         const url = editingId
-            ? `http://localhost:5000/api/characters/${editingId}`
-            : 'http://localhost:5000/api/characters';
+            ? `/api/characters/${editingId}`
+            : '/api/characters';
         const method = editingId ? 'PUT' : 'POST';
 
         try {
@@ -273,7 +273,7 @@ const CharactersTab = ({ searchQuery }) => {
             setEditingId(charId);
             
             // Fetch detailed character data with anime associations
-            const response = await fetch(`http://localhost:5000/api/characters/${charId}/details`, {
+            const response = await fetch(`/api/characters/${charId}/details`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -312,7 +312,7 @@ const CharactersTab = ({ searchQuery }) => {
             }
 
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/api/characters/${charId}`, {
+            const response = await fetch(`/api/characters/${charId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,

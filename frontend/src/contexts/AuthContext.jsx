@@ -54,7 +54,7 @@ const AuthProvider = ({children}) => {
 
         try {
             setError(null);
-            const response = await fetch('http://localhost:5000/api/auth/profile', {
+            const response = await fetch('/api/auth/profile', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -136,7 +136,7 @@ const AuthProvider = ({children}) => {
             setLoading(true);
             setError(null);
 
-            const response = await fetch('http://localhost:5000/api/auth/login', {
+            const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -191,7 +191,7 @@ const AuthProvider = ({children}) => {
             setLoading(true);
             setError(null);
 
-            const response = await fetch('http://localhost:5000/api/auth/register', {
+            const response = await fetch('/api/auth/register', {
                 method: 'POST', headers: {
                     'Content-Type': 'application/json'
                 }, body: JSON.stringify(userData)
@@ -217,7 +217,7 @@ const AuthProvider = ({children}) => {
             setLoading(true);
             setError(null);
 
-            const response = await fetch('http://localhost:5000/api/auth/profile', {
+            const response = await fetch('/api/auth/profile', {
                 method: 'PUT', headers: {
                     'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`
                 }, body: JSON.stringify(profileData)
