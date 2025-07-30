@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu } from "react-feather";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import AdvancedSearchForm from "./AdvancedSearchForm";
@@ -285,7 +286,7 @@ function Navigation() {
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="nav-link profile-button"
               >
-                Menu
+                <Menu size={20} />
               </button>
               {dropdownOpen && (
                 <div className="dropdown-menu">
@@ -331,7 +332,7 @@ function Navigation() {
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="nav-link profile-button"
               >
-                Menu
+                <Menu size={20} />
               </button>
               {dropdownOpen && (
                 <div className="dropdown-menu">

@@ -73,23 +73,24 @@
     font-weight: bold;
 }
 
-.continue-watching-card .progress-bar{
-    position: relative;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 5px; /* Made slightly thicker */
-    background: #61dafb;
-    border-radius: 0 0 8px 8px;
-}
-
-.continue-watching-card.progress-overlay {
+.continue-watching-card .progress-overlay {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
     height: 5px; /* Made slightly thicker */
     background: rgba(255, 255, 255, 0.25);
+    border-radius: 0 0 8px 8px;
+}
+
+.continue-watching-card .progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 5px; /* Made slightly thicker */
+    background: #61dafb;
+    border-radius: 0 0 8px 8px;
+    transition: width 0.3s ease;
 }
 
 .anime-title a {
@@ -128,22 +129,27 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    font-size: 16px;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    color: white !important;
+    font-size: 16px !important;
     font-weight: bold;
-    line-height: 28px; /* Center the '×' */
+    padding: 0 !important; /* Override global button padding */
+    margin: 0 !important;
     cursor: pointer;
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: center;
     opacity: 0;
     transition: all 0.2s ease;
     z-index: 2;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .continue-watching-card:hover .remove-button {
@@ -151,7 +157,7 @@
 }
 
 .remove-button:hover {
-    background: #dc3545;
+    background: #dc3545 !important;
     transform: scale(1.1);
 }
 

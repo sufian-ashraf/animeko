@@ -3,6 +3,7 @@ import React, {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import AnimeCard from '../components/AnimeCard';
 import ContinueWatching from '../components/ContinueWatching';
+import FriendRecommendations from '../components/FriendRecommendations';
 import { useAuth } from '../contexts/AuthContext';
 
 // import the extracted styles
@@ -75,6 +76,9 @@ function Home() {
 
             {/* Continue Watching Section */}
             {user && <ContinueWatching limit={10} />}
+
+            {/* Friend Recommendations Section */}
+            {user && <FriendRecommendations limit={10} />}
 
             <section className="results-section">
                 <h3>All Anime</h3>

@@ -76,7 +76,9 @@ router.get('/sent', authenticate, async (req, res, next) => {
 router.get('/received', authenticate, async (req, res, next) => {
     try {
         const receiverId = req.user.user_id;
-        const recommendations = await Recommendation.getReceivedRecommendations(receiverId);
+        const { limit } = req.query;
+        
+        const recommendations = await Recommendation.getReceivedRecommendations(receiverId, limit);
         
         res.json(recommendations);
     } catch (error) {

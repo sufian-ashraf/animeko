@@ -51,8 +51,8 @@ class Recommendation {
     /**
      * Get all non-dismissed recommendations received by a user
      */
-    static async getReceivedRecommendations(receiverId) {
-        const query = `
+    static async getReceivedRecommendations(receiverId, limit = null) {
+        let query = `
             SELECT 
                 r.*,
                 a.title,
@@ -70,7 +70,14 @@ class Recommendation {
             ORDER BY r.recommended_at DESC
         `;
         
-        const result = await pool.query(query, [receiverId]);
+        const params = [receiverId];
+        
+        if (limit && !isNaN(limit)) {
+            query += ` LIMIT $2`;
+            params.push(parseInt(limit));
+        }
+        
+        const result = await pool.query(query, params);
         return result.rows;
     }
 

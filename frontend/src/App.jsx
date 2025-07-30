@@ -49,6 +49,7 @@ import './styles/ListDetail.css';
 import './styles/EpisodeWatchPage.css';
 import './styles/dark-mode.css';
 import './styles/NotificationBell.css';
+import './styles/FriendRecommendations.css';
 
 function App() {
     return (<AuthProvider>
