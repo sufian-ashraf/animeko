@@ -1,4 +1,4 @@
-import pool from '../db.js';
+import pool, { query } from '../db.js';
 
 // Check if user1 and user2 are confirmed friends
 async function areUsersFriends(userId1, userId2) {
@@ -6,7 +6,7 @@ async function areUsersFriends(userId1, userId2) {
         return false;
     }
     
-    const result = await pool.query(
+    const result = await query(
         `SELECT 1 FROM friendship 
          WHERE ((requester_id = $1 AND addressee_id = $2) OR (requester_id = $2 AND addressee_id = $1)) 
          AND status = 'accepted'`,

@@ -25,7 +25,14 @@ export const NotificationProvider = ({ children }) => {
             const newSocket = io('http://localhost:5000', {
                 auth: {
                     token: token
-                }
+                },
+                // Add configuration to reduce disconnections
+                autoConnect: true,
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionAttempts: 5,
+                timeout: 20000,
+                forceNew: false
             });
 
             newSocket.on('connect', () => {
@@ -41,8 +48,15 @@ export const NotificationProvider = ({ children }) => {
                 setUnreadCount(count);
             });
 
-            newSocket.on('disconnect', () => {
-                console.log('Disconnected from notification socket');
+            newSocket.on('disconnect', (reason) => {
+                // Only log unexpected disconnections
+                if (reason !== 'io client disconnect' && reason !== 'io server disconnect') {
+                    console.log('Disconnected from notification socket:', reason);
+                }
+            });
+
+            newSocket.on('connect_error', (error) => {
+                console.error('Socket connection error:', error.message);
             });
 
             setSocket(newSocket);
@@ -50,8 +64,14 @@ export const NotificationProvider = ({ children }) => {
             return () => {
                 newSocket.close();
             };
+        } else {
+            // Close existing socket if user logs out or becomes admin
+            if (socket) {
+                socket.close();
+                setSocket(null);
+            }
         }
-    }, [user, token, isAdmin]);
+    }, [user?.id, token, isAdmin]); // Only depend on user.id instead of entire user object
 
     // Fetch initial notifications and unread count only for authenticated non-admin users
     useEffect(() => {
@@ -59,7 +79,7 @@ export const NotificationProvider = ({ children }) => {
             fetchNotifications();
             fetchUnreadCount();
         }
-    }, [user, token, isAdmin]);
+    }, [user?.id, token, isAdmin]); // Only depend on user.id instead of entire user object
 
     const fetchNotifications = async (page = 1, limit = 20) => {
         if (!token) return;

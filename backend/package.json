@@ -4,7 +4,9 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "nodemon start.js",
+    "start:direct": "nodemon server.js",
+    "start:prod": "node start.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"

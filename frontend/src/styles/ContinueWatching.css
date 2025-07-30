@@ -36,7 +36,7 @@
     color: inherit;
 }
 
-.anime-poster {
+.continue-watching-card .anime-poster {
     position: relative;
     width: 100%;
     padding-top: 56.25%; /* 16:9 Aspect Ratio */
@@ -44,7 +44,7 @@
     background: #f0f2f5;
 }
 
-.anime-poster img {
+.continue-watching-card .anime-poster img {
     position: absolute;
     top: 0;
     left: 0;
@@ -58,7 +58,7 @@
     transform: scale(1.05);
 }
 
-.placeholder-poster {
+.continue-watching-card .placeholder-poster {
     position: absolute;
     top: 0;
     left: 0;

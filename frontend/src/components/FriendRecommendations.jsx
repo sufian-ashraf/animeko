@@ -149,7 +149,7 @@ const FriendRecommendations = ({ limit = 10 }) => {
                             </h4>
                             <p className="recommender">
                                 by <Link 
-                                    to={`/user/${recommendation.sender_username}`} 
+                                    to={`/profile/${recommendation.sender_id}`} 
                                     className="friend-name"
                                     onClick={(e) => e.stopPropagation()}
                                 >

@@ -4,10 +4,11 @@ import cors from 'cors';
 import {dirname} from 'path';
 import {fileURLToPath} from 'url';
 import { createServer } from 'http';
-import pool from './db.js'; // import shared pool
+import pool, { testConnection } from './db.js'; // import shared pool and test function
 // import middlewares
 import authenticate from './middlewares/authenticate.js';
 import { attachVisibilityHelpers } from './middlewares/visibilityCheck.js';
+import { attachDatabaseHelpers, handleDatabaseErrors } from './middlewares/databaseMiddleware.js';
 import { initializeSocket } from './utils/socket.js';
 
 // import routes
@@ -63,6 +64,9 @@ app.use('/api/search', searchRoutes);
 // Parse JSON bodies
 app.use(express.json());
 
+// Attach database helpers to all requests
+app.use(attachDatabaseHelpers);
+
 // Attach visibility helpers to all requests
 app.use(attachVisibilityHelpers);
 
@@ -86,10 +90,59 @@ app.use('/api/watch', watchProgressRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Test database connection
-    pool.connect()
-    .then(() => console.log('Connected to PostgreSQL database'))
-    .catch(err => console.error('Database connection error:', err));
+// Enhanced database connection with retry logic
+const connectToDatabase = async () => {
+    try {
+        const isConnected = await testConnection();
+        if (isConnected) {
+            console.log('Connected to PostgreSQL database');
+        } else {
+            throw new Error('Connection test failed');
+        }
+    } catch (err) {
+        console.error('Database connection error:', err.message);
+        // Retry connection after 5 seconds
+        console.log('Retrying database connection in 5 seconds...');
+        setTimeout(connectToDatabase, 5000);
+    }
+};
+
+// Health check endpoint for database
+app.get('/api/health', async (req, res) => {
+    try {
+        const isConnected = await testConnection();
+        res.status(200).json({ 
+            status: isConnected ? 'healthy' : 'unhealthy',
+            database: isConnected ? 'connected' : 'disconnected',
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        res.status(503).json({ 
+            status: 'unhealthy',
+            database: 'disconnected',
+            error: err.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// Periodic connection health check (reduced frequency)
+setInterval(async () => {
+    try {
+        await testConnection();
+    } catch (err) {
+        console.log('Periodic health check failed, attempting reconnection...');
+        connectToDatabase();
+    }
+}, 300000); // Check every 5 minutes instead of 1 minute
+
+// Remove the duplicate pool event handlers since they're now in db.js
+
+// Initial connection
+connectToDatabase();
+
+// Database error handling middleware (must come before general error handler)
+app.use(handleDatabaseErrors);
 
 // Error handling middleware
 const errorHandler = (err, req, res, next) => {
@@ -107,4 +160,38 @@ server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     subscriptionExpiryJob.start();
     notificationCleanupJob.start();
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+    console.log('\nShutting down gracefully...');
+    
+    try {
+        // Close database pool
+        await pool.end();
+        console.log('Database pool closed');
+        
+        // Close server
+        server.close(() => {
+            console.log('Server closed');
+            process.exit(0);
+        });
+    } catch (err) {
+        console.error('Error during shutdown:', err);
+        process.exit(1);
+    }
+});
+
+process.on('SIGTERM', async () => {
+    console.log('SIGTERM received, shutting down gracefully...');
+    
+    try {
+        await pool.end();
+        server.close(() => {
+            process.exit(0);
+        });
+    } catch (err) {
+        console.error('Error during shutdown:', err);
+        process.exit(1);
+    }
 });

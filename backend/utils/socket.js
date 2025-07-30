@@ -9,6 +9,9 @@ export const initializeSocket = (server) => {
             origin: 'http://localhost:5173',
             credentials: true,
         },
+        // Simpler, more stable configuration
+        pingTimeout: 60000,
+        pingInterval: 25000
     });
 
     // Authentication middleware for socket connections
@@ -35,8 +38,11 @@ export const initializeSocket = (server) => {
         // Join user to their personal room for targeted notifications
         socket.join(`user_${socket.userId}`);
         
-        socket.on('disconnect', () => {
-            console.log(`User ${socket.userId} disconnected`);
+        socket.on('disconnect', (reason) => {
+            // Only log disconnections that aren't normal client behavior
+            if (reason !== 'client namespace disconnect' && reason !== 'transport close') {
+                console.log(`User ${socket.userId} disconnected. Reason: ${reason}`);
+            }
         });
     });
 
