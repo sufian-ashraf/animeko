@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import AdvancedSearchForm from "./AdvancedSearchForm";
+import NotificationBell from "./NotificationBell";
 import "../styles/Navigation.css";
 
 function Navigation() {
@@ -275,6 +276,8 @@ function Navigation() {
               />
             </div>
           </div>
+
+          {user && !isAdmin && <NotificationBell />}
 
           {user ? (
             <div className="user-menu" ref={dropdownRef}>

@@ -3,6 +3,7 @@ import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import {AuthProvider} from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AlertProvider } from './contexts/AlertContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import {ProtectedRoute} from './components/ProtectedRoute';
 import AdminRoute from './components/admin/AdminRoute';
 import Navigation from './components/HomeNavigation';
@@ -47,11 +48,13 @@ import './styles/AnimeLibrary.css';
 import './styles/ListDetail.css';
 import './styles/EpisodeWatchPage.css';
 import './styles/dark-mode.css';
+import './styles/NotificationBell.css';
 
 function App() {
     return (<AuthProvider>
         <ThemeProvider>
         <AlertProvider>
+        <NotificationProvider>
         <Router>
             <AlertHandler />
             <LogoutHandler />
@@ -148,6 +151,7 @@ function App() {
                 </main>
             </div>
         </Router>
+        </NotificationProvider>
         </AlertProvider>
         </ThemeProvider>
     </AuthProvider>);

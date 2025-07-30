@@ -3,10 +3,12 @@ import express from 'express';
 import cors from 'cors';
 import {dirname} from 'path';
 import {fileURLToPath} from 'url';
+import { createServer } from 'http';
 import pool from './db.js'; // import shared pool
 // import middlewares
 import authenticate from './middlewares/authenticate.js';
 import { attachVisibilityHelpers } from './middlewares/visibilityCheck.js';
+import { initializeSocket } from './utils/socket.js';
 
 // import routes
 import authRoutes from './routes/authRoutes.js';
@@ -27,15 +29,21 @@ import premiumRoutes from './routes/premiumRoutes.js';
 import episodeRoutes from './routes/episodeRoutes.js';
 import watchProgressRoutes from './routes/watchProgressRoutes.js';
 import subscriptionExpiryJob from './cron/subscriptionExpiryJob.js';
+import notificationCleanupJob from './cron/notificationCleanupJob.js';
 import searchRoutes from './routes/searchRoutes.js';
 import recommendationRoutes from './routes/recommendationRoutes.js';
 import reviewReactionRoutes from './routes/reviewReactionRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+const server = createServer(app);
 const PORT = process.env.PORT || 5000;
+
+// Initialize Socket.IO
+const io = initializeSocket(server);
 
 // Middleware
 // Enable CORS for requests from your frontend
@@ -76,6 +84,7 @@ app.use('/api', premiumRoutes);
 app.use('/api/episodes', episodeRoutes);
 app.use('/api/watch', watchProgressRoutes);
 app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Test database connection
     pool.connect()
@@ -94,7 +103,8 @@ const errorHandler = (err, req, res, next) => {
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     subscriptionExpiryJob.start();
+    notificationCleanupJob.start();
 });
