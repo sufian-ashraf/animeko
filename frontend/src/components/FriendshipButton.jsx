@@ -15,9 +15,12 @@ const FriendshipButton = ({ targetUserId, size = 'normal', onStatusChange }) => 
     }
 
     useEffect(() => {
+        // Reset status when targetUserId changes to ensure fresh data
+        setStatus('none');
+        setError('');
+        
         const fetchFriendshipStatus = async () => {
-            // Only fetch if we have a different target user or haven't fetched yet
-            if (!targetUserId || targetUserId === lastFetchedUserId) return;
+            if (!targetUserId) return;
 
             try {
                 const response = await fetch(`/api/friends/status/${targetUserId}`, {
@@ -27,7 +30,6 @@ const FriendshipButton = ({ targetUserId, size = 'normal', onStatusChange }) => 
                 if (response.ok) {
                     const data = await response.json();
                     setStatus(data.status);
-                    setLastFetchedUserId(targetUserId);
                     if (onStatusChange) {
                         onStatusChange(data.status);
                     }
@@ -40,7 +42,7 @@ const FriendshipButton = ({ targetUserId, size = 'normal', onStatusChange }) => 
         if (targetUserId && token) {
             fetchFriendshipStatus();
         }
-    }, [targetUserId, token, onStatusChange, lastFetchedUserId]);
+    }, [targetUserId, token, onStatusChange]);
 
     const handleAction = async (action) => {
         setLoading(true);
@@ -109,7 +111,7 @@ const FriendshipButton = ({ targetUserId, size = 'normal', onStatusChange }) => 
                         newStatus = 'none';
                         break;
                     case 'accept_request':
-                        newStatus = 'friend';
+                        newStatus = 'friends'; // Fixed: should be 'friends' not 'friend'
                         break;
                     case 'reject_request':
                         newStatus = 'none';
